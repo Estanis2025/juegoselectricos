@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Juegos Eléctricos: Plano Dormitorio</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --panel-bg: #ffffff;
+            --phase-color: #e74c3c;   /* Rojo */
+            --neutral-color: #3498db; /* Azul */
+            --earth-color: #2ecc71;   /* Verde */
+            --wire-default: #7f8c8d;
+            --terminal-size: 16px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0; overflow: hidden; touch-action: none;
+            display: flex; flex-direction: column; height: 100vh; user-select: none;
+        }
+
+        /* --- PANTALLA INICIO --- */
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+            z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; transition: opacity 0.5s;
+        }
+        .btn-big {
+            font-size: 1.5rem; padding: 15px 50px; background: #f1c40f; color: #2c3e50;
+            border: none; border-radius: 50px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: transform 0.2s;
+        }
+        .btn-big:hover { transform: scale(1.05); background: #f39c12; }
+
+        /* UI */
+        header {
+            background: var(--panel-bg); padding: 10px 15px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow); z-index: 10; border-bottom: 4px solid #bdc3c7;
+        }
+        .header-left h1 { margin: 0; font-size: 1.1rem; color: #2c3e50; }
+        .stats { display: flex; gap: 8px; align-items: center; }
+        .btn { border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; font-size: 0.8rem; }
+        .btn-help { background: #f39c12; } .btn-reset { background: #c0392b; } .btn-next { background: #27ae60; display: none; }
+
+        /* TABLERO */
+        #game-board {
+            position: relative; flex-grow: 1;
+            /* Patrón de plano arquitectónico */
+            background-color: #2c3e50;
+            background-image: 
+                linear-gradient(#34495e 2px, transparent 2px),
+                linear-gradient(90deg, #34495e 2px, transparent 2px);
+            background-size: 40px 40px;
+            overflow: hidden;
+        }
+        
+        /* Paredes simuladas para el nivel dormitorio */
+        .wall {
+            position: absolute; background: #95a5a6; opacity: 0.5; pointer-events: none; z-index: 0;
+        }
+
+        #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+
+        /* COMPONENTES */
+        .component {
+            position: absolute; background: white; border: 2px solid #7f8c8d; border-radius: 4px;
+            box-shadow: var(--shadow); z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .component label {
+            position: absolute; top: -18px; font-size: 9px; color: white; background: #7f8c8d; 
+            padding: 2px 5px; border-radius: 4px; white-space: nowrap;
+        }
+
+        /* Estilos específicos */
+        .comp-source { width: 80px; height: 150px; background: #34495e; color: white; border: 2px solid #2c3e50; }
+        
+        .comp-lamp { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #bdc3c7; }
+        .bulb-glass { width: 100%; height: 100%; border-radius: 50%; background: #bdc3c7; transition: 0.3s; }
+        .bulb-glass.on { background: #f1c40f; box-shadow: 0 0 30px 5px rgba(241, 196, 15, 0.7); }
+        
+        .comp-switch { width: 60px; height: 40px; }
+        .switch-lever { width: 30px; height: 16px; background: #e74c3c; border-radius: 8px; position: relative; cursor: pointer; }
+        .switch-lever.active { background: #2ecc71; }
+        .switch-lever.active .knob { left: 16px; }
+        .knob { width: 12px; height: 12px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: 0.2s; }
+
+        .comp-breaker { width: 50px; height: 80px; background: #ecf0f1; border-color: #34495e; }
+        .breaker-switch { width: 14px; height: 30px; background: #2c3e50; border-radius: 2px; cursor: pointer; transition: 0.2s; }
+        .breaker-switch.active { background: #27ae60; transform: scaleY(-1); }
+        .comp-breaker.tripped { border-color: red; animation: shake 0.4s; }
+
+        /* NUEVO: ENCHUFE */
+        .comp-outlet { width: 50px; height: 50px; background: #ecf0f1; border-radius: 8px; }
+        .outlet-face { 
+            width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; 
+            position: relative; opacity: 0.5; transition: 0.3s;
+        }
+        .outlet-face::before { content:''; width:4px; height:12px; background:#333; position:absolute; left:12px; top:15px; } /* Neutro */
+        .outlet-face::after { content:''; width:4px; height:12px; background:#333; position:absolute; right:12px; top:15px; } /* Fase */
+        .outlet-face .earth-pin { width:6px; height:6px; background:#333; border-radius:50%; position:absolute; bottom:10px; } /* Tierra */
+        .outlet-face.powered { opacity: 1; background: #dff9fb; box-shadow: inset 0 0 10px #2ecc71; } /* Feedback visual */
+
+        /* TERMINALES */
+        .terminal {
+            width: var(--terminal-size); height: var(--terminal-size);
+            background: #bdc3c7; border: 2px solid #7f8c8d; border-radius: 50%;
+            position: absolute; cursor: crosshair; z-index: 10; transition: 0.2s;
+        }
+        .terminal:hover, .terminal.highlight { transform: scale(1.3); background: #f1c40f; border-color: white; }
+        .terminal[data-role="phase"] { background: var(--phase-color); }
+        .terminal[data-role="neutral"] { background: var(--neutral-color); }
+        .terminal[data-role="earth"] { background: var(--earth-color); }
+
+        /* CABLES */
+        path.wire { fill: none; stroke-width: 4; stroke-linecap: round; cursor: pointer; transition: stroke 0.2s; opacity: 0.9; }
+        path.wire:hover { stroke-width: 7; opacity: 1; }
+        path.wire.short { stroke: #c0392b !important; animation: shakeWire 0.1s infinite; }
+        
+        /* MODAL */
+        #modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85);
+            z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center; padding: 20px;
+        }
+        .hidden { display: none !important; }
+
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+        @keyframes shakeWire { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA INICIO -->
+    <div id="start-screen">
+        <div style="font-size:4rem; margin-bottom:10px;">⚡🏠</div>
+        <h1>Juegos Eléctricos</h1>
+        <p>Simulador de Instalaciones Residenciales</p>
+        <button class="btn-big" onclick="startGame()">Comenzar</button>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal" class="hidden">
+        <h2 id="modal-title">Nivel X</h2>
+        <p id="modal-desc" style="max-width:500px; line-height:1.5;">...</p>
+        <button class="btn btn-help" style="font-size:1.1rem; padding:10px 25px; margin-top:20px;" onclick="game.closeModal()">Entendido</button>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <h1 id="level-title">Nivel 1</h1>
+            <small id="level-objective" style="color:#7f8c8d;">...</small>
+        </div>
+        <div class="stats">
+            <div style="background:#ecf0f1; padding:5px 10px; border-radius:4px; font-weight:bold;">
+                Estado: <span id="status-text" style="color:#555">OFF</span>
+            </div>
+            <button class="btn btn-help" onclick="game.showHint()">Ayuda</button>
+            <button class="btn btn-reset" onclick="game.reloadLevel()">Reset</button>
+            <button id="next-btn" class="btn btn-next" onclick="game.nextLevel()">Siguiente >></button>
+        </div>
+    </header>
+
+    <div id="game-board">
+        <!-- Paredes del plano -->
+        <div id="walls-layer"></div>
+        <svg id="wire-layer"></svg>
+        <div id="components-layer"></div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE NIVELES
+        const levels = [
+            // NIVEL 11: DORMITORIO COMPLETO
+            { 
+                id: 11, 
+                title: "Plano Dormitorio (Completo)", 
+                objective: "Realiza la instalación completa: Disyuntor general, Luz central con interruptor, y Enchufes con TIERRA.",
+                walls: [
+                    // Paredes simuladas (top, left, width, height)
+                    {t: 20, l: 15, w: 70, h: 2}, // Norte
+                    {t: 20, l: 15, w: 2, h: 70}, // Oeste
+                    {t: 90, l: 15, w: 70, h: 2}, // Sur
+                    {t: 20, l: 85, w: 2, h: 70}, // Este
+                    {t: 90, l: 15, w: 20, h: 2}, // Puerta gap
+                ],
+                comps: [
+                    { type: 'source', x: 5, y: 10 }, // Tablero fuera cuarto
+                    { type: 'breaker', id: 'B1', x: 20, y: 25 }, // Entrada
+                    { type: 'switch', id: 'S1', x: 25, y: 85 }, // Lado Puerta
+                    { type: 'lamp', id: 'L1', x: 50, y: 55 }, // Centro Cama
+                    { type: 'outlet', id: 'O1', x: 18, y: 55 }, // Enchufe TV
+                    { type: 'outlet', id: 'O2', x: 80, y: 40 }, // Velador Der
+                    { type: 'outlet', id: 'O3', x: 80, y: 70 }  // Velador Izq
+                ]
+            },
+            // Niveles previos simplificados para demostración si se reinicia
+            { id: 1, title: "Introducción Fase/Neutro", objective: "Conecta la lámpara.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'lamp', id: 'L1', x: 60, y: 40 }] },
+            { id: 4, title: "Protección Básica", objective: "Usa el disyuntor para proteger la línea.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 40 }] }
+        ];
+
+        const svgNS = "http://www.w3.org/2000/svg";
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            game.audioCtx.resume();
+            // Cargar directamente el nivel 11 (índice 0 en este array de ejemplo modificado, o buscar por ID)
+            game.loadLevel(0); 
+        }
+
+        class GameManager {
+            constructor() {
+                this.wires = [];
+                this.components = {};
+                this.currentLevelIdx = 0;
+                this.svgLayer = document.getElementById('wire-layer');
+                this.compLayer = document.getElementById('components-layer');
+                this.wallLayer = document.getElementById('walls-layer');
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                this.drag = { active: false, startId: null, tempPath: null, startType: null };
+                
+                this.initInput();
+            }
+
+            loadLevel(idx) {
+                this.currentLevelIdx = idx;
+                const lvl = levels[idx];
+                
+                // UI Texts
+                document.getElementById('level-title').textContent = lvl.title;
+                document.getElementById('level-objective').textContent = lvl.objective;
+                document.getElementById('modal-title').textContent = lvl.title;
+                document.getElementById('modal-desc').textContent = lvl.objective;
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('status-text').textContent = "OFF";
+                document.getElementById('status-text').style.color = "#555";
+                
+                // Limpieza
+                this.wires = [];
+                this.svgLayer.innerHTML = ''; 
+                this.compLayer.innerHTML = '';
+                this.wallLayer.innerHTML = '';
+                this.components = {};
+
+                // Generar Paredes (Visual)
+                if(lvl.walls) {
+                    lvl.walls.forEach(w => {
+                        const div = document.createElement('div');
+                        div.className = 'wall';
+                        div.style.top = w.t + '%'; div.style.left = w.l + '%';
+                        div.style.width = w.w + '%'; div.style.height = w.h + '%';
+                        this.wallLayer.appendChild(div);
+                    });
+                }
+
+                // Generar Componentes
+                lvl.comps.forEach(c => this.createComponent(c));
+                
+                document.getElementById('modal').classList.remove('hidden');
+                this.checkCircuit();
+            }
+
+            createComponent(data) {
+                const el = document.createElement('div');
+                el.className = `component comp-${data.type}`;
+                el.style.left = data.x + '%'; el.style.top = data.y + '%';
+                el.id = `comp-${data.id || 'src'}`;
+
+                let html = '';
+                
+                // COMPONENTE: FUENTE (CON TIERRA)
+                if(data.type === 'source') {
+                    html = `
+                        <div style="margin-top:10px; font-weight:bold; font-size:12px;">TABLERO</div>
+                        <div style="font-size:10px;">220V</div>
+                        
+                        <div class="terminal" id="t-phase" data-role="phase" title="Fase (L)" style="top:40px; right:-8px;"></div>
+                        <div class="terminal" id="t-neutral" data-role="neutral" title="Neutro (N)" style="top:70px; right:-8px;"></div>
+                        <div class="terminal" id="t-earth" data-role="earth" title="Tierra (PE)" style="top:100px; right:-8px;"></div>
+                        
+                        <span style="position:absolute; top:42px; right:12px; font-size:9px; color:#e74c3c;">L</span>
+                        <span style="position:absolute; top:72px; right:12px; font-size:9px; color:#3498db;">N</span>
+                        <span style="position:absolute; top:102px; right:12px; font-size:9px; color:#2ecc71;">T</span>
+                    `;
+                    this.components['source'] = { type: 'source' };
+                }
+                // COMPONENTE: LÁMPARA
+                else if (data.type === 'lamp') {
+                    html = `<div class="bulb-glass" id="bulb-${data.id}"></div>
+                            <label>Lámpara</label>
+                            <div class="terminal" id="t-${data.id}-L" style="bottom:5px; left:-8px;"></div>
+                            <div class="terminal" id="t-${data.id}-N" style="bottom:5px; right:-8px;"></div>`;
+                    this.components[data.id] = { type: 'lamp' };
+                }
+                // COMPONENTE: INTERRUPTOR
+                else if (data.type === 'switch') {
+                    html = `<label>Int.</label>
+                            <div class="switch-lever" id="sw-${data.id}" onclick="game.toggleSwitch('${data.id}')">
+                                <div class="knob"></div>
+                            </div>
+                            <div class="terminal" id="t-${data.id}-1" style="top:12px; left:-8px;"></div>
+                            <div class="terminal" id="t-${data.id}-2" style="top:12px; right:-8px;"></div>`;
+                    this.components[data.id] = { type: 'switch', state: false };
+                }
+                // COMPONENTE: DISYUNTOR
+                else if (data.type === 'breaker') {
+                    html = `<label>Disy.</label>
+                            <div class="breaker-switch active" id="bk-${data.id}" onclick="game.toggleBreaker('${data.id}')"></div>
+                            <!-- Entrada -->
+                            <div class="terminal" id="t-${data.id}-inL" style="top:10px; left:-8px;"></div>
+                            <div class="terminal" id="t-${data.id}-inN" style="top:30px; left:-8px;"></div>
+                            <!-- Salida -->
+                            <div class="terminal" id="t-${data.id}-outL" style="top:10px; right:-8px;"></div>
+                            <div class="terminal" id="t-${data.id}-outN" style="top:30px; right:-8px;"></div>`;
+                    this.components[data.id] = { type: 'breaker', state: true };
+                }
+                // COMPONENTE: ENCHUFE (NUEVO)
+                else if (data.type === 'outlet') {
+                    html = `<label>Enchufe</label>
+                            <div class="outlet-face" id="face-${data.id}">
+                                <div class="earth-pin"></div>
+                            </div>
+                            <div class="terminal" id="t-${data.id}-L" data-role="phase" style="top:10px; right:-8px;" title="Fase"></div>
+                            <div class="terminal" id="t-${data.id}-N" data-role="neutral" style="top:10px; left:-8px;" title="Neutro"></div>
+                            <div class="terminal" id="t-${data.id}-E" data-role="earth" style="bottom:-8px; left:20px;" title="Tierra"></div>`;
+                    this.components[data.id] = { type: 'outlet' };
+                }
+
+                el.innerHTML = html;
+                this.compLayer.appendChild(el);
+            }
+
+            // --- INPUT ---
+            initInput() {
+                this.compLayer.addEventListener('pointerdown', (e) => {
+                    if(e.target.classList.contains('terminal')) {
+                        e.stopPropagation(); e.target.releasePointerCapture(e.pointerId);
+                        this.startDrag(e);
+                    }
+                });
+                document.addEventListener('pointermove', (e) => { if(this.drag.active) this.updateDrag(e); });
+                document.addEventListener('pointerup', (e) => { if(this.drag.active) this.endDrag(e); });
+            }
+
+            startDrag(e) {
+                const id = e.target.id;
+                const role = e.target.dataset.role; // phase, neutral, earth, or undefined
+                
+                this.drag.active = true; 
+                this.drag.startId = id;
+                this.drag.startType = role;
+
+                // Color cable temporal
+                let color = "var(--wire-default)";
+                if(role === 'phase') color = "var(--phase-color)";
+                if(role === 'neutral') color = "var(--neutral-color)";
+                if(role === 'earth') color = "var(--earth-color)";
+
+                const path = document.createElementNS(svgNS, "path");
+                path.setAttribute("stroke", color); path.setAttribute("stroke-width", "4");
+                path.setAttribute("fill", "none"); path.setAttribute("stroke-dasharray", "5,5");
+                this.svgLayer.appendChild(path);
+                this.drag.tempPath = path;
+            }
+
+            updateDrag(e) {
+                const r1 = document.getElementById(this.drag.startId).getBoundingClientRect();
+                const board = document.getElementById('game-board').getBoundingClientRect();
+                const x1 = r1.left + r1.width/2 - board.left; 
+                const y1 = r1.top + r1.height/2 - board.top;
+                const x2 = e.clientX - board.left; 
+                const y2 = e.clientY - board.top;
+                
+                this.drag.tempPath.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
+            }
+
+            endDrag(e) {
+                this.drag.active = false; this.drag.tempPath.remove();
+                const el = document.elementFromPoint(e.clientX, e.clientY);
+                if(el && el.classList.contains('terminal') && el.id !== this.drag.startId) {
+                    this.connect(this.drag.startId, el.id);
+                }
+            }
+
+            connect(u, v) {
+                // Evitar duplicados
+                if(this.wires.some(w => (w.u === u && w.v === v) || (w.u === v && w.v === u))) return;
+                
+                // Determinar color final del cable
+                const elU = document.getElementById(u);
+                const elV = document.getElementById(v);
+                
+                // Lógica de color: Si alguno es Tierra, es Verde. Si es Fase es Rojo, etc.
+                let color = "#555";
+                const roles = [elU.dataset.role, elV.dataset.role];
+                
+                if (roles.includes('earth')) color = "var(--earth-color)";
+                else if (roles.includes('phase')) color = "var(--phase-color)";
+                else if (roles.includes('neutral')) color = "var(--neutral-color)";
+
+                const path = document.createElementNS(svgNS, "path");
+                path.classList.add('wire');
+                path.setAttribute("stroke", color);
+                this.svgLayer.appendChild(path);
+
+                const wire = { u, v, el: path };
+                
+                // Borrar con doble click
+                path.addEventListener('dblclick', () => {
+                    path.remove(); 
+                    this.wires = this.wires.filter(w => w !== wire);
+                    this.playSound('cut');
+                    this.checkCircuit();
+                });
+
+                this.wires.push(wire);
+                this.drawWires();
+                this.playSound('click');
+                this.checkCircuit();
+            }
+
+            drawWires() {
+                const board = document.getElementById('game-board').getBoundingClientRect();
+                this.wires.forEach(w => {
+                    const r1 = document.getElementById(w.u).getBoundingClientRect();
+                    const r2 = document.getElementById(w.v).getBoundingClientRect();
+                    const x1 = r1.left+r1.width/2-board.left; 
+                    const y1 = r1.top+r1.height/2-board.top;
+                    const x2 = r2.left+r2.width/2-board.left; 
+                    const y2 = r2.top+r2.height/2-board.top;
+                    
+                    // Curva Bézier simple
+                    const drop = Math.abs(x2 - x1) * 0.2 + 20;
+                    const d = `M ${x1} ${y1} C ${x1} ${y1+drop}, ${x2} ${y2+drop}, ${x2} ${y2}`;
+                    w.el.setAttribute("d", d);
+                });
+            }
+
+            // --- LÓGICA COMPONENTES ---
+            toggleSwitch(id) {
+                this.components[id].state = !this.components[id].state;
+                const el = document.getElementById(`sw-${id}`);
+                this.components[id].state ? el.classList.add('active') : el.classList.remove('active');
+                this.playSound('click'); this.checkCircuit();
+            }
+            toggleBreaker(id) {
+                const c = this.components[id];
+                c.state = !c.state;
+                const el = document.getElementById(`bk-${id}`);
+                if(c.state) { el.classList.add('active'); el.parentElement.classList.remove('tripped'); }
+                else el.classList.remove('active');
+                this.playSound('clack'); this.checkCircuit();
+            }
+
+            // --- LÓGICA ELÉCTRICA (VALIDACIÓN) ---
+            checkCircuit() {
+                // Reset Visuals
+                this.wires.forEach(w => { w.el.classList.remove('short'); });
+                Object.keys(this.components).forEach(id => {
+                    if(this.components[id].type === 'lamp') document.getElementById(`bulb-${id}`).classList.remove('on');
+                    if(this.components[id].type === 'outlet') document.getElementById(`face-${id}`).classList.remove('powered');
+                });
+
+                // Construir Grafo
+                const adj = {};
+                const addEdge = (a, b) => { 
+                    if(!adj[a]) adj[a] = []; if(!adj[b]) adj[b] = []; 
+                    adj[a].push(b); adj[b].push(a); 
+                };
+
+                // Cables
+                this.wires.forEach(w => addEdge(w.u, w.v));
+
+                // Internos
+                Object.keys(this.components).forEach(id => {
+                    const c = this.components[id];
+                    if(c.type === 'switch' && c.state) addEdge(`t-${id}-1`, `t-${id}-2`);
+                    if(c.type === 'breaker' && c.state) {
+                        addEdge(`t-${id}-inL`, `t-${id}-outL`);
+                        addEdge(`t-${id}-inN`, `t-${id}-outN`);
+                    }
+                    if(c.type === 'lamp') addEdge(`t-${id}-L`, `t-${id}-N`); // Resistencia interna
+                });
+
+                // Función de Búsqueda (BFS)
+                const isConnected = (start, end, avoidLamps) => {
+                    if(!adj[start]) return false;
+                    let Q = [start], visited = new Set([start]);
+                    while(Q.length) {
+                        let u = Q.shift();
+                        if(u === end) return true;
+                        if(adj[u]) for(let v of adj[u]) {
+                            // Si evitamos lámparas (para detectar cortos), no pasamos por nodos L/N de la misma lámpara
+                            if(avoidLamps && u.includes('L') && v.includes('L') && u.split('-')[1]===v.split('-')[1]) continue;
+                            if(!visited.has(v)) { visited.add(v); Q.push(v); }
+                        }
+                    } return false;
+                };
+
+                // 1. Detección CORTOCIRCUITO (Fase a Neutro sin carga)
+                if(isConnected('t-phase', 't-neutral', true)) {
+                    this.triggerShortCircuit();
+                    return;
+                }
+
+                // 2. Estado de Dispositivos
+                let lampsOK = 0, totalLamps = 0;
+                let outletsOK = 0, totalOutlets = 0;
+
+                Object.keys(this.components).forEach(id => {
+                    const c = this.components[id];
+                    
+                    // LÁMPARAS
+                    if(c.type === 'lamp') {
+                        totalLamps++;
+                        const hasPhase = isConnected('t-phase', `t-${id}-L`) || isConnected('t-phase', `t-${id}-N`);
+                        const hasNeutral = isConnected('t-neutral', `t-${id}-L`) || isConnected('t-neutral', `t-${id}-N`);
+                        // Lógica simplificada: necesita fase y neutro (y que no sea el mismo pin)
+                        // Para simplificar BFS: comprobamos paths cruzados
+                        if( (isConnected('t-phase', `t-${id}-L`) && isConnected('t-neutral', `t-${id}-N`)) ||
+                            (isConnected('t-phase', `t-${id}-N`) && isConnected('t-neutral', `t-${id}-L`)) ) {
+                            document.getElementById(`bulb-${id}`).classList.add('on');
+                            lampsOK++;
+                        }
+                    }
+
+                    // ENCHUFES (Requieren Tierra para estar 100% OK en este nivel)
+                    if(c.type === 'outlet') {
+                        totalOutlets++;
+                        // Fase y Neutro
+                        const pOK = isConnected('t-phase', `t-${id}-L`);
+                        const nOK = isConnected('t-neutral', `t-${id}-N`);
+                        // Tierra
+                        const eOK = isConnected('t-earth', `t-${id}-E`);
+
+                        if(pOK && nOK) {
+                            document.getElementById(`face-${id}`).classList.add('powered');
+                            if(eOK) outletsOK++; // Solo cuenta si tiene tierra
+                        }
+                    }
+                });
+
+                // Validar Victoria
+                const status = document.getElementById('status-text');
+                if(lampsOK === totalLamps && outletsOK === totalOutlets && totalLamps + totalOutlets > 0) {
+                    status.textContent = "INSTALACIÓN SEGURA Y FUNCIONAL";
+                    status.style.color = "green";
+                    if(document.getElementById('next-btn').style.display === 'none') {
+                        this.playSound('win');
+                        document.getElementById('next-btn').style.display = 'inline-block';
+                    }
+                } else {
+                    // Feedback parcial
+                    if(outletsOK < totalOutlets && totalOutlets > 0) {
+                         status.textContent = "FALTA TIERRA EN ENCHUFES";
+                         status.style.color = "orange";
+                    } else {
+                         status.textContent = "INCOMPLETO";
+                         status.style.color = "#555";
+                    }
+                    document.getElementById('next-btn').style.display = 'none';
+                }
+            }
+
+            triggerShortCircuit() {
+                const bk = Object.keys(this.components).find(k => this.components[k].type === 'breaker' && this.components[k].state);
+                if(bk) {
+                    this.components[bk].state = false;
+                    const el = document.getElementById(`bk-${bk}`);
+                    el.classList.remove('active');
+                    el.parentElement.classList.add('tripped');
+                    this.playSound('clack_loud');
+                } else {
+                    this.wires.forEach(w => w.el.classList.add('short'));
+                    document.getElementById('status-text').textContent = "¡CORTOCIRCUITO!";
+                    document.getElementById('status-text').style.color = "red";
+                    this.playSound('buzz');
+                }
+            }
+
+            // UTILS
+            closeModal() { document.getElementById('modal').classList.add('hidden'); }
+            reloadLevel() { this.loadLevel(this.currentLevelIdx); }
+            showHint() { 
+                // Ilumina terminales brevemente
+                document.querySelectorAll('.terminal').forEach(t => t.classList.add('highlight'));
+                setTimeout(() => document.querySelectorAll('.terminal').forEach(t => t.classList.remove('highlight')), 1500);
+            }
+            nextLevel() { alert("¡Felicidades! Instalación certificada."); } // Demo end
+            
+            playSound(type) {
+                if(!this.audioCtx) return;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.connect(gain); gain.connect(this.audioCtx.destination);
+                const t = this.audioCtx.currentTime;
+                
+                if(type==='click'){osc.frequency.setValueAtTime(600,t);gain.gain.exponentialRampToValueAtTime(0.01,t+0.1);osc.start(t);osc.stop(t+0.1);}
+                if(type==='clack'){osc.type='square';osc.frequency.setValueAtTime(150,t);gain.gain.exponentialRampToValueAtTime(0.01,t+0.1);osc.start(t);osc.stop(t+0.1);}
+                if(type==='clack_loud'){osc.type='sawtooth';osc.frequency.setValueAtTime(100,t);gain.gain.setValueAtTime(0.5,t);gain.gain.linearRampToValueAtTime(0,t+0.2);osc.start(t);osc.stop(t+0.2);}
+                if(type==='win'){osc.type='triangle';osc.frequency.setValueAtTime(523,t);osc.frequency.setValueAtTime(1046,t+0.3);gain.gain.linearRampToValueAtTime(0,t+0.6);osc.start(t);osc.stop(t+0.6);}
+                if(type==='buzz'){osc.type='sawtooth';osc.frequency.setValueAtTime(50,t);gain.gain.linearRampToValueAtTime(0,t+0.5);osc.start(t);osc.stop(t+0.5);}
+            }
+        }
+
+        const game = new GameManager();
+        window.addEventListener('resize', () => game.drawWires());
+    </script>
+</body>
+</html>
