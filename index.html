@@ -171,7 +171,7 @@
         
         /* MENU DE AYUDA */
         #help-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5000; display: none; justify-content: center; align-items: center; }
-        .help-card { background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 500px; }
+        .help-card { background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 500px; max-height: 80vh; overflow-y: auto; }
         .wiring-diagram { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
         .wiring-diagram h3 { margin-top: 0; color: #2d3436; }
         .wiring-step { display: flex; align-items: center; margin: 10px 0; }
@@ -180,6 +180,15 @@
         .wire-neutral { background: var(--wire-neutral); }
         .wire-earth { background: var(--wire-earth); }
         .wire-return { background: var(--wire-return); }
+        
+        .tester-instructions { margin: 20px 0; padding: 15px; background: #e8f4fd; border-radius: 8px; border: 1px solid #b3d9f7; }
+        .tester-instructions h3 { margin-top: 0; color: #2980b9; }
+        .instruction-step { display: flex; align-items: flex-start; margin: 15px 0; }
+        .step-number { background: #2980b9; color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; flex-shrink: 0; }
+        
+        .btn-help {
+            background: #9b59b6; border-color: #8e44ad; color: white;
+        }
     </style>
 </head>
 <body>
@@ -225,42 +234,88 @@
     <!-- MENU DE AYUDA -->
     <div id="help-modal">
         <div class="help-card">
-            <h1 style="color:#2f3640;">Ayuda - Esquema de Conexión</h1>
+            <h1 style="color:#2f3640;">Ayuda - Simulador Electricista</h1>
+            
+            <div class="tester-instructions">
+                <h3>📟 Cómo usar el Tester DT830D</h3>
+                
+                <div class="instruction-step">
+                    <div class="step-number">1</div>
+                    <div>Selecciona la herramienta <strong>"Tester DT830D"</strong> en la barra superior</div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">2</div>
+                    <div>
+                        <p><strong>Arrastra las puntas del tester</strong> a los puntos de conexión:</p>
+                        <ul style="text-align: left; margin: 5px 0;">
+                            <li><span style="color:#e74c3c;">● Punta Roja:</span> Para medir tensión o fase</li>
+                            <li><span style="color:#2d3436;">● Punta Negra:</span> Para conectar a neutro o tierra</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">3</div>
+                    <div>
+                        <p><strong>Suelta las puntas</strong> sobre los terminales para conectarlas</p>
+                        <p style="font-size: 0.9rem; color: #666; margin: 5px 0;">Las puntas se "pegarán" automáticamente a los terminales</p>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">4</div>
+                    <div>
+                        <p><strong>Lee la medición</strong> en la pantalla del tester:</p>
+                        <ul style="text-align: left; margin: 5px 0;">
+                            <li><strong>000:</strong> No hay tensión entre los puntos</li>
+                            <li><strong>220:</strong> Hay tensión de 220V entre los puntos</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="instruction-step">
+                    <div class="step-number">5</div>
+                    <div>
+                        <p><strong>Para desconectar:</strong> Arrastra las puntas fuera de los terminales</p>
+                    </div>
+                </div>
+            </div>
+            
             <div class="wiring-diagram">
-                <h3>Esquema de conexión correcta:</h3>
+                <h3>💡 Esquema de Conexión Correcta</h3>
                 
                 <div class="wiring-step">
                     <div class="wire-color wire-phase"></div>
-                    <div>Fase (L) - Color Rojo</div>
+                    <div><strong>Fase (L)</strong> - Color Rojo</div>
                 </div>
                 <div class="wiring-step">
                     <div class="wire-color wire-neutral"></div>
-                    <div>Neutro (N) - Color Azul</div>
+                    <div><strong>Neutro (N)</strong> - Color Azul</div>
                 </div>
                 <div class="wiring-step">
                     <div class="wire-color wire-earth"></div>
-                    <div>Tierra (T) - Color Verde</div>
+                    <div><strong>Tierra (T)</strong> - Color Verde</div>
                 </div>
                 <div class="wiring-step">
                     <div class="wire-color wire-return"></div>
-                    <div>Retorno - Color Gris</div>
+                    <div><strong>Retorno</strong> - Color Gris</div>
                 </div>
                 
-                <p><strong>Instrucciones:</strong></p>
+                <p><strong>Instrucciones de conexión:</strong></p>
                 <ol style="text-align: left;">
-                    <li>Conecta Fase (L) del tablero a entrada (L) de la tecla</li>
-                    <li>Conecta salida (1) de la tecla a retorno de la lámpara</li>
-                    <li>Conecta Neutro (N) del tablero a neutro de la lámpara</li>
-                    <li>Conecta Tierra (T) del tablero a tierra de la lámpara</li>
+                    <li>Conecta <strong>Fase (L)</strong> del tablero a entrada <strong>(L)</strong> de la tecla</li>
+                    <li>Conecta salida <strong>(1)</strong> de la tecla a <strong>retorno</strong> de la lámpara</li>
+                    <li>Conecta <strong>Neutro (N)</strong> del tablero a <strong>neutro</strong> de la lámpara</li>
+                    <li>Conecta <strong>Tierra (T)</strong> del tablero a <strong>tierra</strong> de la lámpara</li>
                 </ol>
                 
-                <p><strong>Herramientas:</strong></p>
-                <ul style="text-align: left;">
-                    <li><strong>Tester DT830D:</strong> Mide tensión entre dos puntos</li>
-                    <li><strong>Buscapolo:</strong> Detecta presencia de tensión en cables</li>
-                </ul>
+                <p style="margin-top: 15px; padding: 10px; background: #fff3cd; border-radius: 4px;">
+                    <strong>⚠️ Importante:</strong> Siempre corta la energía (interruptor OFF) antes de realizar conexiones
+                </p>
             </div>
-            <button onclick="document.getElementById('help-modal').style.display = 'none'" style="background:#2f3640; color:white; border:none; padding:10px 20px; border-radius:20px; font-size:1.1rem; cursor:pointer; margin-top: 15px;">Cerrar</button>
+            
+            <button onclick="document.getElementById('help-modal').style.display = 'none'" style="background:#2f3640; color:white; border:none; padding:10px 20px; border-radius:20px; font-size:1.1rem; cursor:pointer; margin-top: 15px;">Cerrar Ayuda</button>
         </div>
     </div>
 
@@ -284,7 +339,7 @@
             <button class="tool-btn" id="btn-neon" onclick="game.selectTool('neon')">
                 💡 Buscapolo
             </button>
-            <button class="tool-btn" onclick="document.getElementById('help-modal').style.display = 'flex'">
+            <button class="tool-btn btn-help" onclick="document.getElementById('help-modal').style.display = 'flex'">
                 ❓ Ayuda
             </button>
         </div>
@@ -415,6 +470,7 @@
                     this.moveProbe(this.probeRed, 200, 300);
                     this.moveProbe(this.probeBlack, 250, 300);
                     this.updateMultimeter();
+                    this.showToast("Arrastra las puntas del tester a los puntos de medición");
                 } else {
                     testerBody.style.display = 'none';
                     this.probeRed.el.style.display = 'none';
@@ -426,6 +482,9 @@
 
                 // Mostrar/Ocultar Buscapolo
                 this.uiNeon.style.display = t === 'neon' ? 'block' : 'none';
+                if(t === 'neon') {
+                    this.showToast("Mueve el buscapolo sobre cables para detectar tensión");
+                }
             }
 
             // --- LÓGICA ELÉCTRICA ---
