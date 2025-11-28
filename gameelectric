@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Juegos Eléctricos: Master Electrician</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --panel-bg: #ffffff;
+            --phase-color: #e74c3c;
+            --neutral-color: #3498db;
+            --wire-default: #7f8c8d;
+            --terminal-size: 18px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* --- PANTALLA DE INICIO --- */
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            z-index: 1000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white;
+            transition: opacity 0.5s;
+        }
+        #start-screen h1 { font-size: 2.5rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        #start-screen p { color: #bdc3c7; font-size: 1.1rem; margin-bottom: 40px; }
+        .logo-icon { font-size: 5rem; margin-bottom: 20px; animation: pulseLogo 2s infinite; }
+        
+        .btn-big {
+            font-size: 1.5rem; padding: 15px 50px;
+            background: #f1c40f; color: #2c3e50;
+            border: none; border-radius: 50px;
+            cursor: pointer; font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn-big:hover { transform: scale(1.05); background: #f39c12; }
+        .btn-big:active { transform: scale(0.95); }
+
+        @keyframes pulseLogo { 0% { transform: scale(1); text-shadow: 0 0 0px #f1c40f; } 50% { transform: scale(1.1); text-shadow: 0 0 20px #f1c40f; } 100% { transform: scale(1); } }
+
+        /* HEADER */
+        header {
+            background: var(--panel-bg);
+            padding: 10px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow); z-index: 10;
+        }
+        .header-left h1 { margin: 0; font-size: 1.1rem; color: #2c3e50; }
+        .header-left small { color: #7f8c8d; }
+        
+        .stats { display: flex; gap: 10px; align-items: center; }
+        .stat-badge { 
+            background: #ecf0f1; padding: 5px 8px; border-radius: 4px; font-size: 0.85rem; 
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .btn {
+            border: none; padding: 6px 12px; border-radius: 4px; 
+            cursor: pointer; font-weight: bold; color: white; font-size: 0.85rem;
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-help { background: #f39c12; }
+        .btn-reset { background: #c0392b; }
+        .btn-next { background: #2980b9; display: none; }
+
+        /* GAME BOARD */
+        #game-board {
+            position: relative; flex-grow: 1;
+            background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
+            background-size: 20px 20px; overflow: hidden;
+        }
+        #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+
+        /* COMPONENTES */
+        .component {
+            position: absolute; background: white;
+            border: 2px solid #95a5a6; border-radius: 6px;
+            box-shadow: var(--shadow); z-index: 2;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .component label { position: absolute; top: -20px; font-size: 10px; color: #555; font-weight: bold; width: 100%; text-align: center; }
+
+        /* ESTILOS ESPECÍFICOS COMPONENTES */
+        .comp-source { width: 70px; height: 140px; background: #34495e; color: white; border: none; }
+        .comp-lamp { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #bdc3c7; }
+        .bulb-glass { width: 100%; height: 100%; border-radius: 50%; background: #bdc3c7; transition: background 0.3s, box-shadow 0.3s; }
+        .bulb-glass.on { background: #f1c40f; box-shadow: 0 0 40px 10px rgba(241, 196, 15, 0.6); }
+        .comp-switch { width: 80px; height: 50px; }
+        .switch-lever { width: 40px; height: 20px; background: #e74c3c; border-radius: 10px; position: relative; cursor: pointer; }
+        .switch-lever.active { background: #2ecc71; }
+        .switch-knob { width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left 0.2s; }
+        .switch-lever.active .switch-knob { left: 22px; }
+        .comp-breaker { width: 60px; height: 90px; background: #ecf0f1; border: 2px solid #7f8c8d; }
+        .breaker-lever { width: 15px; height: 40px; background: #2c3e50; margin: 5px; cursor: pointer; position: relative; transition: transform 0.2s; border-radius: 3px; }
+        .breaker-lever.active { background: #27ae60; transform: scaleY(-1); }
+        .comp-breaker.tripped { border-color: red; animation: shake 0.5s; }
+
+        /* TERMINALES */
+        .terminal {
+            width: var(--terminal-size); height: var(--terminal-size);
+            background: #95a5a6; border: 2px solid #666; border-radius: 50%;
+            position: absolute; cursor: crosshair; z-index: 3; transition: transform 0.2s;
+        }
+        .terminal:hover, .terminal.highlight { transform: scale(1.3); background: #f39c12; border-color: white; }
+        .terminal[data-role="phase"] { background: var(--phase-color); }
+        .terminal[data-role="neutral"] { background: var(--neutral-color); }
+
+        /* CABLES SVG */
+        path.wire { fill: none; stroke-width: 5; stroke-linecap: round; cursor: pointer; transition: stroke 0.2s; }
+        path.wire:hover { stroke-width: 8; opacity: 0.7; }
+        path.wire.live { stroke: #f1c40f; stroke-opacity: 0.8; filter: drop-shadow(0 0 2px orange); }
+        path.wire.short { stroke: #c0392b !important; animation: shakeWire 0.1s infinite; }
+
+        /* MENSAJES */
+        #message-area {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.85); color: white;
+            font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.3s; text-align: center;
+            width: 80%; max-width: 400px;
+        }
+        
+        #modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        #modal h2 { color: #f1c40f; margin-bottom: 10px; }
+        #modal p { max-width: 500px; line-height: 1.5; margin-bottom: 20px; }
+        .hidden { display: none !important; }
+
+        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
+        @keyframes shakeWire { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA DE INICIO (NUEVO) -->
+    <div id="start-screen">
+        <div class="logo-icon">⚡</div>
+        <h1>Juegos Eléctricos</h1>
+        <p>Aprende a conectar circuitos reales</p>
+        <button class="btn-big" onclick="startGame()">Comenzar Juego</button>
+    </div>
+
+    <!-- MODAL INSTRUCCIONES NIVEL -->
+    <div id="modal" class="hidden">
+        <h2 id="modal-title">Nivel 1</h2>
+        <p id="modal-desc">Objetivo...</p>
+        <button class="btn btn-help" style="font-size:1.2rem; padding:10px 20px;" onclick="game.closeModal()">Entendido</button>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <h1 id="level-title">Nivel 1</h1>
+            <small id="level-objective">Conecta la lámpara</small>
+        </div>
+        <div class="stats">
+            <div class="stat-badge">⚡ <span id="status-text">OFF</span></div>
+            <button class="btn btn-help" onclick="game.showHint()" title="Ver pista">Pista</button>
+            <button class="btn btn-reset" onclick="game.reloadLevel()" title="Reiniciar nivel">⟳</button>
+            <button id="next-btn" class="btn btn-next" onclick="game.nextLevel()">Siguiente >></button>
+        </div>
+    </header>
+
+    <div id="game-board">
+        <svg id="wire-layer"></svg>
+        <div id="components-layer"></div>
+        <div id="message-area"></div>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE NIVELES (10 NIVELES)
+        const levels = [
+            { id: 1, title: "Conexión Básica", objective: "Haz que la bombilla encienda conectando Fase y Neutro.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'lamp', id: 'L1', x: 60, y: 40 }] },
+            { id: 2, title: "El Interruptor", objective: "Intercala el interruptor para controlar la luz.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 40, y: 70 }, { type: 'lamp', id: 'L1', x: 70, y: 30 }] },
+            { id: 3, title: "Circuito en Serie", objective: "Conecta dos lámparas en fila (una tras otra).", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 70 }, { type: 'lamp', id: 'L1', x: 55, y: 30 }, { type: 'lamp', id: 'L2', x: 80, y: 30 }] },
+            { id: 4, title: "Seguridad: Disyuntor", objective: "Protege el circuito pasando primero por el disyuntor.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 40 }] },
+            { id: 5, title: "Instalación Completa", objective: "Fuente → Disyuntor → Interruptor → Lámpara.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 25, y: 40 }, { type: 'switch', id: 'S1', x: 50, y: 70 }, { type: 'lamp', id: 'L1', x: 80, y: 30 }] },
+            { id: 6, title: "Circuito en Paralelo", objective: "Conecta dos lámparas para que brillen al máximo (caminos separados).", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 80 }, { type: 'lamp', id: 'L1', x: 60, y: 20 }, { type: 'lamp', id: 'L2', x: 60, y: 60 }] },
+            { id: 7, title: "Protección Paralela", objective: "Usa el disyuntor para proteger un circuito paralelo directo.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'lamp', id: 'L2', x: 70, y: 60 }] },
+            { id: 8, title: "Doble Control", objective: "Cada interruptor debe controlar su propia lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'switch', id: 'S1', x: 35, y: 20 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'switch', id: 'S2', x: 35, y: 80 }, { type: 'lamp', id: 'L2', x: 70, y: 80 }] },
+            { id: 9, title: "Sala de Estar", objective: "Disyuntor general y luego interruptor para dos luces.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 25, y: 50 }, { type: 'switch', id: 'S1', x: 50, y: 80 }, { type: 'lamp', id: 'L1', x: 80, y: 20 }, { type: 'lamp', id: 'L2', x: 80, y: 50 }] },
+            { id: 10, title: "Maestro Electricista", objective: "Complejo: Protege todo y conecta cada interruptor a su lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 20, y: 50 }, { type: 'switch', id: 'S1', x: 40, y: 20 }, { type: 'lamp', id: 'L1', x: 65, y: 20 }, { type: 'switch', id: 'S2', x: 40, y: 80 }, { type: 'lamp', id: 'L2', x: 65, y: 80 }, { type: 'lamp', id: 'L3', x: 90, y: 50 }] }
+        ];
+
+        const svgNS = "http://www.w3.org/2000/svg";
+
+        // FUNCIÓN GLOBAL INICIO
+        function startGame() {
+            const startScreen = document.getElementById('start-screen');
+            startScreen.style.opacity = '0';
+            setTimeout(() => {
+                startScreen.classList.add('hidden');
+                // Inicializar Audio Context ahora que tenemos interacción
+                if(game.audioCtx) game.audioCtx.resume();
+                // Mostrar instrucciones nivel 1
+                document.getElementById('modal').classList.remove('hidden');
+            }, 500);
+        }
+
+        class GameManager {
+            constructor() {
+                this.wires = [];
+                this.components = {};
+                this.currentLevelIdx = 0;
+                this.svgLayer = document.getElementById('wire-layer');
+                this.compLayer = document.getElementById('components-layer');
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                this.dragState = { active: false, startId: null, tempPath: null };
+                
+                this.initInput();
+                this.loadLevel(0);
+            }
+
+            loadLevel(idx) {
+                this.currentLevelIdx = idx;
+                const lvl = levels[idx];
+                
+                document.getElementById('level-title').textContent = lvl.title;
+                document.getElementById('level-objective').textContent = lvl.objective;
+                document.getElementById('modal-title').textContent = lvl.title;
+                document.getElementById('modal-desc').textContent = lvl.objective;
+                document.getElementById('next-btn').style.display = 'none';
+                
+                this.wires = [];
+                this.svgLayer.innerHTML = ''; 
+                this.compLayer.innerHTML = '';
+                this.components = {};
+
+                lvl.comps.forEach(c => this.createComponent(c));
+                
+                // Mostrar modal (salvo que sea el inicio absoluto que se gestiona en startGame)
+                if(document.getElementById('start-screen').classList.contains('hidden')) {
+                    document.getElementById('modal').classList.remove('hidden');
+                }
+
+                this.checkCircuit();
+            }
+
+            createComponent(data) {
+                const el = document.createElement('div');
+                el.className = `component comp-${data.type}`;
+                el.style.left = data.x + '%';
+                el.style.top = data.y + '%';
+                
+                let html = '';
+                if(data.type === 'source') {
+                    html = `<div style="margin-top:20px; font-weight:bold;">220V</div>
+                            <div class="terminal" id="t-phase" data-role="phase" style="top:50px; right:-9px;"></div>
+                            <div class="terminal" id="t-neutral" data-role="neutral" style="top:100px; right:-9px;"></div>
+                            <span style="position:absolute; top:52px; right:12px; font-size:10px;">L</span>
+                            <span style="position:absolute; top:102px; right:12px; font-size:10px;">N</span>`;
+                } else if (data.type === 'lamp') {
+                    html = `<div class="bulb-glass" id="bulb-${data.id}"></div>
+                            <div class="terminal" id="t-${data.id}-1" style="bottom:5px; left:-9px;"></div>
+                            <div class="terminal" id="t-${data.id}-2" style="bottom:5px; right:-9px;"></div>`;
+                    this.components[data.id] = { type: 'lamp' };
+                } else if (data.type === 'switch') {
+                    html = `<label>${data.id}</label>
+                            <div class="switch-lever" id="sw-${data.id}" onclick="game.toggleSwitch('${data.id}')">
+                                <div class="switch-knob"></div>
+                            </div>
+                            <div class="terminal" id="t-${data.id}-1" style="top:20px; left:-9px;"></div>
+                            <div class="terminal" id="t-${data.id}-2" style="top:20px; right:-9px;"></div>`;
+                    this.components[data.id] = { type: 'switch', state: false };
+                } else if (data.type === 'breaker') {
+                    html = `<label>Disyuntor</label>
+                            <div class="breaker-lever active" id="bk-${data.id}" onclick="game.toggleBreaker('${data.id}')"></div>
+                            <div class="terminal" id="t-${data.id}-1" style="top:10px; left:-9px;"></div>
+                            <div class="terminal" id="t-${data.id}-2" style="top:10px; right:-9px;"></div>
+                            <div class="terminal" id="t-${data.id}-3" style="bottom:10px; left:-9px;"></div>
+                            <div class="terminal" id="t-${data.id}-4" style="bottom:10px; right:-9px;"></div>`;
+                    this.components[data.id] = { type: 'breaker', state: true };
+                }
+                el.innerHTML = html;
+                this.compLayer.appendChild(el);
+            }
+
+            initInput() {
+                this.compLayer.addEventListener('pointerdown', (e) => {
+                    if(e.target.classList.contains('terminal')) {
+                        e.stopPropagation(); e.target.releasePointerCapture(e.pointerId);
+                        this.startDrag(e, e.target.id);
+                    }
+                });
+                document.addEventListener('pointermove', (e) => { if(this.dragState.active) this.updateDrag(e); });
+                document.addEventListener('pointerup', (e) => { if(this.dragState.active) this.endDrag(e); });
+            }
+
+            startDrag(e, id) {
+                this.dragState.active = true; this.dragState.startId = id;
+                const path = document.createElementNS(svgNS, "path");
+                path.setAttribute("stroke", "#7f8c8d"); path.setAttribute("stroke-width", "4");
+                path.setAttribute("fill", "none"); path.setAttribute("stroke-dasharray", "5,5");
+                this.svgLayer.appendChild(path);
+                this.dragState.tempPath = path;
+                const el = document.getElementById(id);
+                if(el.dataset.role === 'phase') path.setAttribute("stroke", "var(--phase-color)");
+                if(el.dataset.role === 'neutral') path.setAttribute("stroke", "var(--neutral-color)");
+            }
+
+            updateDrag(e) {
+                const r1 = document.getElementById(this.dragState.startId).getBoundingClientRect();
+                const board = document.getElementById('game-board').getBoundingClientRect();
+                const x1 = r1.left+r1.width/2-board.left; const y1 = r1.top+r1.height/2-board.top;
+                const x2 = e.clientX-board.left; const y2 = e.clientY-board.top;
+                this.dragState.tempPath.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
+            }
+
+            endDrag(e) {
+                this.dragState.active = false; this.dragState.tempPath.remove();
+                const el = document.elementFromPoint(e.clientX, e.clientY);
+                if(el && el.classList.contains('terminal') && el.id !== this.dragState.startId) {
+                    this.connect(this.dragState.startId, el.id);
+                }
+            }
+
+            connect(idA, idB) {
+                if(this.wires.some(w => (w.u === idA && w.v === idB) || (w.u === idB && w.v === idA))) return;
+                const path = document.createElementNS(svgNS, "path");
+                path.classList.add('wire');
+                const tA = document.getElementById(idA);
+                let color = "#555";
+                if(tA.dataset.role === 'phase') color = "var(--phase-color)";
+                else if(tA.dataset.role === 'neutral') color = "var(--neutral-color)";
+                path.setAttribute("stroke", color);
+                this.svgLayer.appendChild(path);
+                const wire = { u: idA, v: idB, el: path };
+                path.addEventListener('dblclick', () => {
+                    path.remove(); this.wires = this.wires.filter(w => w !== wire);
+                    this.checkCircuit(); this.playSound('cut');
+                });
+                this.wires.push(wire);
+                this.drawWires(); this.playSound('click'); this.checkCircuit();
+            }
+
+            drawWires() {
+                const board = document.getElementById('game-board').getBoundingClientRect();
+                this.wires.forEach(w => {
+                    const r1 = document.getElementById(w.u).getBoundingClientRect();
+                    const r2 = document.getElementById(w.v).getBoundingClientRect();
+                    const x1 = r1.left+r1.width/2-board.left; const y1 = r1.top+r1.height/2-board.top;
+                    const x2 = r2.left+r2.width/2-board.left; const y2 = r2.top+r2.height/2-board.top;
+                    const drop = Math.abs(x2 - x1) * 0.2 + 30;
+                    w.el.setAttribute("d", `M ${x1} ${y1} C ${x1} ${y1+drop}, ${x2} ${y2+drop}, ${x2} ${y2}`);
+                });
+            }
+
+            toggleSwitch(id) {
+                const comp = this.components[id];
+                comp.state = !comp.state;
+                const lever = document.getElementById(`sw-${id}`);
+                if(comp.state) lever.classList.add('active'); else lever.classList.remove('active');
+                this.playSound('click'); this.checkCircuit();
+            }
+
+            toggleBreaker(id) {
+                const comp = this.components[id];
+                comp.state = !comp.state;
+                const el = document.getElementById(`bk-${id}`);
+                if(comp.state) { el.classList.add('active'); el.parentElement.classList.remove('tripped'); }
+                else el.classList.remove('active');
+                this.playSound('clack'); this.checkCircuit();
+            }
+
+            checkCircuit() {
+                this.wires.forEach(w => { w.el.classList.remove('live'); w.el.classList.remove('short'); });
+                Object.keys(this.components).forEach(k => { if(this.components[k].type==='lamp') document.getElementById(`bulb-${k}`).classList.remove('on'); });
+
+                const adj = {};
+                const addEdge = (a,b) => { if(!adj[a]) adj[a]=[]; if(!adj[b]) adj[b]=[]; adj[a].push(b); adj[b].push(a); };
+                this.wires.forEach(w => addEdge(w.u, w.v));
+
+                Object.keys(this.components).forEach(id => {
+                    const c = this.components[id];
+                    if(c.type === 'switch' && c.state) addEdge(`t-${id}-1`, `t-${id}-2`);
+                    if(c.type === 'breaker' && c.state) { addEdge(`t-${id}-1`, `t-${id}-3`); addEdge(`t-${id}-2`, `t-${id}-4`); }
+                    if(c.type === 'lamp') addEdge(`t-${id}-1`, `t-${id}-2`);
+                });
+
+                const findPath = (start, end, avoidLamps) => {
+                    if(!adj[start]) return false;
+                    let Q = [start], visited = new Set([start]);
+                    while(Q.length) {
+                        let u = Q.shift();
+                        if(u === end) return true;
+                        if(adj[u]) for(let v of adj[u]) {
+                            if(avoidLamps && u.includes('L') && v.includes('L') && u.split('-')[1]===v.split('-')[1]) continue;
+                            if(!visited.has(v)) { visited.add(v); Q.push(v); }
+                        }
+                    } return false;
+                };
+
+                // Detectar Cortocircuito (sin pasar por resistencia de lámparas)
+                if(findPath('t-phase', 't-neutral', true)) {
+                    const bk = Object.keys(this.components).find(k => this.components[k].type === 'breaker' && this.components[k].state);
+                    if(bk) {
+                        this.components[bk].state = false;
+                        document.getElementById(`bk-${bk}`).classList.remove('active');
+                        document.getElementById(`bk-${bk}`).parentElement.classList.add('tripped');
+                        this.playSound('clack_loud'); this.showMessage("¡El disyuntor saltó!");
+                        return; // Recalcular en siguiente ciclo o parar
+                    }
+                    this.wires.forEach(w => w.el.classList.add('short'));
+                    document.getElementById('status-text').textContent = "CORTOCIRCUITO";
+                    document.getElementById('status-text').style.color = "red";
+                    this.playSound('buzz'); return;
+                }
+
+                let lampsOn = 0, totalLamps = 0;
+                Object.keys(this.components).forEach(id => {
+                    if(this.components[id].type === 'lamp') {
+                        totalLamps++;
+                        const p1 = `t-${id}-1`, p2 = `t-${id}-2`;
+                        const p1_L = findPath('t-phase', p1), p2_N = findPath('t-neutral', p2);
+                        const p1_N = findPath('t-neutral', p1), p2_L = findPath('t-phase', p2);
+                        if((p1_L && p2_N) || (p1_N && p2_L)) {
+                            document.getElementById(`bulb-${id}`).classList.add('on');
+                            lampsOn++;
+                        }
+                    }
+                });
+
+                if(lampsOn > 0 && lampsOn === totalLamps) {
+                    document.getElementById('status-text').textContent = "OK";
+                    document.getElementById('status-text').style.color = "green";
+                    if(document.getElementById('next-btn').style.display === 'none') {
+                        this.playSound('win');
+                        document.getElementById('next-btn').style.display = 'inline-block';
+                        this.showMessage("¡Nivel completado!");
+                        this.wires.forEach(w => w.el.classList.add('live'));
+                    }
+                } else {
+                    document.getElementById('status-text').textContent = "OFF";
+                    document.getElementById('status-text').style.color = "#555";
+                    document.getElementById('next-btn').style.display = 'none';
+                }
+            }
+
+            nextLevel() {
+                if(this.currentLevelIdx < levels.length - 1) this.loadLevel(this.currentLevelIdx + 1);
+                else this.showMessage("¡Has terminado el juego!");
+            }
+            reloadLevel() { this.loadLevel(this.currentLevelIdx); }
+            showHint() { document.querySelectorAll('.terminal').forEach(t => t.classList.add('highlight')); setTimeout(() => document.querySelectorAll('.terminal').forEach(t => t.classList.remove('highlight')), 2000); }
+            showMessage(msg) { const el = document.getElementById('message-area'); el.textContent = msg; el.style.opacity = 1; setTimeout(() => el.style.opacity = 0, 3000); }
+            closeModal() { document.getElementById('modal').classList.add('hidden'); if(this.audioCtx) this.audioCtx.resume(); }
+            
+            playSound(type) {
+                if(!this.audioCtx) return;
+                const osc = this.audioCtx.createOscillator();
+                const gain = this.audioCtx.createGain();
+                osc.connect(gain); gain.connect(this.audioCtx.destination);
+                const t = this.audioCtx.currentTime;
+                if(type === 'click') { osc.frequency.setValueAtTime(200,t); gain.gain.linearRampToValueAtTime(0,t+0.1); osc.start(t); osc.stop(t+0.1); }
+                else if(type === 'clack') { osc.type='square'; osc.frequency.setValueAtTime(100,t); gain.gain.exponentialRampToValueAtTime(0.01,t+0.1); osc.start(t); osc.stop(t+0.1); }
+                else if(type === 'clack_loud') { osc.type='sawtooth'; osc.frequency.setValueAtTime(80,t); gain.gain.setValueAtTime(0.3,t); gain.gain.linearRampToValueAtTime(0,t+0.2); osc.start(t); osc.stop(t+0.2); }
+                else if(type === 'win') { osc.type='triangle'; osc.frequency.setValueAtTime(440,t); osc.frequency.setValueAtTime(880,t+0.2); gain.gain.linearRampToValueAtTime(0,t+0.4); osc.start(t); osc.stop(t+0.4); }
+                else if(type === 'buzz') { osc.type='sawtooth'; osc.frequency.setValueAtTime(50,t); gain.gain.linearRampToValueAtTime(0,t+0.5); osc.start(t); osc.stop(t+0.5); }
+            }
+        }
+
+        const game = new GameManager();
+        window.addEventListener('resize', () => game.drawWires());
+    </script>
+</body>
+</html>
