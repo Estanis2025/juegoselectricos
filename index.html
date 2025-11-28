@@ -3,657 +3,630 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Simulador Electricista: Niveles y Tester</title>
+    <title>Simulador Electricista: Master Tools</title>
     <style>
         :root {
-            --bg-color: #2f3542;
-            --wire-phase: #e74c3c;   /* Rojo */
-            --wire-neutral: #3498db; /* Azul */
-            --wire-earth: #2ecc71;   /* Verde */
-            --wire-return: #95a5a6;  /* Gris */
-            --shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            --bg-color: #dcdde1;
+            --panel-bg: #2f3640;
+            --wire-phase: #c0392b;
+            --wire-neutral: #2980b9;
+            --wire-earth: #27ae60;
+            --wire-return: #2c3e50;
+            --bad-wire: #e17055;
+            --neon-glow: #ff9f43;
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
             margin: 0; overflow: hidden; touch-action: none;
             display: flex; flex-direction: column; height: 100vh; user-select: none;
-            color: white;
         }
 
-        /* HEADER & UI */
+        /* HEADER */
         header {
-            background: rgba(0,0,0,0.4); padding: 10px 20px;
+            background: var(--panel-bg); color: white; padding: 10px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid #555; z-index: 50;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); z-index: 20;
         }
 
-        .level-badge {
-            background: #f1c40f; color: #222; padding: 5px 15px; border-radius: 20px;
-            font-weight: bold; margin-right: 15px; display: inline-block;
+        .level-info {
+            background: #f1c40f; color: #2d3436; padding: 5px 12px;
+            border-radius: 4px; font-weight: bold; font-size: 0.9rem;
+            display: flex; flex-direction: column; align-items: center; line-height: 1.1;
         }
 
-        .toolbar { display: flex; gap: 10px; }
-        
+        .toolbar {
+            display: flex; gap: 8px; background: rgba(255,255,255,0.1);
+            padding: 5px; border-radius: 6px;
+        }
+
         .tool-btn {
-            background: #57606f; border: 1px solid #747d8c; color: white;
-            padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; gap: 5px;
+            background: #353b48; border: 1px solid #718093; color: #dcdde1;
+            padding: 8px 12px; border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s; font-size: 0.85rem;
         }
-        .tool-btn:hover { background: #747d8c; }
-        .tool-btn.active { background: #0984e3; border-color: #74b9ff; box-shadow: 0 0 10px #0984e3; }
+        .tool-btn:hover { background: #718093; }
+        .tool-btn.active { 
+            background: #00a8ff; border-color: #0097e6; color: white; font-weight: bold; 
+            box-shadow: 0 0 8px #00a8ff;
+        }
 
-        .btn-action { background: #2ed573; border: none; color: #2f3542; font-weight: bold; }
-        .btn-reset { background: #ff4757; color: white; }
+        .btn-full-reset {
+            background: #c23616; color: white; border: none; padding: 8px 12px;
+            border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 0.8rem;
+        }
+        .btn-full-reset:hover { background: #e84118; }
 
         /* TABLERO */
         #game-board {
             position: relative; flex-grow: 1;
-            background-image: radial-gradient(#57606f 1px, transparent 1px);
+            background-image: radial-gradient(#7f8fa6 1px, transparent 1px);
             background-size: 20px 20px;
+            cursor: default;
         }
+        #game-board[data-tool="hand"] { cursor: default; }
+        #game-board[data-tool="multimeter"] { cursor: none; } /* Ocultamos cursor para mostrar herramienta */
+        #game-board[data-tool="neon"] { cursor: none; }
+
         #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 
-        /* CURSORES */
-        #game-board[data-tool="hand"] { cursor: default; }
-        #game-board[data-tool="tester"] { cursor: crosshair; }
-
-        /* TESTER FLOTANTE */
+        /* --- HERRAMIENTAS FLOTANTES MEJORADAS --- */
+        
+        /* 1. Multímetro */
         #multimeter {
-            position: absolute; width: 140px; background: #f39c12;
-            border: 4px solid #2d3436; border-radius: 10px; padding: 10px;
-            box-shadow: 10px 10px 30px rgba(0,0,0,0.5);
-            display: none; z-index: 100; pointer-events: none; top: 60px; left: 20px;
+            position: absolute; width: 140px; background: #e1b12c;
+            border: 4px solid #2f3640; border-radius: 8px; padding: 8px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.4);
+            display: none; z-index: 100; pointer-events: none;
+            transform: translate(10px, 10px); /* Offset visual */
         }
-        .lcd {
-            background: #95a5a6; color: #2d3436; font-family: 'Courier New', monospace;
-            font-size: 1.8rem; text-align: right; padding: 5px; border: 2px inset #7f8c8d;
-            border-radius: 4px; font-weight: bold; margin-bottom: 5px;
+        .lcd-screen {
+            background: #95a5a6; color: #2d3436;
+            font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.4rem;
+            padding: 8px; border: 2px inset #7f8c8d; border-radius: 2px;
+            text-align: right; margin-bottom: 5px; 
         }
-        .lcd.hot { background: #ff6b6b; color: #fff; } /* Tensión detectada */
-        .lcd.cold { background: #1dd1a1; color: #2d3436; } /* Sin tensión */
+        .lcd-screen.active { background: #badc58; color: #000; } /* Pantalla encendida midiendo */
+        .lcd-screen.error { background: #ff7979; color: #fff; } /* Error */
+        
+        .probe-tip {
+            position: absolute; top: -10px; left: -10px; width: 0; height: 0;
+            border-left: 5px solid transparent; border-right: 5px solid transparent;
+            border-bottom: 10px solid red; /* Punta roja virtual */
+        }
 
-        /* COMPONENTES GENERALES */
+        /* 2. Buscapolo */
+        #neon-pen {
+            position: absolute; width: 12px; height: 60px;
+            background: linear-gradient(to right, #2f3640 40%, #7f8fa6 100%); 
+            border: 1px solid #555; border-radius: 2px;
+            display: none; pointer-events: none; z-index: 100;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            /* El transform-origin y translate ajustan para que la punta sea el cursor */
+            transform: translate(-6px, -60px); 
+        }
+        /* Punta metálica */
+        #neon-pen::after {
+            content: ''; position: absolute; bottom: -15px; left: 3px;
+            width: 6px; height: 15px; background: silver;
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+        /* Luz interna */
+        #neon-light {
+            width: 8px; height: 20px; margin: 5px auto; background: #444; border-radius: 2px;
+            transition: 0.1s;
+        }
+        #neon-pen.active #neon-light {
+            background: var(--neon-glow);
+            box-shadow: 0 0 15px var(--neon-glow), inset 0 0 8px orangered;
+            animation: flicker 0.1s infinite alternate;
+        }
+        @keyframes flicker { from { opacity: 0.8; } to { opacity: 1; } }
+
+        /* COMPONENTES */
         .component {
-            position: absolute; background: #dfe4ea; border-radius: 4px;
-            box-shadow: var(--shadow); z-index: 2; color: #333;
+            position: absolute; background: white; border: 1px solid #718093;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.1); z-index: 2; border-radius: 4px;
             display: flex; flex-direction: column; align-items: center;
         }
-        
-        /* 1. Tablero Principal */
-        .comp-source { width: 100px; height: 140px; background: #2f3542; border: 2px solid #57606f; }
-        .breaker-main {
-            width: 50px; height: 30px; background: #ff4757; margin: 10px; border-radius: 3px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.7rem; color: white;
+        .comp-board { width: 110px; height: 150px; background: #2f3640; color: white; left: 5%; top: 15%; }
+        .breaker {
+            width: 50px; height: 30px; background: #c23616; margin: 15px; border-radius: 4px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem;
             box-shadow: inset 0 -3px rgba(0,0,0,0.3);
         }
-        .breaker-main.on { background: #2ed573; transform: translateY(2px); box-shadow: inset 0 2px rgba(0,0,0,0.3); }
+        .breaker.on { background: #44bd32; transform: translateY(2px); box-shadow: inset 0 2px rgba(0,0,0,0.3); }
 
-        /* 2. Disyuntor (Diferencial) */
-        .comp-disyuntor { width: 80px; height: 120px; background: #f1f2f6; border: 2px solid #ced6e0; }
-        .lever-dif { 
-            width: 40px; height: 25px; background: #3742fa; margin-top: 15px; border-radius: 3px; cursor: pointer; color: white; text-align: center; line-height: 25px; font-size: 0.7rem;
-        }
-        .lever-dif.on { background: #2ed573; }
+        .comp-switch { width: 70px; height: 90px; left: 40%; top: 60%; background: #f5f6fa; }
+        .rocker { width: 30px; height: 50px; background: white; border: 1px solid #b2bec3; margin-top: 10px; cursor: pointer; }
+        .rocker.active { border-left: 5px solid #b2bec3; background: #dcdde1; }
 
-        /* 3. Tecla / Interruptor */
-        .comp-switch { width: 60px; height: 90px; background: #fff; }
-        .rocker { width: 30px; height: 50px; border: 1px solid #ccc; margin-top: 10px; cursor: pointer; background: #f1f2f6; }
-        .rocker.active { background: #dfe4ea; border-left: 4px solid #ccc; }
+        .comp-lamp { width: 80px; height: 80px; border-radius: 50%; left: 70%; top: 30%; border: 4px solid #b2bec3; }
+        .bulb { width: 100%; height: 100%; border-radius: 50%; background: #b2bec3; opacity: 0.4; transition: 0.2s; }
+        .bulb.on { background: #f1c40f; opacity: 1; box-shadow: 0 0 60px #f1c40f; }
 
-        /* 4. Lámpara */
-        .comp-lamp { width: 80px; height: 80px; border-radius: 50%; background: #dfe4ea; border: 3px solid #ccc; }
-        .bulb { width: 100%; height: 100%; border-radius: 50%; background: #bdc3c7; opacity: 0.3; transition: 0.3s; }
-        .bulb.on { background: #f1c40f; opacity: 1; box-shadow: 0 0 50px #f1c40f; }
-
-        /* 5. Enchufe (Tomacorriente) */
-        .comp-outlet { width: 60px; height: 80px; background: #fff; border-radius: 5px; }
-        .outlet-face { 
-            width: 40px; height: 40px; background: #f1f2f6; border-radius: 50%; margin-top: 10px; position: relative; border: 1px solid #ccc;
-        }
-        /* Agujeros */
-        .outlet-face::before { content:''; position:absolute; top:12px; left:8px; width:4px; height:10px; background:#333; }
-        .outlet-face::after { content:''; position:absolute; top:12px; right:8px; width:4px; height:10px; background:#333; }
-        .outlet-earth { position:absolute; bottom:5px; left:18px; width:4px; height:4px; background:#333; border-radius:50%; }
-        
-        .outlet-led { 
-            width: 8px; height: 8px; background: #555; border-radius: 50%; margin-top: 5px; 
-        }
-        .outlet-led.on { background: #2ed573; box-shadow: 0 0 10px #2ed573; }
-
-        /* TERMINALES */
         .terminal {
-            width: 18px; height: 18px; background: #bdc3c7; border: 2px solid #57606f; border-radius: 50%;
-            position: absolute; cursor: pointer; z-index: 10; transition: 0.2s;
+            width: 14px; height: 14px; background: #dcdde1; border: 2px solid #2f3640; border-radius: 50%;
+            position: absolute; cursor: crosshair; z-index: 10;
         }
-        .terminal:hover { background: #ffa502; transform: scale(1.3); }
-        .lbl { position: absolute; font-size: 9px; font-weight: bold; pointer-events: none; }
-        .lbl-w { color: white; } .lbl-b { color: #333; }
+        .terminal:hover { background: #f1c40f; transform: scale(1.3); }
+        .term-lbl { position: absolute; font-size: 9px; font-weight: bold; color: #2f3640; pointer-events: none; }
 
         /* CABLES */
         path.wire { fill: none; stroke-width: 5; stroke-linecap: round; cursor: pointer; opacity: 0.9; }
-        path.wire:hover { stroke-width: 8; opacity: 1; }
+        path.wire:hover { stroke-width: 9; }
+        path.wire.exposed-bad { stroke: var(--bad-wire) !important; stroke-dasharray: 5,5; opacity: 0.8; }
 
-        /* MENSAJES */
+        /* ALERTA TOAST */
         #toast {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: #2f3542; color: white; padding: 10px 20px; border-radius: 30px;
-            font-weight: bold; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 2000;
-            border: 1px solid #57606f;
+            background: #2f3640; color: white; padding: 10px 25px; border-radius: 30px;
+            font-weight: bold; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 3000;
         }
-        
+
+        /* MODAL VICTORIA */
         #win-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 5000; display: none;
             justify-content: center; align-items: center;
         }
-        .win-card {
-            background: white; color: #333; padding: 30px; border-radius: 10px; text-align: center;
-            max-width: 400px;
-        }
+        .win-card { background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 350px; }
     </style>
 </head>
 <body>
 
-    <!-- TESTER FLOTANTE -->
+    <!-- HERRAMIENTAS FLOTANTES -->
     <div id="multimeter">
-        <div class="lcd" id="tester-lcd">000</div>
-        <div style="font-size:0.7rem; text-align:center; color:#222; font-weight:bold;">AC 750V</div>
+        <div class="probe-tip"></div>
+        <div class="lcd-screen" id="multi-lcd">---</div>
+        <div style="font-size:0.7rem; text-align:center; color:#2f3640; font-weight:bold; border-top:1px solid #666; padding-top:4px;" id="multi-mode">
+            CONTINUIDAD
+        </div>
+        <div style="font-size:0.6rem; text-align:center; color:#666; margin-top:2px;">(Mantén click para medir)</div>
+    </div>
+
+    <div id="neon-pen">
+        <div id="neon-light"></div>
     </div>
 
     <!-- MODAL VICTORIA -->
     <div id="win-modal">
         <div class="win-card">
-            <h1 style="color:#2ed573;">¡Circuito Correcto!</h1>
-            <p id="win-msg">Has completado el nivel.</p>
-            <button class="tool-btn btn-action" onclick="game.nextLevel()" style="width:100%; justify-content:center; margin-top:15px;">Siguiente Nivel ➡</button>
+            <h1 style="color:#27ae60;">¡Funciona!</h1>
+            <p>Conexión segura y correcta.</p>
+            <button onclick="game.nextLevel()" style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:20px; font-size:1.1rem; cursor:pointer;">Siguiente Nivel ➡</button>
         </div>
     </div>
 
     <header>
-        <div>
-            <div style="font-size:1.2rem; font-weight:bold;">Simulador Pro</div>
-            <div id="level-display" class="level-badge">Nivel 1</div>
+        <div class="level-info">
+            <span style="font-size:1.2rem;">NIVEL <span id="lvl-num">1</span></span>
+            <span style="font-weight:normal; font-size:0.75rem;" id="lvl-desc">Cables Nuevos (0% Fallas)</span>
         </div>
         
         <div class="toolbar">
-            <button class="tool-btn active" onclick="game.setTool('hand')" id="btn-hand">
-                🖐 Mano (Conectar/Borrar)
+            <button class="tool-btn active" id="btn-hand" onclick="game.selectTool('hand')" title="Conectar / Desconectar">
+                🖐 Mano
             </button>
-            <button class="tool-btn" onclick="game.setTool('tester')" id="btn-tester">
+            <button class="tool-btn" id="btn-multi" onclick="game.selectTool('multimeter')" title="Mide Voltaje o Continuidad">
                 📟 Tester
+            </button>
+            <button class="tool-btn" id="btn-neon" onclick="game.selectTool('neon')" title="Detecta Fase">
+                💡 Buscapolo
             </button>
         </div>
 
-        <button class="tool-btn btn-reset" onclick="game.resetLevel()">Reiniciar Nivel</button>
+        <div style="display:flex; gap:10px;">
+            <button style="background:#7f8fa6; color:white; border:none; padding:8px; border-radius:4px; cursor:pointer;" onclick="game.resetLevel()">
+                Reset Nivel
+            </button>
+            <button class="btn-full-reset" onclick="game.fullReset()">
+                REINICIAR JUEGO
+            </button>
+        </div>
     </header>
 
     <div id="game-board" data-tool="hand">
         <svg id="wire-layer"></svg>
-        <div id="components-layer"></div> <!-- Los componentes se generan por JS -->
+
+        <!-- COMPONENTES -->
+        <div class="component comp-board">
+            <div style="text-align:center; padding:10px; font-weight:bold;">TABLERO</div>
+            <div id="breaker" class="breaker" onclick="game.togglePower()">OFF</div>
+            
+            <div style="position:relative; height:100px;">
+                <span class="term-lbl" style="top:12px; right:25px; color:#fff;">L</span>
+                <div class="terminal" id="t-src-L" style="top:10px; right:-7px; background:#c0392b;"></div>
+                <span class="term-lbl" style="top:42px; right:25px; color:#fff;">N</span>
+                <div class="terminal" id="t-src-N" style="top:40px; right:-7px; background:#2980b9;"></div>
+                <span class="term-lbl" style="top:72px; right:25px; color:#fff;">T</span>
+                <div class="terminal" id="t-src-E" style="top:70px; right:-7px; background:#27ae60;"></div>
+            </div>
+        </div>
+
+        <div class="component comp-switch">
+            <div style="margin-top:5px; font-weight:bold; font-size:0.8rem;">TECLA</div>
+            <div class="terminal" id="t-sw-in" style="top:25px; left:-7px;"></div>
+            <span class="term-lbl" style="top:27px; left:12px;">L</span>
+            <div class="terminal" id="t-sw-out" style="top:65px; right:-7px;"></div>
+            <span class="term-lbl" style="top:67px; right:12px;">1</span>
+            <div class="rocker" id="sw-rocker" onclick="game.toggleSwitch()"></div>
+        </div>
+
+        <div class="component comp-lamp">
+            <div class="bulb" id="bulb"></div>
+            <div class="terminal" id="t-lmp-L" style="bottom:-7px; left:10px;"></div>
+            <span class="term-lbl" style="bottom:10px; left:18px;">Ret</span>
+            <div class="terminal" id="t-lmp-N" style="bottom:-7px; right:10px;"></div>
+            <span class="term-lbl" style="bottom:10px; right:18px;">Neu</span>
+            <div class="terminal" id="t-lmp-E" style="top:-7px; left:32px; background:#27ae60;"></div>
+        </div>
+        
         <div id="toast"></div>
     </div>
 
     <script>
         const svgNS = "http://www.w3.org/2000/svg";
 
-        // CONFIGURACIÓN DE NIVELES
-        const levels = [
-            {
-                id: 1, name: "Básico",
-                comps: [
-                    { type: 'source', x: 5, y: 10 },
-                    { type: 'switch', id: 'S1', x: 40, y: 60 },
-                    { type: 'lamp', id: 'L1', x: 70, y: 30 }
-                ]
-            },
-            {
-                id: 2, name: "Conexión en Serie",
-                comps: [
-                    { type: 'source', x: 5, y: 10 },
-                    { type: 'switch', id: 'S1', x: 30, y: 60 },
-                    { type: 'lamp', id: 'L1', x: 60, y: 30 },
-                    { type: 'lamp', id: 'L2', x: 80, y: 30 }
-                ]
-            },
-            {
-                id: 3, name: "Instalación Completa",
-                comps: [
-                    { type: 'source', x: 5, y: 10 },
-                    { type: 'disyuntor', id: 'D1', x: 25, y: 10 },
-                    { type: 'outlet', id: 'T1', x: 25, y: 60 },
-                    { type: 'switch', id: 'S1', x: 50, y: 60 },
-                    { type: 'lamp', id: 'L1', x: 80, y: 30 }
-                ]
-            }
-        ];
-
         class Simulator {
             constructor() {
+                this.level = 1;
                 this.wires = [];
-                this.levelIdx = 0;
+                this.powerOn = false;
+                this.switchOn = false;
                 this.tool = 'hand';
-                this.dragStart = null;
-                
-                // Estado Componentes
-                this.breakerOn = false;
-                this.switches = {};
-                this.disyuntores = {};
+                this.drag = null;
+                this.isMeasuring = false; // Para el tester
 
-                // DOM
-                this.board = document.getElementById('game-board');
                 this.svg = document.getElementById('wire-layer');
-                this.compLayer = document.getElementById('components-layer');
+                this.board = document.getElementById('game-board');
                 
-                // Tester
-                this.tester = document.getElementById('multimeter');
-                this.lcd = document.getElementById('tester-lcd');
+                // UI Elements
+                this.uiMulti = document.getElementById('multimeter');
+                this.uiLcd = document.getElementById('multi-lcd');
+                this.uiMode = document.getElementById('multi-mode');
+                this.uiNeon = document.getElementById('neon-pen');
+
+                // Audio
+                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
                 this.initInteraction();
-                this.loadLevel(0);
+                this.showToast("Nivel 1: Conecta el circuito.");
             }
 
-            loadLevel(idx) {
-                this.levelIdx = idx;
-                const lvl = levels[idx];
-                document.getElementById('level-display').textContent = `Nivel ${lvl.id}: ${lvl.name}`;
+            // --- GESTIÓN DE JUEGO ---
+            fullReset() {
+                if(confirm("¿Estás seguro de reiniciar todo el progreso?")) {
+                    this.level = 1;
+                    document.getElementById('lvl-num').textContent = "1";
+                    document.getElementById('lvl-desc').textContent = "Cables Nuevos (0% Fallas)";
+                    this.resetLevel();
+                    this.showToast("Juego Reiniciado por completo.");
+                }
+            }
+
+            nextLevel() {
+                this.level++;
                 document.getElementById('win-modal').style.display = 'none';
+                document.getElementById('lvl-num').textContent = this.level;
                 
+                // Aumentar dificultad
+                const failRate = Math.min(this.level * 10, 50);
+                document.getElementById('lvl-desc').textContent = `Probabilidad de Falla: ${failRate}%`;
+                
+                this.resetLevel();
+                this.showToast(`Nivel ${this.level} Iniciado.`);
+            }
+
+            resetLevel() {
+                this.wires.forEach(w => w.el.remove());
                 this.wires = [];
-                this.svg.innerHTML = '';
-                this.compLayer.innerHTML = '';
-                this.breakerOn = false;
-                this.switches = {};
-                this.disyuntores = {};
-
-                // Render Componentes
-                lvl.comps.forEach(c => this.renderComponent(c));
-                
-                this.showToast(`Nivel ${lvl.id} Iniciado. ¡Doble click para borrar cables!`);
-                this.updateCircuit();
-            }
-
-            renderComponent(c) {
-                const el = document.createElement('div');
-                el.style.left = c.x + '%';
-                el.style.top = c.y + '%';
-                
-                let html = '';
-                if(c.type === 'source') {
-                    el.className = 'component comp-source';
-                    html = `
-                        <div style="margin-top:10px; color:#fff; font-weight:bold;">220V</div>
-                        <div id="breaker-main" class="breaker-main" onclick="game.toggleBreaker()">OFF</div>
-                        <div style="position:relative; width:100%; height:80px;">
-                            <div class="terminal" id="t-src-L" style="top:5px; right:-10px; background:var(--wire-phase);"></div><span class="lbl lbl-w" style="top:7px; right:15px;">L</span>
-                            <div class="terminal" id="t-src-N" style="top:35px; right:-10px; background:var(--wire-neutral);"></div><span class="lbl lbl-w" style="top:37px; right:15px;">N</span>
-                            <div class="terminal" id="t-src-E" style="top:65px; right:-10px; background:var(--wire-earth);"></div><span class="lbl lbl-w" style="top:67px; right:15px;">T</span>
-                        </div>`;
-                } else if(c.type === 'disyuntor') {
-                    el.className = 'component comp-disyuntor';
-                    this.disyuntores[c.id] = true;
-                    html = `
-                        <div style="font-size:0.7rem; margin-top:5px;">Disyuntor</div>
-                        <div id="lever-${c.id}" class="lever-dif on" onclick="game.toggleDisyuntor('${c.id}')">ON</div>
-                        <div class="terminal" id="t-${c.id}-inL" style="top:10px; left:-10px;"></div>
-                        <div class="terminal" id="t-${c.id}-inN" style="top:40px; left:-10px;"></div>
-                        <div class="terminal" id="t-${c.id}-outL" style="top:10px; right:-10px;"></div>
-                        <div class="terminal" id="t-${c.id}-outN" style="top:40px; right:-10px;"></div>
-                    `;
-                } else if(c.type === 'switch') {
-                    el.className = 'component comp-switch';
-                    this.switches[c.id] = false;
-                    html = `
-                        <div class="rocker" id="rocker-${c.id}" onclick="game.toggleSwitch('${c.id}')"></div>
-                        <div class="terminal" id="t-${c.id}-in" style="top:20px; left:-10px;"></div><span class="lbl lbl-b" style="top:22px; left:12px;">L</span>
-                        <div class="terminal" id="t-${c.id}-out" style="top:60px; right:-10px;"></div><span class="lbl lbl-b" style="top:62px; right:12px;">1</span>
-                    `;
-                } else if(c.type === 'lamp') {
-                    el.className = 'component comp-lamp';
-                    html = `
-                        <div class="bulb" id="bulb-${c.id}"></div>
-                        <div class="terminal" id="t-${c.id}-L" style="bottom:-5px; left:10px;"></div>
-                        <div class="terminal" id="t-${c.id}-N" style="bottom:-5px; right:10px;"></div>
-                    `;
-                } else if(c.type === 'outlet') {
-                    el.className = 'component comp-outlet';
-                    html = `
-                        <div class="outlet-face">
-                            <div class="outlet-earth"></div>
-                        </div>
-                        <div id="led-${c.id}" class="outlet-led"></div>
-                        <div class="terminal" id="t-${c.id}-L" style="top:15px; right:-10px;"></div>
-                        <div class="terminal" id="t-${c.id}-N" style="top:15px; left:-10px;"></div>
-                        <div class="terminal" id="t-${c.id}-E" style="bottom:5px; left:25px; background:var(--wire-earth);"></div>
-                    `;
-                }
-                
-                el.innerHTML = html;
-                this.compLayer.appendChild(el);
-            }
-
-            // --- LÓGICA ELÉCTRICA ---
-            calculatePotentials() {
-                const map = new Map();
-                if(!this.breakerOn) return map;
-
-                const adj = this.buildAdjacency();
-
-                // 1. Fase (220V)
-                this.bfs(adj, 't-src-L', node => map.set(node, 220));
-
-                // 2. Neutro (0V)
-                this.bfs(adj, 't-src-N', node => { 
-                    if(!map.has(node)) map.set(node, 0); 
-                });
-                
-                // 3. Tierra (0V)
-                this.bfs(adj, 't-src-E', node => { 
-                    if(!map.has(node)) map.set(node, 0); 
-                });
-
-                return map;
-            }
-
-            // BFS mejorado que atraviesa componentes si están activos
-            bfs(adj, start, callback) {
-                let q = [start];
-                let visited = new Set([start]);
-                
-                while(q.length > 0) {
-                    let u = q.shift();
-                    callback(u);
-
-                    // Conexiones por cable
-                    if(adj[u]) {
-                        for(let v of adj[u]) {
-                            if(!visited.has(v)) { 
-                                visited.add(v); 
-                                q.push(v); 
-                            }
-                        }
-                    }
-
-                    // Conexiones internas de componentes
-                    // Switch
-                    if(u.includes('S') && u.includes('in')) {
-                        const swId = u.split('-')[1];
-                        if(this.switches[swId]) {
-                            const partner = u.includes('in') ? `t-${swId}-out` : `t-${swId}-in`;
-                            if(!visited.has(partner)) { 
-                                visited.add(partner); 
-                                q.push(partner); 
-                            }
-                        }
-                    }
-                    // Disyuntor
-                    if(u.includes('D') && u.includes('in')) {
-                        const dId = u.split('-')[1];
-                        const type = u.slice(-1);
-                        if(this.disyuntores[dId]) {
-                            const out = `t-${dId}-out${type}`;
-                            if(!visited.has(out)) { 
-                                visited.add(out); 
-                                q.push(out); 
-                            }
-                        }
-                    }
-                }
-            }
-
-            updateCircuit() {
-                const map = this.calculatePotentials();
-                const lvl = levels[this.levelIdx];
-                let lampsOK = 0;
-                let outletsOK = 0;
-                let totalLamps = 0;
-                let totalOutlets = 0;
-
-                // Verificar Componentes
-                lvl.comps.forEach(c => {
-                    if(c.type === 'lamp') {
-                        totalLamps++;
-                        const vL = map.get(`t-${c.id}-L`);
-                        const vN = map.get(`t-${c.id}-N`);
-                        
-                        // Lámpara enciende si hay diferencia de potencial
-                        if(vL === 220 && vN === 0) {
-                            document.getElementById(`bulb-${c.id}`).classList.add('on');
-                            lampsOK++;
-                        } else {
-                            document.getElementById(`bulb-${c.id}`).classList.remove('on');
-                        }
-                    }
-                    if(c.type === 'outlet') {
-                        totalOutlets++;
-                        const vL = map.get(`t-${c.id}-L`);
-                        const vN = map.get(`t-${c.id}-N`);
-                        const vE = map.get(`t-${c.id}-E`);
-                        
-                        // Enchufe OK si tiene fase, neutro y tierra
-                        if(vL === 220 && vN === 0 && vE === 0) {
-                            document.getElementById(`led-${c.id}`).classList.add('on');
-                            outletsOK++;
-                        } else {
-                            document.getElementById(`led-${c.id}`).classList.remove('on');
-                        }
-                    }
-                });
-
-                // VICTORIA
-                if(lampsOK === totalLamps && outletsOK === totalOutlets) {
-                    setTimeout(() => {
-                        document.getElementById('win-modal').style.display = 'flex';
-                    }, 500);
-                }
-            }
-
-            buildAdjacency() {
-                const adj = {};
-                this.wires.forEach(w => {
-                    if(!adj[w.u]) adj[w.u] = [];
-                    if(!adj[w.v]) adj[w.v] = [];
-                    adj[w.u].push(w.v);
-                    adj[w.v].push(w.u);
-                });
-                return adj;
-            }
-
-            // --- CONTROLES ---
-            toggleBreaker() {
-                this.breakerOn = !this.breakerOn;
-                const b = document.getElementById('breaker-main');
-                b.textContent = this.breakerOn ? "ON" : "OFF";
-                if(this.breakerOn) {
-                    b.classList.add('on');
-                } else {
-                    b.classList.remove('on');
-                }
-                this.updateCircuit();
-            }
-
-            toggleSwitch(id) {
-                this.switches[id] = !this.switches[id];
-                const el = document.getElementById(`rocker-${id}`);
-                if(this.switches[id]) {
-                    el.classList.add('active');
-                } else {
-                    el.classList.remove('active');
-                }
-                this.updateCircuit();
-            }
-
-            toggleDisyuntor(id) {
-                this.disyuntores[id] = !this.disyuntores[id];
-                const el = document.getElementById(`lever-${id}`);
-                el.textContent = this.disyuntores[id] ? "ON" : "OFF";
-                if(this.disyuntores[id]) {
-                    el.classList.add('on');
-                } else {
-                    el.classList.remove('on');
-                }
+                if(this.powerOn) this.togglePower();
+                this.switchOn = false;
+                document.getElementById('sw-rocker').classList.remove('active');
                 this.updateCircuit();
             }
 
             // --- HERRAMIENTAS ---
-            setTool(t) {
+            selectTool(t) {
                 this.tool = t;
-                document.getElementById('game-board').dataset.tool = t;
+                this.board.dataset.tool = t;
+                this.isMeasuring = false;
+                this.stopBeep();
+
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                if(t === 'hand') {
-                    document.getElementById('btn-hand').classList.add('active');
-                }
-                if(t === 'tester') {
-                    document.getElementById('btn-tester').classList.add('active');
-                }
-                
-                this.tester.style.display = 'none';
+                if(t==='hand') document.getElementById('btn-hand').classList.add('active');
+                if(t==='multimeter') document.getElementById('btn-multi').classList.add('active');
+                if(t==='neon') document.getElementById('btn-neon').classList.add('active');
+
+                this.uiMulti.style.display = 'none';
+                this.uiNeon.style.display = 'none';
             }
 
-            handleMouseMove(e) {
-                if(this.tool === 'tester') {
-                    this.tester.style.display = 'block';
-                    this.tester.style.left = (e.clientX + 15) + 'px';
-                    this.tester.style.top = (e.clientY + 15) + 'px';
-                    
-                    const el = document.elementFromPoint(e.clientX, e.clientY);
-                    let voltage = 0;
-                    
-                    if(el) {
-                        const map = this.calculatePotentials();
-                        let id = null;
-                        
-                        if(el.classList.contains('terminal')) {
-                            id = el.id;
-                        } else if(el.classList.contains('wire')) {
-                            const w = this.wires.find(wire => wire.el === el);
-                            if(w) id = w.u;
-                        }
-
-                        if(id && map.has(id)) {
-                            voltage = map.get(id);
-                        }
+            // --- LÓGICA ELÉCTRICA ---
+            togglePower() {
+                if(this.powerOn) {
+                    this.powerOn = false;
+                    document.getElementById('breaker').classList.remove('on');
+                    document.getElementById('breaker').textContent = "OFF";
+                    this.showToast("Corriente Cortada");
+                } else {
+                    // Validar cortos directos
+                    const adj = this.getAdjacency(true); // Incluir rotos
+                    if(this.hasPath(adj, 't-src-N', 't-sw-in') || this.hasPath(adj, 't-src-N', 't-sw-out')) {
+                        this.showToast("❌ ERROR: Neutro en Tecla", "error");
+                        return;
                     }
-
-                    this.lcd.textContent = voltage > 0 ? "220 V" : "000 V";
-                    if(voltage > 0) {
-                        this.lcd.className = "lcd hot";
-                    } else {
-                        this.lcd.className = "lcd cold";
-                    }
+                    this.powerOn = true;
+                    document.getElementById('breaker').classList.add('on');
+                    document.getElementById('breaker').textContent = "ON";
+                    this.showToast("⚡ Energía ACTIVADA");
                 }
+                this.updateCircuit();
             }
 
-            // --- CABLEADO ---
-            initInteraction() {
-                // Click terminal para conectar
-                this.compLayer.addEventListener('mousedown', (e) => {
-                    if(e.target.classList.contains('terminal')) {
-                        if(this.tool === 'hand') {
-                            e.stopPropagation();
-                            this.dragStart = e.target.id;
-                        }
+            toggleSwitch() {
+                this.switchOn = !this.switchOn;
+                document.getElementById('sw-rocker').classList.toggle('active');
+                this.updateCircuit();
+            }
+
+            updateCircuit() {
+                document.getElementById('bulb').classList.remove('on');
+                this.wires.forEach(w => w.voltage = false);
+
+                if(!this.powerOn) return;
+
+                const adj = this.getAdjacency(false); // Solo sanos
+                const voltageNodes = new Set();
+
+                // Propagar Fase
+                this.bfs(adj, 't-src-L', n => voltageNodes.add(n));
+                if(this.switchOn && voltageNodes.has('t-sw-in')) {
+                    this.bfs(adj, 't-sw-out', n => voltageNodes.add(n));
+                }
+
+                this.wires.forEach(w => {
+                    if(!w.broken && (voltageNodes.has(w.u) || voltageNodes.has(w.v))) {
+                        w.voltage = true;
                     }
                 });
 
-                // Doble click para borrar
-                this.compLayer.addEventListener('dblclick', (e) => {
-                    if(e.target.classList.contains('terminal') && this.tool === 'hand') {
-                        const id = e.target.id;
-                        const toRemove = this.wires.filter(w => w.u === id || w.v === id);
-                        if(toRemove.length > 0) {
-                            toRemove.forEach(w => w.el.remove());
-                            this.wires = this.wires.filter(w => w.u !== id && w.v !== id);
-                            this.showToast("Cables desconectados");
-                            this.updateCircuit();
-                        }
-                    }
-                });
+                const neutralNodes = new Set();
+                this.bfs(adj, 't-src-N', n => neutralNodes.add(n));
 
-                window.addEventListener('mouseup', (e) => {
-                    if(this.dragStart) {
-                        const el = document.elementFromPoint(e.clientX, e.clientY);
-                        if(el && el.classList.contains('terminal') && el.id !== this.dragStart) {
-                            this.addWire(this.dragStart, el.id);
+                if(voltageNodes.has('t-lmp-L') && neutralNodes.has('t-lmp-N')) {
+                    document.getElementById('bulb').classList.add('on');
+                    setTimeout(() => {
+                        if(document.getElementById('bulb').classList.contains('on')) {
+                            document.getElementById('win-modal').style.display = 'flex';
+                            this.playSound(600, 0.1, 'sine');
                         }
-                        this.dragStart = null;
-                    }
-                });
-
-                window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-                window.addEventListener('resize', () => this.wires.forEach(w => this.drawWire(w)));
+                    }, 500);
+                }
             }
 
-            addWire(u, v) {
-                // Check duplicados
-                if(this.wires.find(w => (w.u === u && w.v === v) || (w.u === v && w.v === u))) {
-                    return;
-                }
-
-                // Color
-                let color = '#7f8fa6';
-                if(u.includes('L') || v.includes('L')) color = 'var(--wire-phase)';
-                else if(u.includes('N') || v.includes('N')) color = 'var(--wire-neutral)';
-                else if(u.includes('E') || v.includes('E')) color = 'var(--wire-earth)';
+            // --- CABLES ---
+            createWire(u, v, color) {
+                if(this.wires.find(w => (w.u===u && w.v===v) || (w.u===v && w.v===u))) return;
 
                 const path = document.createElementNS(svgNS, 'path');
                 path.classList.add('wire');
                 path.setAttribute('stroke', color);
                 this.svg.appendChild(path);
 
-                const wire = { u, v, el: path };
-                this.wires.push(wire);
-                this.drawWire(wire);
+                // Probabilidad de falla aumenta con el nivel
+                const failChance = this.level === 1 ? 0 : 0.1 * this.level; 
+                const isBroken = Math.random() < Math.min(failChance, 0.5);
+
+                const wireObj = { u, v, el: path, broken: isBroken, voltage: false, color };
+                this.wires.push(wireObj);
+
+                // Eventos Mouse
+                path.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    if(this.tool === 'hand') {
+                        if(!this.powerOn) {
+                            path.remove();
+                            this.wires = this.wires.filter(w => w !== wireObj);
+                            this.updateCircuit();
+                        } else {
+                            this.showToast("¡Peligro! Corta la luz primero.", "error");
+                        }
+                    } else if (this.tool === 'multimeter') {
+                        this.isMeasuring = true;
+                        this.diagnoseWire(wireObj);
+                    }
+                });
+
+                // Detener medición al soltar
+                path.addEventListener('mouseup', () => {
+                    if(this.tool === 'multimeter') {
+                        this.isMeasuring = false;
+                        this.resetTesterDisplay();
+                    }
+                });
+
+                // Actualizar
+                this.updateWirePath(wireObj);
                 this.updateCircuit();
             }
 
-            drawWire(w) {
-                const el1 = document.getElementById(w.u);
-                const el2 = document.getElementById(w.v);
-                if(!el1 || !el2) return;
-                
-                const r1 = el1.getBoundingClientRect();
-                const r2 = el2.getBoundingClientRect();
-                const br = this.board.getBoundingClientRect();
+            // --- LÓGICA DE HERRAMIENTAS ---
+            handleMouseMove(e) {
+                const rect = this.board.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
 
-                const x1 = r1.left + r1.width/2 - br.left;
-                const y1 = r1.top + r1.height/2 - br.top;
-                const x2 = r2.left + r2.width/2 - br.left;
-                const y2 = r2.top + r2.height/2 - br.top;
+                // 1. Buscapolo
+                if(this.tool === 'neon') {
+                    this.uiNeon.style.display = 'block';
+                    this.uiNeon.style.left = (e.clientX) + 'px';
+                    this.uiNeon.style.top = (e.clientY) + 'px'; // Punta en cursor
+                    
+                    const el = document.elementFromPoint(e.clientX, e.clientY);
+                    const wire = this.wires.find(w => w.el === el);
+                    if(wire && wire.voltage) {
+                        this.uiNeon.classList.add('active');
+                    } else {
+                        this.uiNeon.classList.remove('active');
+                    }
+                }
 
-                // Curva en U
-                const cx1 = x1;
-                const cy1 = Math.max(y1, y2) + 50;
-                const cx2 = x2;
-                const cy2 = Math.max(y1, y2) + 50;
+                // 2. Multímetro
+                if(this.tool === 'multimeter') {
+                    this.uiMulti.style.display = 'block';
+                    this.uiMulti.style.left = (e.clientX + 5) + 'px';
+                    this.uiMulti.style.top = (e.clientY + 5) + 'px';
+                    
+                    if(!this.isMeasuring) {
+                        this.resetTesterDisplay();
+                    }
+                }
 
-                w.el.setAttribute('d', `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`);
+                // 3. Arrastre Cable
+                if(this.drag && this.tool === 'hand') {
+                    const start = this.getCenter(this.drag.startEl);
+                    this.drag.path.setAttribute('d', `M ${start.x} ${start.y} L ${x} ${y}`);
+                }
             }
 
-            showToast(msg) {
+            resetTesterDisplay() {
+                this.stopBeep();
+                this.uiLcd.className = "lcd-screen";
+                if(this.powerOn) {
+                    this.uiMode.textContent = "MODO: VOLTAJE AC";
+                    this.uiLcd.textContent = "000 V";
+                } else {
+                    this.uiMode.textContent = "MODO: CONTINUIDAD";
+                    this.uiLcd.textContent = "---";
+                }
+            }
+
+            diagnoseWire(wire) {
+                if(this.powerOn) {
+                    // VOLTAJE
+                    this.uiLcd.className = "lcd-screen active";
+                    this.uiLcd.textContent = wire.voltage ? "220 V" : "005 V"; // Ruido fantasma si es 0
+                    if(wire.voltage) this.uiLcd.style.color = "#c0392b";
+                    else this.uiLcd.style.color = "#2d3436";
+                } else {
+                    // CONTINUIDAD
+                    if(wire.broken) {
+                        this.uiLcd.textContent = "O.L.";
+                        this.uiLcd.className = "lcd-screen error";
+                        wire.el.classList.add('exposed-bad');
+                        this.showToast("Cable Cortado", "error");
+                    } else {
+                        this.uiLcd.textContent = "0.0 Ω";
+                        this.uiLcd.className = "lcd-screen active";
+                        this.startBeep();
+                    }
+                }
+            }
+
+            // --- AUDIO ---
+            startBeep() {
+                if(this.osc) return;
+                this.osc = this.audioCtx.createOscillator();
+                this.gain = this.audioCtx.createGain();
+                this.osc.connect(this.gain);
+                this.gain.connect(this.audioCtx.destination);
+                this.osc.frequency.value = 1800;
+                this.gain.gain.value = 0.1;
+                this.osc.start();
+            }
+            stopBeep() {
+                if(this.osc) { this.osc.stop(); this.osc.disconnect(); this.osc = null; }
+            }
+            playSound(f, d, t) {
+                const o=this.audioCtx.createOscillator(); const g=this.audioCtx.createGain();
+                o.connect(g); g.connect(this.audioCtx.destination);
+                o.type=t; o.frequency.value=f; g.gain.value=0.1;
+                o.start(); o.stop(this.audioCtx.currentTime+d);
+            }
+
+            // --- EVENTOS DE ENTRADA ---
+            initInteraction() {
+                document.querySelectorAll('.terminal').forEach(t => {
+                    t.addEventListener('mousedown', (e) => {
+                        if(this.tool !== 'hand') return;
+                        if(this.powerOn) { this.showToast("No tocar con Tensión", "error"); return; }
+                        
+                        e.stopPropagation();
+                        let color = '#333';
+                        if(t.id.includes('src-L')) color = 'var(--wire-phase)';
+                        else if(t.id.includes('src-N') || t.id.includes('lmp-N')) color = 'var(--wire-neutral)';
+                        else if(t.id.includes('src-E') || t.id.includes('lmp-E')) color = 'var(--wire-earth)';
+                        else color = 'var(--wire-return)';
+
+                        const path = document.createElementNS(svgNS, 'path');
+                        path.setAttribute('stroke', color);
+                        path.setAttribute('stroke-width', 4);
+                        path.setAttribute('fill', 'none');
+                        path.setAttribute('stroke-dasharray', '5,5');
+                        this.svg.appendChild(path);
+                        this.drag = { startId: t.id, startEl: t, path, color };
+                    });
+                });
+
+                window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                
+                window.addEventListener('mouseup', (e) => {
+                    if(this.drag) {
+                        this.drag.path.remove();
+                        const el = document.elementFromPoint(e.clientX, e.clientY);
+                        if(el && el.classList.contains('terminal') && el.id !== this.drag.startId) {
+                            this.createWire(this.drag.startId, el.id, this.drag.color);
+                        }
+                        this.drag = null;
+                    }
+                    if(this.tool === 'multimeter') {
+                        this.isMeasuring = false;
+                        this.resetTesterDisplay();
+                    }
+                });
+            }
+
+            // GRAFOS
+            getAdjacency(includeBroken) {
+                const adj = {};
+                this.wires.forEach(w => {
+                    if(!includeBroken && w.broken) return;
+                    if(!adj[w.u]) adj[w.u]=[]; if(!adj[w.v]) adj[w.v]=[];
+                    adj[w.u].push(w.v); adj[w.v].push(w.u);
+                });
+                return adj;
+            }
+            bfs(adj, s, cb) {
+                if(!adj[s]) return;
+                const q=[s], v=new Set([s]);
+                while(q.length) { const u=q.shift(); cb(u); if(adj[u]) for(let n of adj[u]) if(!v.has(n)){v.add(n);q.push(n);} }
+            }
+            hasPath(adj, s, e) { let f=false; this.bfs(adj,s,n=>{if(n===e)f=true}); return f; }
+
+            // UTILS
+            updateWirePath(w) {
+                const p1 = this.getCenter(document.getElementById(w.u));
+                const p2 = this.getCenter(document.getElementById(w.v));
+                const cx = (p1.x+p2.x)/2; const cy = Math.max(p1.y,p2.y)+40;
+                w.el.setAttribute('d', `M ${p1.x} ${p1.y} Q ${cx} ${cy} ${p2.x} ${p2.y}`);
+            }
+            getCenter(el) {
+                const r = el.getBoundingClientRect(); const b = this.board.getBoundingClientRect();
+                return { x: r.left+r.width/2-b.left, y: r.top+r.height/2-b.top };
+            }
+            showToast(msg, type='info') {
                 const t = document.getElementById('toast');
                 t.textContent = msg;
-                t.style.opacity = 1;
-                setTimeout(() => {
-                    t.style.opacity = 0;
-                }, 3000);
-            }
-
-            resetLevel() {
-                this.loadLevel(this.levelIdx);
-            }
-
-            nextLevel() { 
-                if(this.levelIdx < levels.length - 1) {
-                    this.loadLevel(this.levelIdx + 1);
-                } else {
-                    this.showToast("¡Juego Completado! Felicitaciones.");
-                }
+                t.style.background = type === 'error' ? '#c23616' : '#2f3640';
+                t.style.opacity = 1; setTimeout(()=>t.style.opacity=0,2500);
             }
         }
 
         const game = new Simulator();
+        window.addEventListener('resize', () => game.wires.forEach(w => game.updateWirePath(w)));
     </script>
 </body>
 </html>
