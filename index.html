@@ -115,6 +115,16 @@
             padding: 8px 12px; border-radius: 4px; cursor: pointer;
             font-weight: bold;
         }
+        
+        .connection-error {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
@@ -322,6 +332,13 @@
                         this.showToast("❌ ERROR: Neutro en Tecla", "error");
                         return;
                     }
+                    
+                    // Validar conexiones peligrosas
+                    if(this.hasPath(adj, 't-src-L', 't-src-N') || this.hasPath(adj, 't-src-L', 't-src-E')) {
+                        this.showToast("❌ ERROR: Cortocircuito detectado", "error");
+                        return;
+                    }
+                    
                     this.powerOn = true;
                     document.getElementById('breaker').classList.add('on');
                     document.getElementById('breaker').textContent = "ON";
@@ -393,13 +410,66 @@
                 } else {
                     // Segundo clic - crear cable
                     if(this.lastClickedTerminal !== terminalId) {
-                        this.createWire(this.lastClickedTerminal, terminalId);
+                        // Validar conexión antes de crearla
+                        if(this.isValidConnection(this.lastClickedTerminal, terminalId)) {
+                            this.createWire(this.lastClickedTerminal, terminalId);
+                        } else {
+                            // Mostrar error visual
+                            document.getElementById(this.lastClickedTerminal).classList.add('connection-error');
+                            document.getElementById(terminalId).classList.add('connection-error');
+                            setTimeout(() => {
+                                document.getElementById(this.lastClickedTerminal).classList.remove('connection-error');
+                                document.getElementById(terminalId).classList.remove('connection-error');
+                            }, 500);
+                        }
                     }
                     
                     // Resetear selección
                     document.getElementById(this.lastClickedTerminal).style.background = '';
                     this.lastClickedTerminal = null;
                 }
+            }
+
+            // Validar si la conexión es eléctricamente correcta
+            isValidConnection(terminal1, terminal2) {
+                const type1 = this.getTerminalType(terminal1);
+                const type2 = this.getTerminalType(terminal2);
+                
+                // Reglas de conexión válidas
+                const validConnections = {
+                    'phase': ['phase', 'switch-in', 'lamp-return'],
+                    'neutral': ['neutral', 'lamp-neutral'],
+                    'earth': ['earth', 'lamp-earth'],
+                    'switch-in': ['phase', 'switch-out'],
+                    'switch-out': ['switch-in', 'lamp-return'],
+                    'lamp-return': ['phase', 'switch-out', 'lamp-neutral'],
+                    'lamp-neutral': ['neutral', 'lamp-return'],
+                    'lamp-earth': ['earth']
+                };
+                
+                // Verificar si la conexión es válida en ambas direcciones
+                const valid1 = validConnections[type1] && validConnections[type1].includes(type2);
+                const valid2 = validConnections[type2] && validConnections[type2].includes(type1);
+                
+                if (!valid1 || !valid2) {
+                    this.showToast(`❌ Conexión inválida: ${type1} ↔ ${type2}`, "error");
+                    return false;
+                }
+                
+                return true;
+            }
+
+            // Obtener tipo de terminal
+            getTerminalType(terminalId) {
+                if (terminalId === 't-src-L') return 'phase';
+                if (terminalId === 't-src-N') return 'neutral';
+                if (terminalId === 't-src-E') return 'earth';
+                if (terminalId === 't-sw-in') return 'switch-in';
+                if (terminalId === 't-sw-out') return 'switch-out';
+                if (terminalId === 't-lmp-L') return 'lamp-return';
+                if (terminalId === 't-lmp-N') return 'lamp-neutral';
+                if (terminalId === 't-lmp-E') return 'lamp-earth';
+                return 'unknown';
             }
 
             createWire(u, v) {
