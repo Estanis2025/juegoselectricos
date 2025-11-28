@@ -127,7 +127,7 @@
             box-shadow: 4px 4px 10px rgba(0,0,0,0.1); z-index: 2; border-radius: 4px;
             display: flex; flex-direction: column; align-items: center;
         }
-        .comp-board { width: 110px; height: 150px; background: #2f3640; color: white; left: 5%; top: 15%; }
+        .comp-board { width: 110px; height: 150px; background: #2f3640; color: white; }
         .breaker {
             width: 50px; height: 30px; background: #c23616; margin: 15px; border-radius: 4px;
             cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.75rem;
@@ -145,6 +145,9 @@
 
         .comp-ac { width: 120px; height: 80px; background: #f5f6fa; }
         .ac-icon { font-size: 2rem; margin-top: 10px; }
+
+        .comp-outlet { width: 80px; height: 60px; background: #f5f6fa; }
+        .outlet-icon { font-size: 1.5rem; margin-top: 5px; }
 
         .terminal {
             width: 14px; height: 14px; background: #dcdde1; border: 2px solid #2f3640; border-radius: 50%;
@@ -179,6 +182,22 @@
             padding: 5px 10px; border-radius: 4px; font-size: 0.8rem;
             pointer-events: none; z-index: 1000; white-space: nowrap;
         }
+
+        /* MODAL AYUDA */
+        #help-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 5000; display: none;
+            justify-content: center; align-items: center;
+        }
+        .help-card { 
+            background: white; padding: 30px; border-radius: 10px; 
+            max-width: 500px; max-height: 80vh; overflow-y: auto;
+        }
+        .help-section { margin-bottom: 20px; }
+        .help-section h3 { color: #2f3640; border-bottom: 2px solid #00a8ff; padding-bottom: 5px; }
+        .help-tool { display: flex; align-items: center; margin: 10px 0; }
+        .help-tool-icon { font-size: 2rem; margin-right: 15px; }
+        .help-tool-desc { flex: 1; }
     </style>
 </head>
 <body>
@@ -202,14 +221,88 @@
         <div class="win-card">
             <h1 style="color:#27ae60;">¡Funciona!</h1>
             <p id="win-message">Conexión segura y correcta.</p>
-            <button onclick="game.nextLevel()" style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:20px; font-size:1.1rem; cursor:pointer;">Siguiente Nivel ➡</button>
+            <button onclick="game.nextLevel()" style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:20px; font-size:1.1rem; cursor:pointer;">
+                Siguiente Nivel ➡
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL AYUDA -->
+    <div id="help-modal">
+        <div class="help-card">
+            <h2 style="text-align:center; color:#2f3640; margin-bottom:20px;">Ayuda - Herramientas Eléctricas</h2>
+            
+            <div class="help-section">
+                <h3>💡 Buscapolo (Detector de Fase)</h3>
+                <div class="help-tool">
+                    <div class="help-tool-icon">💡</div>
+                    <div class="help-tool-desc">
+                        <p><strong>Función:</strong> Detecta la presencia de tensión eléctrica (fase) en cables y componentes.</p>
+                        <p><strong>Cómo usar:</strong></p>
+                        <ul>
+                            <li>Selecciona el buscapolo en la barra de herramientas</li>
+                            <li>Acerca la punta a cables o terminales</li>
+                            <li>Si hay tensión (220V), la luz interior se encenderá</li>
+                            <li>La luz parpadeante indica presencia de fase</li>
+                        </ul>
+                        <p><strong>Precauciones:</strong> Solo detecta fase activa, no indica neutro ni tierra.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="help-section">
+                <h3>📟 Tester (Multímetro)</h3>
+                <div class="help-tool">
+                    <div class="help-tool-icon">📟</div>
+                    <div class="help-tool-desc">
+                        <p><strong>Función:</strong> Mide voltaje y continuidad eléctrica.</p>
+                        <p><strong>Cómo usar:</strong></p>
+                        <ul>
+                            <li>Selecciona el tester en la barra de herramientas</li>
+                            <li>Haz clic y mantén presionado sobre un cable o terminal</li>
+                            <li>Con energía activada: Mide voltaje (0V o 220V)</li>
+                            <li>Sin energía: Mide continuidad (0.0Ω o O.L. - circuito abierto)</li>
+                        </ul>
+                        <p><strong>Modos de operación:</strong></p>
+                        <ul>
+                            <li><strong>Voltaje AC:</strong> Muestra 220V en fase, 0V en neutro</li>
+                            <li><strong>Continuidad:</strong> 0.0Ω = cable sano, O.L. = cable cortado</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="help-section">
+                <h3>🖐 Mano (Conectar/Desconectar)</h3>
+                <div class="help-tool">
+                    <div class="help-tool-icon">🖐</div>
+                    <div class="help-tool-desc">
+                        <p><strong>Función:</strong> Conectar y desconectar cables entre componentes.</p>
+                        <p><strong>Cómo usar:</strong></p>
+                        <ul>
+                            <li>Selecciona la mano en la barra de herramientas</li>
+                            <li>Haz clic y arrastra desde un terminal a otro</li>
+                            <li>Suelta para crear la conexión</li>
+                            <li>Haz clic en un cable existente para eliminarlo</li>
+                        </ul>
+                        <p><strong>Precauciones:</strong> Solo desconecta cables cuando no hay energía.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="text-align:center; margin-top:20px;">
+                <button onclick="document.getElementById('help-modal').style.display='none'" 
+                        style="background:#00a8ff; color:white; border:none; padding:10px 20px; border-radius:20px; font-size:1rem; cursor:pointer;">
+                    Cerrar Ayuda
+                </button>
+            </div>
         </div>
     </div>
 
     <header>
         <div class="level-info">
             <span style="font-size:1.2rem;">NIVEL <span id="lvl-num">1</span></span>
-            <span style="font-weight:normal; font-size:0.75rem;" id="lvl-desc">Cables Nuevos (0% Fallas)</span>
+            <span style="font-weight:normal; font-size:0.75rem;" id="lvl-desc">Lámpara + Interruptor</span>
         </div>
         
         <div class="toolbar">
@@ -221,6 +314,9 @@
             </button>
             <button class="tool-btn" id="btn-neon" onclick="game.selectTool('neon')" title="Detecta Fase">
                 💡 Buscapolo
+            </button>
+            <button class="tool-btn" id="btn-help" onclick="game.showHelp()" title="Ayuda e Instrucciones">
+                ❓ Ayuda
             </button>
         </div>
 
@@ -238,7 +334,7 @@
         <svg id="wire-layer"></svg>
 
         <!-- COMPONENTES -->
-        <div class="component comp-board">
+        <div class="component comp-board" style="left: 5%; top: 15%;">
             <div style="text-align:center; padding:10px; font-weight:bold;">TABLERO</div>
             <div id="breaker" class="breaker" onclick="game.togglePower()">OFF</div>
             
@@ -288,7 +384,7 @@
 
                 this.initInteraction();
                 this.setupLevel();
-                this.showToast("Nivel 1: Conecta el circuito.");
+                this.showToast("Nivel 1: Conecta la lámpara al interruptor.");
             }
 
             // --- GESTIÓN DE NIVELES ---
@@ -300,67 +396,74 @@
                 // Configurar componentes según nivel
                 switch(this.level) {
                     case 1:
-                        // Nivel básico: 1 lámpara + interruptor
+                        // Nivel 1: 1 lámpara + 1 interruptor
                         this.createSwitch(40, 60);
                         this.createLamp(70, 30, "lamp1");
+                        document.getElementById('lvl-desc').textContent = "Lámpara + Interruptor";
                         break;
                     case 2:
-                        // Nivel intermedio: 2 lámparas en serie + interruptor
+                        // Nivel 2: 2 lámparas + 1 interruptor + 1 enchufe
                         this.createSwitch(30, 60);
                         this.createLamp(50, 30, "lamp1");
                         this.createLamp(70, 30, "lamp2");
+                        this.createOutlet(20, 30);
+                        document.getElementById('lvl-desc').textContent = "2 Lámparas + Enchufe";
                         break;
                     case 3:
-                        // Nivel avanzado: 3 lámparas en serie + interruptor
-                        this.createSwitch(20, 60);
-                        this.createLamp(40, 30, "lamp1");
-                        this.createLamp(60, 30, "lamp2");
+                        // Nivel 3: 3 lámparas + 2 interruptores + 2 enchufes
+                        this.createSwitch(20, 60, "sw1");
+                        this.createSwitch(40, 60, "sw2");
+                        this.createLamp(60, 30, "lamp1");
+                        this.createLamp(70, 50, "lamp2");
                         this.createLamp(80, 30, "lamp3");
+                        this.createOutlet(15, 30, "out1");
+                        this.createOutlet(30, 30, "out2");
+                        document.getElementById('lvl-desc').textContent = "3 Lámparas + 2 Interruptores + 2 Enchufes";
                         break;
                     case 4:
-                        // Nivel experto: Aire acondicionado + disyuntor
-                        this.createSwitch(30, 60);
-                        this.createAC(70, 30);
+                        // Nivel 4: Aire acondicionado + disyuntor + lámparas + enchufes
+                        this.createSwitch(20, 60, "sw1");
+                        this.createSwitch(35, 60, "sw2");
+                        this.createLamp(55, 30, "lamp1");
+                        this.createLamp(65, 50, "lamp2");
+                        this.createAC(75, 30);
+                        this.createOutlet(15, 30, "out1");
+                        this.createOutlet(30, 30, "out2");
+                        document.getElementById('lvl-desc').textContent = "Aire AC + Disyuntor + Lámparas + Enchufes";
                         break;
-                    default:
-                        // Niveles adicionales: mezcla de configuraciones
-                        if(this.level % 2 === 0) {
-                            this.createSwitch(30, 60);
-                            this.createLamp(50, 30, "lamp1");
-                            this.createLamp(70, 30, "lamp2");
-                        } else {
-                            this.createSwitch(30, 60);
-                            this.createAC(70, 30);
-                        }
+                    case 5:
+                        // Nivel 5: Circuito complejo con múltiples componentes
+                        this.createSwitch(15, 60, "sw1");
+                        this.createSwitch(30, 60, "sw2");
+                        this.createSwitch(45, 60, "sw3");
+                        this.createLamp(60, 25, "lamp1");
+                        this.createLamp(70, 40, "lamp2");
+                        this.createLamp(80, 25, "lamp3");
+                        this.createAC(65, 60);
+                        this.createOutlet(20, 30, "out1");
+                        this.createOutlet(35, 30, "out2");
+                        this.createOutlet(50, 30, "out3");
+                        document.getElementById('lvl-desc').textContent = "Circuito Completo con Múltiples Componentes";
+                        break;
                 }
                 
-                // Actualizar descripción del nivel
+                // Actualizar número de nivel
                 document.getElementById('lvl-num').textContent = this.level;
-                const levelDescriptions = [
-                    "Cables Nuevos (0% Fallas)",
-                    "2 Lámparas en Serie (10% Fallas)",
-                    "3 Lámparas en Serie (20% Fallas)",
-                    "Aire Acondicionado + Disyuntor (30% Fallas)",
-                    "Circuito Mixto (40% Fallas)",
-                    "Circuito Complejo (50% Fallas)"
-                ];
-                const descIndex = Math.min(this.level - 1, levelDescriptions.length - 1);
-                document.getElementById('lvl-desc').textContent = levelDescriptions[descIndex];
             }
 
-            createSwitch(left, top) {
+            createSwitch(left, top, id = "sw") {
                 const switchEl = document.createElement('div');
                 switchEl.className = 'component comp-switch';
                 switchEl.style.left = `${left}%`;
                 switchEl.style.top = `${top}%`;
                 
                 switchEl.innerHTML = `
-                    <div style="margin-top:5px; font-weight:bold; font-size:0.8rem;">TECLA</div>
-                    <div class="terminal" id="t-sw-in" style="top:25px; left:-7px;"></div>
+                    <div style="margin-top:5px; font-weight:bold; font-size:0.8rem;">TECLA ${id === "sw" ? "" : id.toUpperCase()}</div>
+                    <div class="terminal" id="t-${id}-in" style="top:25px; left:-7px;"></div>
                     <span class="term-lbl" style="top:27px; left:12px;">L</span>
-                    <div class="terminal" id="t-sw-out" style="top:65px; right:-7px;"></div>
+                    <div class="terminal" id="t-${id}-out" style="top:65px; right:-7px;"></div>
                     <span class="term-lbl" style="top:67px; right:12px;">1</span>
-                    <div class="rocker" id="sw-rocker" onclick="game.toggleSwitch()"></div>
+                    <div class="rocker" id="${id}-rocker" onclick="game.toggleSwitch('${id}')"></div>
                 `;
                 
                 this.componentsContainer.appendChild(switchEl);
@@ -406,6 +509,26 @@
                 this.components.push(acEl);
             }
 
+            createOutlet(left, top, id = "out") {
+                const outletEl = document.createElement('div');
+                outletEl.className = 'component comp-outlet';
+                outletEl.style.left = `${left}%`;
+                outletEl.style.top = `${top}%`;
+                
+                outletEl.innerHTML = `
+                    <div style="margin-top:5px; font-weight:bold; font-size:0.8rem;">ENCHUFE ${id === "out" ? "" : id.toUpperCase()}</div>
+                    <div class="outlet-icon">🔌</div>
+                    <div class="terminal" id="t-${id}-L" style="bottom:-7px; left:20px;"></div>
+                    <span class="term-lbl" style="bottom:10px; left:28px;">Fase</span>
+                    <div class="terminal" id="t-${id}-N" style="bottom:-7px; right:20px;"></div>
+                    <span class="term-lbl" style="bottom:10px; right:28px;">Neu</span>
+                    <div class="terminal" id="t-${id}-E" style="top:-7px; left:35px; background:#27ae60;"></div>
+                `;
+                
+                this.componentsContainer.appendChild(outletEl);
+                this.components.push(outletEl);
+            }
+
             // --- GESTIÓN DE JUEGO ---
             fullReset() {
                 if(confirm("¿Estás seguro de reiniciar todo el progreso?")) {
@@ -416,10 +539,15 @@
             }
 
             nextLevel() {
-                this.level++;
-                document.getElementById('win-modal').style.display = 'none';
-                this.setupLevel();
-                this.showToast(`Nivel ${this.level} Iniciado.`);
+                if(this.level < 5) {
+                    this.level++;
+                    document.getElementById('win-modal').style.display = 'none';
+                    this.setupLevel();
+                    this.showToast(`Nivel ${this.level} Iniciado.`);
+                } else {
+                    document.getElementById('win-modal').style.display = 'flex';
+                    document.getElementById('win-message').textContent = "¡Felicidades! Has completado todos los niveles.";
+                }
             }
 
             resetLevel() {
@@ -427,9 +555,15 @@
                 this.wires = [];
                 if(this.powerOn) this.togglePower();
                 this.switchOn = false;
-                document.getElementById('sw-rocker').classList.remove('active');
+                document.querySelectorAll('.rocker').forEach(rocker => {
+                    rocker.classList.remove('active');
+                });
                 this.setupLevel();
                 this.updateCircuit();
+            }
+
+            showHelp() {
+                document.getElementById('help-modal').style.display = 'flex';
             }
 
             // --- HERRAMIENTAS ---
@@ -458,7 +592,7 @@
                 } else {
                     // Validar cortos directos
                     const adj = this.getAdjacency(true);
-                    if(this.hasPath(adj, 't-src-N', 't-sw-in') || this.hasPath(adj, 't-src-N', 't-sw-out')) {
+                    if(this.hasPath(adj, 't-src-N', 't-sw-in') || this.hasPath(adj, 't-src-N', 't-sw1-in') || this.hasPath(adj, 't-src-N', 't-sw2-in') || this.hasPath(adj, 't-src-N', 't-sw3-in')) {
                         this.showToast("❌ ERROR: Neutro en Tecla", "error");
                         return;
                     }
@@ -470,9 +604,15 @@
                 this.updateCircuit();
             }
 
-            toggleSwitch() {
-                this.switchOn = !this.switchOn;
-                document.getElementById('sw-rocker').classList.toggle('active');
+            toggleSwitch(id = "sw") {
+                const rocker = document.getElementById(`${id}-rocker`);
+                rocker.classList.toggle('active');
+                
+                // Actualizar estado del interruptor
+                if(id === "sw") {
+                    this.switchOn = !this.switchOn;
+                }
+                
                 this.updateCircuit();
             }
 
@@ -489,12 +629,21 @@
                 const adj = this.getAdjacency(false);
                 const voltageNodes = new Set();
 
-                // Propagar Fase
+                // Propagar Fase desde la fuente
                 this.bfs(adj, 't-src-L', n => voltageNodes.add(n));
-                if(this.switchOn && voltageNodes.has('t-sw-in')) {
-                    this.bfs(adj, 't-sw-out', n => voltageNodes.add(n));
-                }
+                
+                // Propagar a través de interruptores activados
+                document.querySelectorAll('.rocker.active').forEach(rocker => {
+                    const id = rocker.id.replace('-rocker', '');
+                    const switchIn = `t-${id}-in`;
+                    const switchOut = `t-${id}-out`;
+                    
+                    if(voltageNodes.has(switchIn)) {
+                        this.bfs(adj, switchOut, n => voltageNodes.add(n));
+                    }
+                });
 
+                // Marcar cables con voltaje
                 this.wires.forEach(w => {
                     if(!w.broken && (voltageNodes.has(w.u) || voltageNodes.has(w.v))) {
                         w.voltage = true;
@@ -507,35 +656,65 @@
                 // Verificar circuitos según nivel
                 let circuitComplete = false;
                 
-                if(this.level <= 3) {
-                    // Circuitos con lámparas en serie
-                    const lamps = this.level === 1 ? ['lamp1'] : 
-                                 this.level === 2 ? ['lamp1', 'lamp2'] : 
-                                 ['lamp1', 'lamp2', 'lamp3'];
-                    
-                    // Verificar si todas las lámparas tienen voltaje y neutro
-                    let allLampsLit = true;
-                    lamps.forEach(lampId => {
-                        const hasVoltage = voltageNodes.has(`t-${lampId}-L`);
-                        const hasNeutral = neutralNodes.has(`t-${lampId}-N`);
-                        
-                        if(hasVoltage && hasNeutral) {
-                            document.getElementById(`bulb-${lampId}`).classList.add('on');
-                        } else {
-                            allLampsLit = false;
-                        }
-                    });
-                    
-                    circuitComplete = allLampsLit;
-                } else {
-                    // Circuito con aire acondicionado
-                    const hasVoltage = voltageNodes.has('t-ac-L');
-                    const hasNeutral = neutralNodes.has('t-ac-N');
+                if(this.level === 1) {
+                    // Nivel 1: 1 lámpara
+                    const hasVoltage = voltageNodes.has('t-lamp1-L');
+                    const hasNeutral = neutralNodes.has('t-lamp1-N');
                     
                     if(hasVoltage && hasNeutral) {
+                        document.getElementById('bulb-lamp1').classList.add('on');
                         circuitComplete = true;
-                        document.getElementById('win-message').textContent = "Aire acondicionado funcionando correctamente.";
                     }
+                } else if(this.level === 2) {
+                    // Nivel 2: 2 lámparas + 1 enchufe
+                    const lamp1On = voltageNodes.has('t-lamp1-L') && neutralNodes.has('t-lamp1-N');
+                    const lamp2On = voltageNodes.has('t-lamp2-L') && neutralNodes.has('t-lamp2-N');
+                    const outletOn = voltageNodes.has('t-out-L') && neutralNodes.has('t-out-N');
+                    
+                    if(lamp1On) document.getElementById('bulb-lamp1').classList.add('on');
+                    if(lamp2On) document.getElementById('bulb-lamp2').classList.add('on');
+                    
+                    circuitComplete = lamp1On && lamp2On && outletOn;
+                } else if(this.level === 3) {
+                    // Nivel 3: 3 lámparas + 2 interruptores + 2 enchufes
+                    const lamp1On = voltageNodes.has('t-lamp1-L') && neutralNodes.has('t-lamp1-N');
+                    const lamp2On = voltageNodes.has('t-lamp2-L') && neutralNodes.has('t-lamp2-N');
+                    const lamp3On = voltageNodes.has('t-lamp3-L') && neutralNodes.has('t-lamp3-N');
+                    const outlet1On = voltageNodes.has('t-out1-L') && neutralNodes.has('t-out1-N');
+                    const outlet2On = voltageNodes.has('t-out2-L') && neutralNodes.has('t-out2-N');
+                    
+                    if(lamp1On) document.getElementById('bulb-lamp1').classList.add('on');
+                    if(lamp2On) document.getElementById('bulb-lamp2').classList.add('on');
+                    if(lamp3On) document.getElementById('bulb-lamp3').classList.add('on');
+                    
+                    circuitComplete = lamp1On && lamp2On && lamp3On && outlet1On && outlet2On;
+                } else if(this.level === 4) {
+                    // Nivel 4: Aire acondicionado + lámparas + enchufes
+                    const lamp1On = voltageNodes.has('t-lamp1-L') && neutralNodes.has('t-lamp1-N');
+                    const lamp2On = voltageNodes.has('t-lamp2-L') && neutralNodes.has('t-lamp2-N');
+                    const acOn = voltageNodes.has('t-ac-L') && neutralNodes.has('t-ac-N');
+                    const outlet1On = voltageNodes.has('t-out1-L') && neutralNodes.has('t-out1-N');
+                    const outlet2On = voltageNodes.has('t-out2-L') && neutralNodes.has('t-out2-N');
+                    
+                    if(lamp1On) document.getElementById('bulb-lamp1').classList.add('on');
+                    if(lamp2On) document.getElementById('bulb-lamp2').classList.add('on');
+                    
+                    circuitComplete = lamp1On && lamp2On && acOn && outlet1On && outlet2On;
+                } else if(this.level === 5) {
+                    // Nivel 5: Circuito completo
+                    const lamp1On = voltageNodes.has('t-lamp1-L') && neutralNodes.has('t-lamp1-N');
+                    const lamp2On = voltageNodes.has('t-lamp2-L') && neutralNodes.has('t-lamp2-N');
+                    const lamp3On = voltageNodes.has('t-lamp3-L') && neutralNodes.has('t-lamp3-N');
+                    const acOn = voltageNodes.has('t-ac-L') && neutralNodes.has('t-ac-N');
+                    const outlet1On = voltageNodes.has('t-out1-L') && neutralNodes.has('t-out1-N');
+                    const outlet2On = voltageNodes.has('t-out2-L') && neutralNodes.has('t-out2-N');
+                    const outlet3On = voltageNodes.has('t-out3-L') && neutralNodes.has('t-out3-N');
+                    
+                    if(lamp1On) document.getElementById('bulb-lamp1').classList.add('on');
+                    if(lamp2On) document.getElementById('bulb-lamp2').classList.add('on');
+                    if(lamp3On) document.getElementById('bulb-lamp3').classList.add('on');
+                    
+                    circuitComplete = lamp1On && lamp2On && lamp3On && acOn && outlet1On && outlet2On && outlet3On;
                 }
 
                 if(circuitComplete) {
