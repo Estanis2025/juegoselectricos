@@ -71,7 +71,7 @@
             background: #f1c40f; /* Amarillo tester */
             border: 2px solid #b7880b; border-radius: 10px;
             box-shadow: 10px 10px 20px rgba(0,0,0,0.5);
-            display: none; z-index: 50; top: 50px; left: 20px;
+            z-index: 50; top: 50px; left: 20px;
             font-family: sans-serif;
         }
         .dt-screen-container {
@@ -103,7 +103,7 @@
             border-radius: 4px; cursor: grab; z-index: 1000;
             box-shadow: 3px 3px 10px rgba(0,0,0,0.5);
             transform-origin: bottom center;
-            display: none; /* Se muestran al activar herramienta */
+            /* Se muestran al activar herramienta */
         }
         .probe::after { /* Punta metalica */
             content:''; position: absolute; bottom: -20px; left: 3px;
@@ -122,7 +122,7 @@
             position: absolute; width: 14px; height: 70px;
             background: linear-gradient(to right, #2f3640 40%, #7f8fa6 100%); 
             border: 1px solid #555; border-radius: 2px;
-            display: none; pointer-events: none; z-index: 100;
+            pointer-events: none; z-index: 100;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
             transform: translate(-7px, -65px);
         }
@@ -168,6 +168,18 @@
         #ctx-menu { position:absolute; display:none; background:white; padding:5px; border:1px solid #ccc; z-index:4000; border-radius:4px; box-shadow:0 2px 10px rgba(0,0,0,0.2); }
         .ctx-item { padding:8px 15px; cursor:pointer; background:#e74c3c; color:white; font-weight:bold; border-radius:3px; }
         .ctx-item:hover { background:#c0392b; }
+        
+        /* MENU DE AYUDA */
+        #help-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 5000; display: none; justify-content: center; align-items: center; }
+        .help-card { background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 500px; }
+        .wiring-diagram { margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
+        .wiring-diagram h3 { margin-top: 0; color: #2d3436; }
+        .wiring-step { display: flex; align-items: center; margin: 10px 0; }
+        .wire-color { width: 20px; height: 20px; border-radius: 50%; margin-right: 10px; }
+        .wire-phase { background: var(--wire-phase); }
+        .wire-neutral { background: var(--wire-neutral); }
+        .wire-earth { background: var(--wire-earth); }
+        .wire-return { background: var(--wire-return); }
     </style>
 </head>
 <body>
@@ -209,6 +221,48 @@
             <button onclick="game.nextLevel()" style="background:#27ae60; color:white; border:none; padding:10px 20px; border-radius:20px; font-size:1.1rem; cursor:pointer;">Siguiente Nivel ➡</button>
         </div>
     </div>
+    
+    <!-- MENU DE AYUDA -->
+    <div id="help-modal">
+        <div class="help-card">
+            <h1 style="color:#2f3640;">Ayuda - Esquema de Conexión</h1>
+            <div class="wiring-diagram">
+                <h3>Esquema de conexión correcta:</h3>
+                
+                <div class="wiring-step">
+                    <div class="wire-color wire-phase"></div>
+                    <div>Fase (L) - Color Rojo</div>
+                </div>
+                <div class="wiring-step">
+                    <div class="wire-color wire-neutral"></div>
+                    <div>Neutro (N) - Color Azul</div>
+                </div>
+                <div class="wiring-step">
+                    <div class="wire-color wire-earth"></div>
+                    <div>Tierra (T) - Color Verde</div>
+                </div>
+                <div class="wiring-step">
+                    <div class="wire-color wire-return"></div>
+                    <div>Retorno - Color Gris</div>
+                </div>
+                
+                <p><strong>Instrucciones:</strong></p>
+                <ol style="text-align: left;">
+                    <li>Conecta Fase (L) del tablero a entrada (L) de la tecla</li>
+                    <li>Conecta salida (1) de la tecla a retorno de la lámpara</li>
+                    <li>Conecta Neutro (N) del tablero a neutro de la lámpara</li>
+                    <li>Conecta Tierra (T) del tablero a tierra de la lámpara</li>
+                </ol>
+                
+                <p><strong>Herramientas:</strong></p>
+                <ul style="text-align: left;">
+                    <li><strong>Tester DT830D:</strong> Mide tensión entre dos puntos</li>
+                    <li><strong>Buscapolo:</strong> Detecta presencia de tensión en cables</li>
+                </ul>
+            </div>
+            <button onclick="document.getElementById('help-modal').style.display = 'none'" style="background:#2f3640; color:white; border:none; padding:10px 20px; border-radius:20px; font-size:1.1rem; cursor:pointer; margin-top: 15px;">Cerrar</button>
+        </div>
+    </div>
 
     <header>
         <div class="level-info">
@@ -229,6 +283,9 @@
             </button>
             <button class="tool-btn" id="btn-neon" onclick="game.selectTool('neon')">
                 💡 Buscapolo
+            </button>
+            <button class="tool-btn" onclick="document.getElementById('help-modal').style.display = 'flex'">
+                ❓ Ayuda
             </button>
         </div>
 
@@ -299,6 +356,12 @@
                 this.ctxMenu = document.getElementById('ctx-menu');
                 this.selectedWire = null;
 
+                // Inicializar herramientas ocultas
+                this.probeRed.el.style.display = 'none';
+                this.probeBlack.el.style.display = 'none';
+                this.uiNeon.style.display = 'none';
+                document.getElementById('dt830d-body').style.display = 'none';
+
                 this.initInteraction();
                 this.showToast("Bienvenido. Usa 'Cable Nuevo' para conectar.");
             }
@@ -351,6 +414,7 @@
                     // Reset positions nearby
                     this.moveProbe(this.probeRed, 200, 300);
                     this.moveProbe(this.probeBlack, 250, 300);
+                    this.updateMultimeter();
                 } else {
                     testerBody.style.display = 'none';
                     this.probeRed.el.style.display = 'none';
@@ -360,7 +424,8 @@
                     this.probeBlack.terminal = null;
                 }
 
-                this.uiNeon.style.display = 'none';
+                // Mostrar/Ocultar Buscapolo
+                this.uiNeon.style.display = t === 'neon' ? 'block' : 'none';
             }
 
             // --- LÓGICA ELÉCTRICA ---
@@ -407,14 +472,8 @@
                 }
 
                 // 2. Propagar Neutro (0)
-                // Usamos un BFS separado. Si un nodo ya tiene 220, es un corto (pero ya lo validamos antes basic).
-                // En este sim simple, Fase gana visualmente, pero para medir necesitamos distinguir.
-                const neutralSet = new Set();
-                this.bfs(adj, 't-src-N', node => neutralSet.add(node));
-                
-                neutralSet.forEach(node => {
+                this.bfs(adj, 't-src-N', node => {
                     if(!map.has(node)) map.set(node, 0);
-                    // Si ya tenia 220, es un corto real, pero asumimos validacion previa.
                 });
 
                 return map;
@@ -503,6 +562,38 @@
                 }
 
                 this.uiDisplay.textContent = val > 0 ? "220" : "000";
+            }
+
+            // --- BUSCAPOLO LOGIC ---
+            updateNeonPen(x, y) {
+                this.uiNeon.style.left = x + 'px';
+                this.uiNeon.style.top = y + 'px';
+                
+                // Verificar si está sobre un cable con tensión
+                const el = document.elementFromPoint(x, y);
+                let hasVoltage = false;
+                
+                // Verificar cables
+                this.wires.forEach(w => {
+                    if(w.el === el && w.hasVoltage) {
+                        hasVoltage = true;
+                    }
+                });
+                
+                // Verificar terminales
+                if(el && el.classList.contains('terminal')) {
+                    const map = this.getPotentialMap();
+                    const terminalId = el.id;
+                    if(map.get(terminalId) === 220) {
+                        hasVoltage = true;
+                    }
+                }
+                
+                if(hasVoltage) {
+                    this.uiNeon.classList.add('active');
+                } else {
+                    this.uiNeon.classList.remove('active');
+                }
             }
 
             // --- CABLEADO ---
@@ -618,15 +709,7 @@
 
                 // Move Buscapolo
                 if(this.tool === 'neon') {
-                    this.uiNeon.style.display = 'block';
-                    this.uiNeon.style.left = e.clientX + 'px';
-                    this.uiNeon.style.top = e.clientY + 'px';
-                    
-                    const el = document.elementFromPoint(e.clientX, e.clientY);
-                    // Check wire logic
-                    const wire = this.wires.find(w => w.el === el);
-                    if(wire && wire.hasVoltage) this.uiNeon.classList.add('active');
-                    else this.uiNeon.classList.remove('active');
+                    this.updateNeonPen(e.clientX, e.clientY);
                 }
 
                 // Dragging Wire
