@@ -221,8 +221,8 @@
                 id: 3, name: "Instalación Completa",
                 comps: [
                     { type: 'source', x: 5, y: 10 },
-                    { type: 'disyuntor', id: 'D1', x: 25, y: 10 }, // Nuevo componente
-                    { type: 'outlet', id: 'T1', x: 25, y: 60 },    // Nuevo componente
+                    { type: 'disyuntor', id: 'D1', x: 25, y: 10 },
+                    { type: 'outlet', id: 'T1', x: 25, y: 60 },
                     { type: 'switch', id: 'S1', x: 50, y: 60 },
                     { type: 'lamp', id: 'L1', x: 80, y: 30 }
                 ]
@@ -237,9 +237,9 @@
                 this.dragStart = null;
                 
                 // Estado Componentes
-                this.breakerOn = false; // Térmica principal
-                this.switches = {};     // Estado teclas
-                this.disyuntores = {};  // Estado disyuntores
+                this.breakerOn = false;
+                this.switches = {};
+                this.disyuntores = {};
 
                 // DOM
                 this.board = document.getElementById('game-board');
@@ -292,14 +292,12 @@
                         </div>`;
                 } else if(c.type === 'disyuntor') {
                     el.className = 'component comp-disyuntor';
-                    this.disyuntores[c.id] = true; // Default ON
+                    this.disyuntores[c.id] = true;
                     html = `
                         <div style="font-size:0.7rem; margin-top:5px;">Disyuntor</div>
                         <div id="lever-${c.id}" class="lever-dif on" onclick="game.toggleDisyuntor('${c.id}')">ON</div>
-                        <!-- Entrada -->
                         <div class="terminal" id="t-${c.id}-inL" style="top:10px; left:-10px;"></div>
                         <div class="terminal" id="t-${c.id}-inN" style="top:40px; left:-10px;"></div>
-                        <!-- Salida -->
                         <div class="terminal" id="t-${c.id}-outL" style="top:10px; right:-10px;"></div>
                         <div class="terminal" id="t-${c.id}-outN" style="top:40px; right:-10px;"></div>
                     `;
@@ -337,8 +335,8 @@
 
             // --- LÓGICA ELÉCTRICA ---
             calculatePotentials() {
-                const map = new Map(); // terminalID -> voltage (220 or 0)
-                if(!this.breakerOn) return map; // Sin energía principal
+                const map = new Map();
+                if(!this.breakerOn) return map;
 
                 const adj = this.buildAdjacency();
 
@@ -346,15 +344,19 @@
                 this.bfs(adj, 't-src-L', node => map.set(node, 220));
 
                 // 2. Neutro (0V)
-                this.bfs(adj, 't-src-N', node => { if(!map.has(node)) map.set(node, 0); });
+                this.bfs(adj, 't-src-N', node => { 
+                    if(!map.has(node)) map.set(node, 0); 
+                });
                 
                 // 3. Tierra (0V)
-                this.bfs(adj, 't-src-E', node => { if(!map.has(node)) map.set(node, 0); });
+                this.bfs(adj, 't-src-E', node => { 
+                    if(!map.has(node)) map.set(node, 0); 
+                });
 
                 return map;
             }
 
-            // BFS personalizado que atraviesa componentes si están ON
+            // BFS mejorado que atraviesa componentes si están activos
             bfs(adj, start, callback) {
                 let q = [start];
                 let visited = new Set([start]);
@@ -363,39 +365,38 @@
                     let u = q.shift();
                     callback(u);
 
-                    // A. Conexiones por cable
+                    // Conexiones por cable
                     if(adj[u]) {
                         for(let v of adj[u]) {
-                            if(!visited.has(v)) { visited.add(v); q.push(v); }
+                            if(!visited.has(v)) { 
+                                visited.add(v); 
+                                q.push(v); 
+                            }
                         }
                     }
 
-                    // B. Conexiones internas de componentes
+                    // Conexiones internas de componentes
                     // Switch
-                    if(u.includes('switch') || (u.includes('S') && u.includes('in'))) { // Simple check
-                        const swId = u.split('-')[1]; // S1
+                    if(u.includes('S') && u.includes('in')) {
+                        const swId = u.split('-')[1];
                         if(this.switches[swId]) {
                             const partner = u.includes('in') ? `t-${swId}-out` : `t-${swId}-in`;
-                            if(!visited.has(partner)) { visited.add(partner); q.push(partner); }
+                            if(!visited.has(partner)) { 
+                                visited.add(partner); 
+                                q.push(partner); 
+                            }
                         }
                     }
-                    // Disyuntor (Pasa L-L y N-N si está ON)
+                    // Disyuntor
                     if(u.includes('D') && u.includes('in')) {
-                        const dId = u.split('-')[1]; // D1
-                        const type = u.slice(-1); // L or N
+                        const dId = u.split('-')[1];
+                        const type = u.slice(-1);
                         if(this.disyuntores[dId]) {
                             const out = `t-${dId}-out${type}`;
-                            if(!visited.has(out)) { visited.add(out); q.push(out); }
-                        }
-                    }
-                    // Lámparas en serie: conducen internamente L <-> N
-                    // (Simulación simple: lámparas son "resistencias", la corriente pasa)
-                    if(u.includes('lamp') || u.includes('L')) {
-                        // Detectar si es terminal de lámpara
-                        const parts = u.split('-');
-                        if(parts[0] === 't' && parts[1].startsWith('L') && (parts[2] === 'L' || parts[2] === 'N')) {
-                            const partner = parts[2] === 'L' ? `t-${parts[1]}-N` : `t-${parts[1]}-L`;
-                            if(!visited.has(partner)) { visited.add(partner); q.push(partner); }
+                            if(!visited.has(out)) { 
+                                visited.add(out); 
+                                q.push(out); 
+                            }
                         }
                     }
                 }
@@ -415,35 +416,23 @@
                         totalLamps++;
                         const vL = map.get(`t-${c.id}-L`);
                         const vN = map.get(`t-${c.id}-N`);
-                        // Lámpara enciende si hay diferencia de potencial (220 y 0)
-                        // Para serie, simplificamos: si llega fase por un lado y neutro por el otro a la cadena.
-                        // En lógica BFS arriba, la fase "inunda" todo. Para serie real se necesita análisis de circuito.
-                        // TRUCO SIMULACIÓN: Si vL es 220 y vN es 0 (o viceversa), prende.
-                        // Pero el BFS de fase "cruza" la lámpara. Así que ambos lados tendrían 220 si no llega neutro "fuerte".
-                        // REFINAMIENTO: El neutro debe llegar desde el origen N.
                         
-                        // Lógica simple robusta:
-                        // Check if L pin traces to Source L AND N pin traces to Source N.
-                        if(this.checkContinuity(`t-${c.id}-L`, 't-src-L') && this.checkContinuity(`t-${c.id}-N`, 't-src-N')) {
-                             document.getElementById(`bulb-${c.id}`).classList.add('on');
-                             lampsOK++;
+                        // Lámpara enciende si hay diferencia de potencial
+                        if(vL === 220 && vN === 0) {
+                            document.getElementById(`bulb-${c.id}`).classList.add('on');
+                            lampsOK++;
                         } else {
-                             document.getElementById(`bulb-${c.id}`).classList.remove('on');
+                            document.getElementById(`bulb-${c.id}`).classList.remove('on');
                         }
                     }
                     if(c.type === 'outlet') {
                         totalOutlets++;
-                        // Enchufe OK si Fase=220, Neutro=0, Tierra=0
                         const vL = map.get(`t-${c.id}-L`);
-                        const vN = map.get(`t-${c.id}-N`); // 0 derivado de src-N
-                        const vE = map.get(`t-${c.id}-E`); // 0 derivado de src-E
+                        const vN = map.get(`t-${c.id}-N`);
+                        const vE = map.get(`t-${c.id}-E`);
                         
-                        // Validación más estricta: Continuidad
-                        const hasL = this.checkContinuity(`t-${c.id}-L`, 't-src-L');
-                        const hasN = this.checkContinuity(`t-${c.id}-N`, 't-src-N');
-                        const hasE = this.checkContinuity(`t-${c.id}-E`, 't-src-E');
-
-                        if(hasL && hasN && hasE) {
+                        // Enchufe OK si tiene fase, neutro y tierra
+                        if(vL === 220 && vN === 0 && vE === 0) {
                             document.getElementById(`led-${c.id}`).classList.add('on');
                             outletsOK++;
                         } else {
@@ -454,49 +443,19 @@
 
                 // VICTORIA
                 if(lampsOK === totalLamps && outletsOK === totalOutlets) {
-                    setTimeout(() => document.getElementById('win-modal').style.display = 'flex', 500);
+                    setTimeout(() => {
+                        document.getElementById('win-modal').style.display = 'flex';
+                    }, 500);
                 }
-            }
-
-            // Verifica si hay camino físico/lógico entre dos puntos
-            checkContinuity(start, target) {
-                if(!this.breakerOn) return false; // Sin energía no hay "continuidad activa" para la lógica de victoria
-                // (Para tester es distinto, pero aquí usamos lógica de estado)
-                const adj = this.buildAdjacency();
-                let found = false;
-                
-                // BFS Específico que NO cruza lámparas (para ver si llega Neutro real, no fase retornada)
-                // Modificamos BFS para que las cargas (lámparas) no sean puentes perfectos en esta validación direccional
-                // Simplificación: Usar el mapa de potenciales.
-                // Si map.get(node) === 220, está conectado a fase.
-                // Si map.get(node) === 0, está conectado a neutro/tierra.
-                // Esto ya lo hace calculatePotentials diferenciando orígenes.
-                
-                const map = this.calculatePotentials();
-                
-                if(target === 't-src-L') return map.get(start) === 220;
-                if(target === 't-src-N') {
-                    // Aquí está el truco: calculatePotentials pone 0 a lo que toca N.
-                    // Pero si la fase entra por el otro lado de la lámpara, el nodo tendría 220.
-                    // Necesitamos saber si TOCA N.
-                    // Recalcular solo N
-                    let isN = false;
-                    this.bfs(adj, 't-src-N', n => { if(n===start) isN = true; });
-                    return isN;
-                }
-                if(target === 't-src-E') {
-                    let isE = false;
-                    this.bfs(adj, 't-src-E', n => { if(n===start) isE = true; });
-                    return isE;
-                }
-                return false;
             }
 
             buildAdjacency() {
                 const adj = {};
                 this.wires.forEach(w => {
-                    if(!adj[w.u]) adj[w.u]=[]; if(!adj[w.v]) adj[w.v]=[];
-                    adj[w.u].push(w.v); adj[w.v].push(w.u);
+                    if(!adj[w.u]) adj[w.u] = [];
+                    if(!adj[w.v]) adj[w.v] = [];
+                    adj[w.u].push(w.v);
+                    adj[w.v].push(w.u);
                 });
                 return adj;
             }
@@ -505,19 +464,35 @@
             toggleBreaker() {
                 this.breakerOn = !this.breakerOn;
                 const b = document.getElementById('breaker-main');
-                if(this.breakerOn) b.classList.add('on'); else b.classList.remove('on');
+                b.textContent = this.breakerOn ? "ON" : "OFF";
+                if(this.breakerOn) {
+                    b.classList.add('on');
+                } else {
+                    b.classList.remove('on');
+                }
                 this.updateCircuit();
             }
+
             toggleSwitch(id) {
                 this.switches[id] = !this.switches[id];
                 const el = document.getElementById(`rocker-${id}`);
-                if(this.switches[id]) el.classList.add('active'); else el.classList.remove('active');
+                if(this.switches[id]) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
                 this.updateCircuit();
             }
+
             toggleDisyuntor(id) {
                 this.disyuntores[id] = !this.disyuntores[id];
                 const el = document.getElementById(`lever-${id}`);
-                if(this.disyuntores[id]) el.classList.add('on'); else el.classList.remove('on');
+                el.textContent = this.disyuntores[id] ? "ON" : "OFF";
+                if(this.disyuntores[id]) {
+                    el.classList.add('on');
+                } else {
+                    el.classList.remove('on');
+                }
                 this.updateCircuit();
             }
 
@@ -526,8 +501,12 @@
                 this.tool = t;
                 document.getElementById('game-board').dataset.tool = t;
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                if(t==='hand') document.getElementById('btn-hand').classList.add('active');
-                if(t==='tester') document.getElementById('btn-tester').classList.add('active');
+                if(t === 'hand') {
+                    document.getElementById('btn-hand').classList.add('active');
+                }
+                if(t === 'tester') {
+                    document.getElementById('btn-tester').classList.add('active');
+                }
                 
                 this.tester.style.display = 'none';
             }
@@ -541,15 +520,15 @@
                     const el = document.elementFromPoint(e.clientX, e.clientY);
                     let voltage = 0;
                     
-                    // Detectar si está sobre un terminal o cable
                     if(el) {
                         const map = this.calculatePotentials();
                         let id = null;
                         
-                        if(el.classList.contains('terminal')) id = el.id;
-                        else if(el.classList.contains('wire')) {
+                        if(el.classList.contains('terminal')) {
+                            id = el.id;
+                        } else if(el.classList.contains('wire')) {
                             const w = this.wires.find(wire => wire.el === el);
-                            if(w) id = w.u; // Aproximación: toma voltaje de un extremo
+                            if(w) id = w.u;
                         }
 
                         if(id && map.has(id)) {
@@ -608,7 +587,9 @@
 
             addWire(u, v) {
                 // Check duplicados
-                if(this.wires.find(w => (w.u===u && w.v===v) || (w.u===v && w.v===u))) return;
+                if(this.wires.find(w => (w.u === u && w.v === v) || (w.u === v && w.v === u))) {
+                    return;
+                }
 
                 // Color
                 let color = '#7f8fa6';
@@ -642,22 +623,33 @@
                 const y2 = r2.top + r2.height/2 - br.top;
 
                 // Curva en U
-                const cx1 = x1, cy1 = Math.max(y1, y2) + 50;
-                const cx2 = x2, cy2 = Math.max(y1, y2) + 50;
+                const cx1 = x1;
+                const cy1 = Math.max(y1, y2) + 50;
+                const cx2 = x2;
+                const cy2 = Math.max(y1, y2) + 50;
 
                 w.el.setAttribute('d', `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`);
             }
 
             showToast(msg) {
                 const t = document.getElementById('toast');
-                t.textContent = msg; t.style.opacity = 1;
-                setTimeout(() => t.style.opacity = 0, 3000);
+                t.textContent = msg;
+                t.style.opacity = 1;
+                setTimeout(() => {
+                    t.style.opacity = 0;
+                }, 3000);
             }
 
-            resetLevel() { this.loadLevel(this.levelIdx); }
+            resetLevel() {
+                this.loadLevel(this.levelIdx);
+            }
+
             nextLevel() { 
-                if(this.levelIdx < levels.length - 1) this.loadLevel(this.levelIdx + 1); 
-                else this.showToast("¡Juego Completado! Felicitaciones.");
+                if(this.levelIdx < levels.length - 1) {
+                    this.loadLevel(this.levelIdx + 1);
+                } else {
+                    this.showToast("¡Juego Completado! Felicitaciones.");
+                }
             }
         }
 
