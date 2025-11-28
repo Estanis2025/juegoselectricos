@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Taller Eléctrico: Instalación Segura</title>
+    <title>Taller Eléctrico: Validación Estricta</title>
     <style>
         :root {
             --bg-color: #f0f2f5;
@@ -47,7 +47,6 @@
             cursor: default;
         }
 
-        /* BUSCAPOLO CURSOR (Simulado visualmente) */
         #game-board.tester-mode { cursor: help; }
 
         #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
@@ -58,7 +57,7 @@
             box-shadow: var(--shadow); z-index: 2; display: flex; flex-direction: column; align-items: center;
         }
         
-        /* CAJA TÉRMICA PRINCIPAL */
+        /* CAJA TÉRMICA */
         .comp-main-panel { 
             width: 120px; height: 160px; background: #34495e; color: white; 
             border: 3px solid #2c3e50; left: 5%; top: 20%;
@@ -72,7 +71,7 @@
         .breaker-handle::after { content: 'OFF'; }
         .breaker-handle.on::after { content: 'ON'; }
 
-        /* INTERRUPTOR (TECLA) */
+        /* INTERRUPTOR */
         .comp-switch { 
             width: 80px; height: 100px; left: 40%; top: 60%;
             background: #ecf0f1;
@@ -99,21 +98,18 @@
             position: absolute; cursor: crosshair; z-index: 10;
         }
         .terminal:hover { transform: scale(1.2); background: #f39c12; }
-        
-        /* Etiquetas de terminales */
         .term-label { position: absolute; font-size: 10px; font-weight: bold; pointer-events: none; color: #333; }
 
         /* CABLES */
         path.wire { fill: none; stroke-width: 6; stroke-linecap: round; cursor: pointer; opacity: 0.9; }
         path.wire:hover { stroke-width: 9; opacity: 1; }
-        /* Efecto Buscapolo */
         path.wire.voltage { filter: drop-shadow(0 0 4px red); } 
 
-        /* ALERTA FLOTANTE */
+        /* ALERTA */
         #alert-box {
             position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
             background: #c0392b; color: white; padding: 15px 25px; border-radius: 30px;
-            font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; text-align: center; z-index: 100;
+            font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; text-align: center; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         
         .info-card {
@@ -121,7 +117,6 @@
             background: rgba(255,255,255,0.9); padding: 15px; border-radius: 8px;
             border-left: 5px solid #3498db; font-size: 0.85rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .info-card h4 { margin: 0 0 5px 0; color: #2c3e50; }
         .wire-legend { display: flex; align-items: center; gap: 5px; margin: 2px 0; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
 
@@ -132,7 +127,7 @@
     <header>
         <div>
             <h1 style="margin:0; font-size:1.2rem;">Taller de Electricidad ⚡</h1>
-            <small>Práctica: Instalación de Punto y Toma simple</small>
+            <small>Instalación: Lámpara con Retorno y Neutro</small>
         </div>
         <div class="tool-panel">
             <div id="tester-indicator" class="status-badge" style="background:#7f8c8d;">BUSCAPOLO: OFF</div>
@@ -143,15 +138,13 @@
     <div id="game-board">
         <svg id="wire-layer"></svg>
 
-        <!-- CAJA DE INFORMACIÓN / AYUDA -->
         <div class="info-card">
-            <h4>Código de Colores</h4>
+            <h4>Referencia</h4>
             <div class="wire-legend"><div class="dot" style="background:#8B4513"></div> Fase (Marrón/Rojo)</div>
             <div class="wire-legend"><div class="dot" style="background:#3498db"></div> Neutro (Celeste)</div>
             <div class="wire-legend"><div class="dot" style="background:#2c3e50"></div> Retorno (Negro)</div>
-            <div class="wire-legend"><div class="dot" style="background:#2ecc71"></div> Tierra (Verde/Amarillo)</div>
             <hr>
-            <strong>Regla de Oro:</strong> ¡Cortá la luz antes de trabajar!
+            <strong>Requisito:</strong> La lámpara debe tener NEUTRO y RETORNO.
         </div>
 
         <!-- 1. TABLERO GENERAL -->
@@ -159,48 +152,42 @@
             <div style="text-align:center; padding:5px; font-weight:bold;">TÉRMICA</div>
             <div id="main-breaker" class="breaker-handle" onclick="game.togglePower()"></div>
             
-            <!-- Terminales Salida -->
             <div style="position:relative; height:100px;">
                 <span class="term-label" style="top:12px; right:25px; color:white;">Fase</span>
-                <div class="terminal" id="t-source-phase" data-type="phase" style="top:10px; right:-10px; background:#8B4513;"></div>
+                <div class="terminal" id="t-source-phase" style="top:10px; right:-10px; background:#8B4513;"></div>
                 
                 <span class="term-label" style="top:42px; right:25px; color:white;">Neutro</span>
-                <div class="terminal" id="t-source-neutral" data-type="neutral" style="top:40px; right:-10px; background:#3498db;"></div>
+                <div class="terminal" id="t-source-neutral" style="top:40px; right:-10px; background:#3498db;"></div>
                 
                 <span class="term-label" style="top:72px; right:25px; color:white;">Tierra</span>
-                <div class="terminal" id="t-source-earth" data-type="earth" style="top:70px; right:-10px; background:#2ecc71;"></div>
+                <div class="terminal" id="t-source-earth" style="top:70px; right:-10px; background:#2ecc71;"></div>
             </div>
         </div>
 
-        <!-- 2. INTERRUPTOR (TECLA) -->
+        <!-- 2. INTERRUPTOR -->
         <div class="component comp-switch">
             <div style="margin-top:5px; font-weight:bold; font-size:12px;">TECLA</div>
-            <!-- Parte trasera simulada (conexiones) -->
-            
-            <!-- Entrada (L) -->
             <div class="terminal" id="t-sw-in" style="top:30px; left:-10px;"></div>
             <span class="term-label" style="top:32px; left:12px;">L (Entrada)</span>
             
-            <!-- Salida (1) Retorno -->
             <div class="terminal" id="t-sw-out" style="top:70px; right:-10px;"></div>
             <span class="term-label" style="top:72px; right:12px;">1 (Retorno)</span>
-
-            <!-- Botón visual frontal (para probar) -->
             <div class="switch-rocker" id="visual-switch" onclick="game.pressSwitch()"></div>
         </div>
 
         <!-- 3. LÁMPARA -->
         <div class="component comp-lamp">
             <div class="bulb" id="bulb"></div>
-            <!-- Terminales -->
+            <!-- Entrada RETORNO -->
             <div class="terminal" id="t-lamp-L" style="bottom:-10px; left:10px;"></div>
-            <span class="term-label" style="bottom:15px; left:15px; font-size:9px;">Fase/Ret</span>
+            <span class="term-label" style="bottom:15px; left:15px; font-size:9px;">Retorno</span>
             
+            <!-- Entrada NEUTRO -->
             <div class="terminal" id="t-lamp-N" style="bottom:-10px; right:10px;"></div>
             <span class="term-label" style="bottom:15px; right:15px; font-size:9px;">Neutro</span>
 
             <div class="terminal" id="t-lamp-E" style="top:-10px; left:30px; background:#2ecc71;"></div>
-            <span class="term-label" style="top:10px; left:25px; font-size:8px;">Chapa</span>
+            <span class="term-label" style="top:10px; left:25px; font-size:8px;">Tierra</span>
         </div>
 
         <div id="alert-box"></div>
@@ -212,45 +199,144 @@
         class ElectricalGame {
             constructor() {
                 this.wires = [];
-                this.isPowerOn = false; // Empezamos con luz cortada (Seguro)
+                this.isPowerOn = false;
                 this.switchClosed = false;
-                
                 this.svg = document.getElementById('wire-layer');
                 this.dragState = null;
-                
                 this.initInteraction();
-                this.showAlert("PASO 1: Verificá que la térmica esté baja antes de cablear.");
+                this.showAlert("Conectá: Fase a Tecla, Retorno a Lámpara y Neutro a Lámpara.");
             }
 
-            // --- SEGURIDAD: CONTROL DE ENERGÍA ---
+            // --- VALIDACIÓN ESTRICTA AL INTENTAR DAR LUZ ---
             togglePower() {
-                this.isPowerOn = !this.isPowerOn;
+                // Si la luz ya estaba prendida, apagar simplemente
+                if (this.isPowerOn) {
+                    this.setPowerState(false);
+                    return;
+                }
+
+                // SI ESTÁ APAGADA Y QUEREMOS PRENDER, VALIDAMOS PRIMERO
+                
+                // Construir mapa de conexiones actual
+                const adj = this.buildAdjacencyMap();
+                const isConnected = (a, b) => this.checkPath(adj, a, b);
+
+                // 1. VERIFICAR NEUTRO EN TECLA (ERROR GRAVE)
+                if (isConnected('t-source-neutral', 't-sw-in') || isConnected('t-source-neutral', 't-sw-out')) {
+                    this.triggerError("❌ ERROR GRAVE: Neutro conectado a la tecla.");
+                    return; // No sube la térmica
+                }
+
+                // 2. VERIFICAR NEUTRO EN LÁMPARA
+                // Debe haber continuidad desde la Fuente de Neutro hasta el borne Neutro de la lámpara
+                const lampHasNeutral = isConnected('t-source-neutral', 't-lamp-N');
+                
+                if (!lampHasNeutral) {
+                    this.triggerError("❌ MALA CONEXIÓN: La lámpara no tiene Neutro.");
+                    return; // No sube la térmica
+                }
+
+                // 3. VERIFICAR RETORNO EN LÁMPARA
+                // Debe haber conexión desde la Salida de la Tecla (1) hasta la Entrada de la Lámpara (Retorno)
+                const lampHasReturn = isConnected('t-sw-out', 't-lamp-L');
+
+                if (!lampHasReturn) {
+                    // Verificar si cometió el error de conectar Fase directa
+                    if (isConnected('t-source-phase', 't-lamp-L')) {
+                        this.triggerError("❌ MALA CONEXIÓN: Lámpara directa a fase. Debe usar el Retorno.");
+                    } else {
+                        this.triggerError("❌ MALA CONEXIÓN: Falta cable de Retorno (Tecla -> Lámpara).");
+                    }
+                    return; // No sube la térmica
+                }
+
+                // Si todo está bien, permitimos subir la térmica
+                this.setPowerState(true);
+            }
+
+            setPowerState(isOn) {
+                this.isPowerOn = isOn;
                 const handle = document.getElementById('main-breaker');
                 const tester = document.getElementById('tester-indicator');
                 
-                if (this.isPowerOn) {
+                if (isOn) {
                     handle.classList.add('on');
-                    tester.style.background = "#e67e22"; // Naranja activo
+                    tester.style.background = "#e67e22";
                     tester.textContent = "BUSCAPOLO: ACTIVO";
-                    this.showAlert("¡Corriente ACTIVADA! Usa el buscapolo. No toques cables.");
+                    this.showAlert("✅ Conexión Correcta. Energía Activada.");
                 } else {
                     handle.classList.remove('on');
                     tester.style.background = "#7f8c8d";
                     tester.textContent = "BUSCAPOLO: OFF";
-                    this.showAlert("Corriente cortada. Es seguro trabajar.");
+                    this.showAlert("Corriente cortada.");
                 }
-                this.validateCircuit();
+                this.updateLampState();
             }
 
             pressSwitch() {
                 this.switchClosed = !this.switchClosed;
                 document.getElementById('visual-switch').classList.toggle('active');
-                // Sonido click
                 this.playSound(300, 'square', 0.05);
-                this.validateCircuit();
+                this.updateLampState();
             }
 
-            // --- INTERACCIÓN DE CABLEADO ---
+            // --- LÓGICA DE ENCENDIDO DE LÁMPARA ---
+            updateLampState() {
+                const bulb = document.getElementById('bulb');
+                bulb.classList.remove('on');
+                this.wires.forEach(w => w.el.classList.remove('voltage'));
+
+                if (!this.isPowerOn) return;
+
+                // Ya sabemos que el cableado es correcto porque togglePower lo validó.
+                // Ahora solo chequeamos si la tecla deja pasar corriente (Fase -> Tecla -> Retorno).
+                
+                const adj = this.buildAdjacencyMap();
+                const hasPhaseAtSwitch = this.checkPath(adj, 't-source-phase', 't-sw-in');
+
+                // Visualizar Tensión en cables
+                this.wires.forEach(w => {
+                    // Fase siempre tiene tensión
+                    if (this.checkPath(adj, 't-source-phase', w.u) || this.checkPath(adj, 't-source-phase', w.v)) {
+                        w.el.classList.add('voltage');
+                    }
+                    // Retorno tiene tensión solo si tecla cerrada
+                    if (this.switchClosed && hasPhaseAtSwitch) {
+                         if (w.u === 't-sw-out' || w.v === 't-sw-out') w.el.classList.add('voltage');
+                    }
+                });
+
+                if (this.switchClosed && hasPhaseAtSwitch) {
+                    bulb.classList.add('on');
+                }
+            }
+
+            // --- UTILS GRAFOS ---
+            buildAdjacencyMap() {
+                const adj = {};
+                this.wires.forEach(w => {
+                    if(!adj[w.u]) adj[w.u]=[]; if(!adj[w.v]) adj[w.v]=[];
+                    adj[w.u].push(w.v); adj[w.v].push(w.u);
+                });
+                return adj;
+            }
+
+            checkPath(adj, start, target) {
+                if (!adj[start]) return false;
+                let q = [start], visited = new Set([start]);
+                while (q.length) {
+                    let curr = q.shift();
+                    if (curr === target) return true;
+                    if (adj[curr]) {
+                        for (let n of adj[curr]) {
+                            if (!visited.has(n)) { visited.add(n); q.push(n); }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            // --- INTERACCIÓN ---
             initInteraction() {
                 document.querySelectorAll('.terminal').forEach(t => {
                     t.addEventListener('pointerdown', (e) => this.startDrag(e));
@@ -260,203 +346,85 @@
             }
 
             startDrag(e) {
-                // REGLA DE SEGURIDAD CRÍTICA
                 if (this.isPowerOn) {
-                    this.triggerError("¡PELIGRO DE ELECTROCUCIÓN! Cortá la térmica primero.");
-                    this.playSound(100, 'sawtooth', 0.5); // Sonido error grave
+                    this.triggerError("¡PELIGRO! Cortá la térmica antes de conectar cables.");
                     return;
                 }
-
                 const t = e.target;
-                this.dragState = {
-                    startId: t.id,
-                    startEl: t,
-                    path: this.createTempPath()
-                };
-
-                // Auto-determinación del color del cable según origen
-                const type = this.getTerminalType(t.id);
-                let color = '#555'; // Default
-                if (type === 'phase') color = 'var(--wire-phase)'; // Marrón
-                if (type === 'neutral') color = 'var(--wire-neutral)'; // Celeste
-                if (type === 'earth') color = 'var(--wire-earth)'; // Verde
-                if (type === 'return') color = 'var(--wire-return)'; // Negro (Retorno)
-
+                this.dragState = { startId: t.id, startEl: t, path: this.createTempPath() };
+                
+                // Colores automáticos
+                let color = '#555';
+                if (t.id === 't-source-phase') color = 'var(--wire-phase)';
+                else if (t.id === 't-source-neutral') color = 'var(--wire-neutral)';
+                else if (t.id === 't-source-earth') color = 'var(--wire-earth)';
+                else if (t.id === 't-sw-out') color = 'var(--wire-return)'; // Retorno automático
+                else if (t.id === 't-lamp-N') color = 'var(--wire-neutral)'; // Si sale del neutro lámpara
+                
                 this.dragState.path.setAttribute('stroke', color);
             }
 
             drag(e) {
                 if (!this.dragState) return;
                 const rect = document.getElementById('game-board').getBoundingClientRect();
-                const startRect = this.dragState.startEl.getBoundingClientRect();
-                
-                const x1 = startRect.left + startRect.width/2 - rect.left;
-                const y1 = startRect.top + startRect.height/2 - rect.top;
+                const start = this.dragState.startEl.getBoundingClientRect();
+                const x1 = start.left + start.width/2 - rect.left;
+                const y1 = start.top + start.height/2 - rect.top;
                 const x2 = e.clientX - rect.left;
                 const y2 = e.clientY - rect.top;
-                
                 this.dragState.path.setAttribute('d', `M ${x1} ${y1} L ${x2} ${y2}`);
             }
 
             endDrag(e) {
                 if (!this.dragState) return;
                 this.dragState.path.remove();
-
-                const endEl = document.elementFromPoint(e.clientX, e.clientY);
-                
-                if (endEl && endEl.classList.contains('terminal') && endEl.id !== this.dragState.startId) {
-                    this.connectWires(this.dragState.startId, endEl.id, this.dragState.path.getAttribute('stroke'));
+                const end = document.elementFromPoint(e.clientX, e.clientY);
+                if (end && end.classList.contains('terminal') && end.id !== this.dragState.startId) {
+                    this.connectWires(this.dragState.startId, end.id, this.dragState.path.getAttribute('stroke'));
                 }
                 this.dragState = null;
             }
 
-            getTerminalType(id) {
-                // Lógica de colores según de dónde arrastras
-                if (id === 't-source-phase') return 'phase';
-                if (id === 't-source-neutral') return 'neutral';
-                if (id === 't-source-earth' || id === 't-lamp-E') return 'earth';
-                if (id === 't-sw-out') return 'return'; // Del interruptor a la lámpara es retorno
-                return 'phase'; // Default para input de interruptor
-            }
-
-            connectWires(idA, idB, color) {
-                // Verificar duplicados
-                if (this.wires.some(w => (w.u === idA && w.v === idB) || (w.u === idB && w.v === idA))) return;
-
+            connectWires(u, v, color) {
+                if (this.wires.some(w => (w.u === u && w.v === v) || (w.u === v && w.v === u))) return;
                 const path = document.createElementNS(svgNS, "path");
                 path.classList.add('wire');
                 path.setAttribute('stroke', color);
                 
-                // Evento click en cable (Simula Buscapolo o Desconexión)
-                path.addEventListener('click', (e) => this.handleWireClick(e, wireObj));
+                const wire = { u, v, el: path };
+                path.addEventListener('click', () => {
+                    if (!this.isPowerOn && confirm("¿Quitar cable?")) {
+                        path.remove();
+                        this.wires = this.wires.filter(w => w !== wire);
+                    } else if (this.isPowerOn) {
+                        this.showAlert("Buscapolo: " + (path.classList.contains('voltage') ? "¡TENSIÓN!" : "Sin Tensión"));
+                    }
+                });
                 
                 this.svg.appendChild(path);
-                
-                const wireObj = { u: idA, v: idB, el: path, color: color };
-                this.wires.push(wireObj);
+                this.wires.push(wire);
                 this.updateWireVisuals();
-                this.playSound(600, 'sine', 0.1); // Click conexión
+                this.playSound(600, 'sine', 0.1);
             }
 
-            handleWireClick(e, wire) {
-                if (this.isPowerOn) {
-                    // Modo Buscapolo: Indicar si hay tensión
-                    const hasVoltage = this.checkVoltageOnWire(wire);
-                    if (hasVoltage) {
-                        this.showAlert("⚡ BUSCAPOLO: ¡HAY TENSIÓN! (220V)");
-                        this.playSound(800, 'square', 0.1);
-                    } else {
-                        this.showAlert("Buscapolo: Sin tensión.");
-                    }
-                } else {
-                    // Modo Trabajo: Desconectar
-                    if (confirm("¿Quitar este cable?")) {
-                        wire.el.remove();
-                        this.wires = this.wires.filter(w => w !== wire);
-                        this.playSound(400, 'sine', 0.1);
-                    }
-                }
-            }
-
-            // --- LÓGICA DE VALIDACIÓN (EL CEREBRO) ---
-            validateCircuit() {
-                const bulb = document.getElementById('bulb');
-                bulb.classList.remove('on');
-                this.wires.forEach(w => w.el.classList.remove('voltage')); // Reset buscapolo visual
-
-                if (!this.isPowerOn) return;
-
-                // Construir grafo
-                const adj = {};
-                const addEdge = (u,v) => {
-                    if(!adj[u]) adj[u]=[]; if(!adj[v]) adj[v]=[];
-                    adj[u].push(v); adj[v].push(u);
-                };
-
-                this.wires.forEach(w => addEdge(w.u, w.v));
-
-                // Helper BFS
-                const isConnected = (start, target) => {
-                    if (!adj[start]) return false;
-                    let q = [start];
-                    let visited = new Set([start]);
-                    while (q.length) {
-                        let curr = q.shift();
-                        if (curr === target) return true;
-                        if (adj[curr]) {
-                            for (let neighbor of adj[curr]) {
-                                if (!visited.has(neighbor)) {
-                                    visited.add(neighbor);
-                                    q.push(neighbor);
-                                }
-                            }
-                        }
-                    }
-                    return false;
-                };
-
-                // --- VALIDACIONES DE SEGURIDAD (ERRORES GRAVES) ---
-                
-                // 1. NEUTRO EN TECLA: ¿El neutro toca la tecla?
-                // Chequear si hay camino desde Fuente-Neutro hasta Switch-IN o Switch-OUT
-                const neutralToSwitch = isConnected('t-source-neutral', 't-sw-in') || isConnected('t-source-neutral', 't-sw-out');
-                if (neutralToSwitch) {
-                    this.triggerError("❌ ERROR GRAVE: ¡Conectaste el Neutro a la tecla! La tecla solo corta la FASE.");
-                    this.tripBreaker();
-                    return;
-                }
-
-                // 2. FASE DIRECTA A LÁMPARA (Sin pasar por tecla)
-                // Esto no es "corto", pero la luz quedaría siempre prendida.
-                
-                // --- SIMULACIÓN DE CORRIENTE ---
-                
-                // A. ¿Llega FASE a la entrada de la tecla?
-                const phaseToSwitchIn = isConnected('t-source-phase', 't-sw-in');
-                
-                // B. ¿Tecla cerrada conecta In con Out?
-                const switchConducts = this.switchClosed;
-
-                // C. ¿Llega RETORNO desde tecla a lámpara?
-                const switchOutToLamp = isConnected('t-sw-out', 't-lamp-L');
-
-                // D. ¿Llega NEUTRO a la lámpara?
-                const neutralToLamp = isConnected('t-source-neutral', 't-lamp-N'); // Estándar: Neutro a rosca (N)
-                
-                // E. ¿Llega TIERRA a la lámpara?
-                const earthToLamp = isConnected('t-source-earth', 't-lamp-E');
-
-                // ESTADO FINAL
-                if (phaseToSwitchIn && switchConducts && switchOutToLamp && neutralToLamp) {
-                    bulb.classList.add('on'); // ¡LUZ!
-                    this.showAlert("✅ ¡Excelente! Instalación correcta.");
-                } else {
-                    if (this.switchClosed && (!phaseToSwitchIn || !switchOutToLamp)) {
-                        this.showAlert("La tecla está activada pero no llega corriente a la lámpara.");
-                    } else if (this.switchClosed && !neutralToLamp) {
-                         this.showAlert("Falta conectar el Neutro directo a la lámpara.");
-                    }
-                }
-
-                // Visualización de Tensión (Buscapolo)
-                // Colorear cables que tienen Fase Viva
+            updateWireVisuals() {
+                const rect = document.getElementById('game-board').getBoundingClientRect();
                 this.wires.forEach(w => {
-                    // Si el cable está conectado a la Fase directamente
-                    if (isConnected('t-source-phase', w.u) || isConnected('t-source-phase', w.v)) {
-                        w.el.classList.add('voltage');
-                    }
-                    // Si el cable es retorno y la tecla está cerrada y tiene fase
-                    if (this.switchClosed && phaseToSwitchIn) {
-                        // Chequeo simplificado visual
-                        if (w.u === 't-sw-out' || w.v === 't-sw-out') w.el.classList.add('voltage');
-                    }
+                    const r1 = document.getElementById(w.u).getBoundingClientRect();
+                    const r2 = document.getElementById(w.v).getBoundingClientRect();
+                    const x1 = r1.left + r1.width/2 - rect.left;
+                    const y1 = r1.top + r1.height/2 - rect.top;
+                    const x2 = r2.left + r2.width/2 - rect.left;
+                    const y2 = r2.top + r2.height/2 - rect.top;
+                    const drop = Math.abs(x2 - x1) * 0.2 + 30;
+                    w.el.setAttribute('d', `M ${x1} ${y1} C ${x1} ${y1+drop}, ${x2} ${y2+drop}, ${x2} ${y2}`);
                 });
             }
 
-            checkVoltageOnWire(wire) {
-                // Simple: Si el cable toca Fase Directa O (Fase a través de tecla cerrada)
-                // Nota: Esto requiere reconstruir el grafo dentro de la función, simplificamos:
-                return wire.el.classList.contains('voltage');
+            createTempPath() {
+                const p = document.createElementNS(svgNS, "path");
+                p.setAttribute('fill','none'); p.setAttribute('stroke-width','4'); p.setAttribute('stroke-dasharray','5,5');
+                this.svg.appendChild(p); return p;
             }
 
             triggerError(msg) {
@@ -465,7 +433,7 @@
                 box.textContent = msg;
                 box.style.opacity = 1;
                 this.playSound(100, 'sawtooth', 0.8);
-                setTimeout(() => box.style.opacity = 0, 5000);
+                setTimeout(() => box.style.opacity = 0, 4000);
             }
 
             showAlert(msg) {
@@ -476,49 +444,13 @@
                 setTimeout(() => box.style.opacity = 0, 3000);
             }
 
-            tripBreaker() {
-                // Saltar térmica
-                this.isPowerOn = false;
-                document.getElementById('main-breaker').classList.remove('on');
-                document.getElementById('tester-indicator').style.background = "#7f8c8d";
-                document.getElementById('tester-indicator').textContent = "BUSCAPOLO: OFF";
-            }
-
-            createTempPath() {
-                const path = document.createElementNS(svgNS, "path");
-                path.setAttribute('fill', 'none');
-                path.setAttribute('stroke-width', '4');
-                path.setAttribute('stroke-dasharray', '5,5');
-                this.svg.appendChild(path);
-                return path;
-            }
-
-            updateWireVisuals() {
-                const rect = document.getElementById('game-board').getBoundingClientRect();
-                this.wires.forEach(w => {
-                    const r1 = document.getElementById(w.u).getBoundingClientRect();
-                    const r2 = document.getElementById(w.v).getBoundingClientRect();
-                    
-                    const x1 = r1.left + r1.width/2 - rect.left;
-                    const y1 = r1.top + r1.height/2 - rect.top;
-                    const x2 = r2.left + r2.width/2 - rect.left;
-                    const y2 = r2.top + r2.height/2 - rect.top;
-
-                    // Curva realista
-                    const drop = Math.abs(x2 - x1) * 0.2 + 30;
-                    w.el.setAttribute('d', `M ${x1} ${y1} C ${x1} ${y1+drop}, ${x2} ${y2+drop}, ${x2} ${y2}`);
-                });
-            }
-
             reset() {
                 this.wires.forEach(w => w.el.remove());
                 this.wires = [];
-                this.isPowerOn = false;
+                this.setPowerState(false);
                 this.switchClosed = false;
-                document.getElementById('main-breaker').classList.remove('on');
                 document.getElementById('visual-switch').classList.remove('active');
                 document.getElementById('bulb').classList.remove('on');
-                this.showAlert("Tablero reiniciado. Cortá la corriente antes de empezar.");
             }
 
             playSound(freq, type, vol) {
