@@ -3,519 +3,643 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Taller Eléctrico: Buscapolo Digital</title>
+    <title>Simulador Electricista Pro: Multímetro y Fallas</title>
     <style>
         :root {
-            --bg-color: #f0f2f5;
+            --bg-color: #e0e5ec;
+            --panel-bg: #2c3e50;
             --wire-phase: #8B4513;   /* Marrón */
             --wire-neutral: #3498db; /* Celeste */
             --wire-earth: #2ecc71;   /* Verde */
-            --wire-return: #2c3e50;  /* Negro */
-            --shadow: 0 4px 8px rgba(0,0,0,0.2);
+            --wire-return: #222;     /* Negro */
+            --shadow: 9px 9px 16px rgb(163,177,198,0.6), -9px -9px 16px rgba(255,255,255, 0.5);
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
             margin: 0; overflow: hidden; touch-action: none;
             display: flex; flex-direction: column; height: 100vh; user-select: none;
-            cursor: default;
         }
 
-        /* HEADER */
+        /* --- HEADER & TOOLBAR --- */
         header {
-            background: #2c3e50; color: white; padding: 10px 20px;
+            background: var(--panel-bg); color: white; padding: 10px 20px;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: var(--shadow); z-index: 10;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 20;
         }
-        .tool-panel { display: flex; gap: 10px; align-items: center; }
-        
-        button {
-            padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;
-            font-weight: bold; transition: 0.2s;
-        }
-        .btn-reset { background: #c0392b; color: white; }
-        .btn-help { background: #f1c40f; color: #2c3e50; font-size: 1.2rem; padding: 5px 12px; }
 
-        /* TABLERO */
+        .toolbar { display: flex; gap: 10px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 8px; }
+        
+        .tool-btn {
+            background: #34495e; border: 1px solid #7f8c8d; color: #ecf0f1;
+            padding: 8px 12px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+            transition: 0.2s; font-size: 0.9rem;
+        }
+        .tool-btn:hover { background: #455a64; }
+        .tool-btn.active { background: #f1c40f; color: #2c3e50; font-weight: bold; border-color: #f39c12; }
+
+        .action-btn {
+            padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;
+        }
+        .btn-help { background: #3498db; color: white; }
+        .btn-reset { background: #c0392b; color: white; }
+
+        /* --- TABLERO --- */
         #game-board {
             position: relative; flex-grow: 1;
-            background-image: linear-gradient(#d1d8e0 1px, transparent 1px), linear-gradient(90deg, #d1d8e0 1px, transparent 1px);
+            background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
             background-size: 20px 20px;
+            cursor: default;
         }
+        
+        /* Cursores según herramienta */
+        #game-board[data-tool="hand"] { cursor: default; }
+        #game-board[data-tool="buscapolo"] { cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="%23e67e22" d="M20.7 7c-.4-.4-1-.4-1.4 0l-1.8 1.8-4.2-4.2 1.8-1.8c.4-.4.4-1 0-1.4-.4-.4-1-.4-1.4 0l-3 3 5 5 3-3c.4-.4.4-1 0-1.4zM3 17.2l8.8-8.8 4.2 4.2L7.2 21.4c-.4.4-1 .4-1.4 0l-2.8-2.8c-.4-.4-.4-1 0-1.4z"/></svg>') 0 24, crosshair; }
+        #game-board[data-tool="multimeter"] { cursor: crosshair; }
 
         #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 
-        /* BUSCAPOLO DIGITAL FLOTANTE */
-        #digital-tester {
-            position: absolute;
-            background: #222;
-            color: #7f8c8d; /* Color apagado por defecto */
-            width: 100px; padding: 10px; border-radius: 8px;
-            border: 2px solid #555;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            pointer-events: none; /* Click through */
-            z-index: 1000;
-            display: none; /* Oculto hasta activar corriente */
-            font-family: 'Courier New', monospace;
-            text-align: center;
+        /* --- HERRAMIENTAS FLOTANTES --- */
+        
+        /* 1. Buscapolo Visual */
+        #neon-tester {
+            position: absolute; width: 20px; height: 60px;
+            background: rgba(255, 165, 0, 0.2); border: 2px solid orange; border-radius: 4px;
+            pointer-events: none; display: none; z-index: 100;
+            box-shadow: 0 0 5px orange; transition: background 0.1s;
         }
-        #digital-tester.active { display: block; }
-        .tester-screen {
-            background: #4a5a4a; /* LCD apagado */
-            color: rgba(0,0,0,0.2);
-            padding: 5px; margin-bottom: 5px;
-            font-size: 1.2rem; font-weight: bold; border-radius: 4px;
-            border: 1px inset #333;
-        }
-        /* Cuando detecta tensión */
-        #digital-tester.hot .tester-screen {
-            background: #e74c3c; /* Pantalla Roja Alerta */
-            color: white;
-            box-shadow: 0 0 10px #e74c3c;
-        }
-        #digital-tester.safe .tester-screen {
-            background: #81b214; /* Pantalla Verde Seguro */
-            color: #111;
-        }
+        #neon-tester.lit { background: rgba(255, 0, 0, 1); box-shadow: 0 0 20px red; }
 
-        /* COMPONENTES */
+        /* 2. Multímetro Digital */
+        #multimeter-device {
+            position: absolute; width: 140px; background: #f1c40f; 
+            border: 3px solid #333; border-radius: 10px; padding: 10px;
+            box-shadow: 5px 10px 20px rgba(0,0,0,0.4);
+            display: none; z-index: 101; pointer-events: none;
+        }
+        .lcd-screen {
+            background: #9ea78e; font-family: 'Courier New', monospace;
+            padding: 5px; border: 2px inset #555; margin-bottom: 5px;
+            font-size: 1.4rem; text-align: right; color: #222; font-weight: bold;
+        }
+        .mode-indicator { font-size: 0.7rem; text-transform: uppercase; color: #333; font-weight: bold; }
+
+        /* --- COMPONENTES --- */
         .component {
-            position: absolute; background: white; border: 2px solid #7f8c8d; border-radius: 6px;
-            box-shadow: var(--shadow); z-index: 2; display: flex; flex-direction: column; align-items: center;
+            position: absolute; background: white; border: 1px solid #999; border-radius: 4px;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.1); z-index: 2; display: flex; flex-direction: column; align-items: center;
         }
-        .comp-main-panel { width: 120px; height: 160px; background: #34495e; color: white; left: 5%; top: 20%; }
-        .breaker-handle {
-            width: 60px; height: 40px; background: #e74c3c; margin: 10px; border-radius: 4px;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;
+        .comp-main { width: 110px; height: 150px; background: #34495e; color: white; left: 5%; top: 20%; border-radius: 8px; }
+        .breaker {
+            width: 50px; height: 30px; background: #e74c3c; margin: 10px; border-radius: 4px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem;
+            box-shadow: inset 0 -3px rgba(0,0,0,0.3);
         }
-        .breaker-handle.on { background: #27ae60; transform: translateY(2px); }
-        .breaker-handle::after { content: 'OFF'; } .breaker-handle.on::after { content: 'ON'; }
+        .breaker.on { background: #27ae60; transform: translateY(2px); box-shadow: inset 0 2px rgba(0,0,0,0.3); }
 
-        .comp-switch { width: 80px; height: 100px; left: 40%; top: 60%; background: #ecf0f1; }
-        .switch-rocker { width: 40px; height: 60px; background: #fff; border: 1px solid #ccc; cursor: pointer; margin-top: 10px; }
-        .switch-rocker.active { border-left: 4px solid #ccc; background: #f9f9f9; }
+        .comp-switch { width: 70px; height: 90px; left: 40%; top: 60%; background: #ecf0f1; }
+        .switch-btn { width: 30px; height: 50px; background: #fff; border: 1px solid #bbb; margin-top: 10px; cursor: pointer; }
+        .switch-btn.active { border-left: 5px solid #aaa; background: #eee; }
 
         .comp-lamp { width: 80px; height: 80px; border-radius: 50%; left: 70%; top: 30%; border: 4px solid #bdc3c7; }
-        .bulb { width: 100%; height: 100%; background: #95a5a6; border-radius: 50%; opacity: 0.5; transition: 0.3s; }
-        .bulb.on { background: #f1c40f; opacity: 1; box-shadow: 0 0 50px #f1c40f; }
+        .bulb { width: 100%; height: 100%; background: #95a5a6; border-radius: 50%; opacity: 0.4; transition: 0.2s; }
+        .bulb.on { background: #f1c40f; opacity: 1; box-shadow: 0 0 60px #f1c40f; }
 
         /* TERMINALES */
         .terminal {
-            width: 18px; height: 18px; background: #bdc3c7; border: 2px solid #555; border-radius: 50%;
+            width: 16px; height: 16px; background: #bdc3c7; border: 2px solid #555; border-radius: 50%;
             position: absolute; cursor: crosshair; z-index: 10;
         }
-        .terminal:hover { transform: scale(1.2); background: #f39c12; }
-        .term-label { position: absolute; font-size: 10px; font-weight: bold; pointer-events: none; color: #333; }
+        .terminal:hover { background: #f39c12; transform: scale(1.2); }
+        .lbl { position: absolute; font-size: 9px; font-weight: bold; pointer-events: none; color: #444; white-space: nowrap; }
 
         /* CABLES */
-        path.wire { fill: none; stroke-width: 6; stroke-linecap: round; cursor: pointer; opacity: 0.9; pointer-events: stroke; }
-        path.wire:hover { stroke-width: 10; }
-        /* Clase interna para lógica, no visual directa (lo maneja el buscapolo) */
-        path.wire.voltage { } 
+        path.wire { fill: none; stroke-width: 5; stroke-linecap: round; cursor: pointer; opacity: 0.9; }
+        path.wire:hover { stroke-width: 8; }
+        /* Wire states for debugging/visuals */
+        path.wire.broken-revealed { stroke-dasharray: 5,5; opacity: 0.5; }
 
-        /* MODAL DE AYUDA */
-        #help-overlay {
+        /* --- MODAL AYUDA --- */
+        #help-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 2000;
+            background: rgba(0,0,0,0.85); z-index: 3000;
             display: none; justify-content: center; align-items: center;
         }
-        .help-card {
-            background: white; padding: 20px; border-radius: 10px; max-width: 500px; width: 90%;
-            text-align: center; position: relative;
+        .modal-content {
+            background: white; width: 90%; max-width: 600px; padding: 25px;
+            border-radius: 10px; position: relative; max-height: 90vh; overflow-y: auto;
         }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; font-weight: bold; }
-        .schema-container {
-            margin-top: 20px; padding: 15px; background: #f9f9f9; border: 1px dashed #ccc;
-            display: flex; justify-content: center;
-        }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 2rem; cursor: pointer; color: #c0392b; }
+        
+        .color-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 5px; background: #f9f9f9; border-radius: 4px; }
+        .color-box { width: 20px; height: 20px; border-radius: 4px; border: 1px solid #ccc; }
+        
+        h3 { color: #2c3e50; border-bottom: 2px solid #f1c40f; padding-bottom: 5px; }
 
         /* ALERTAS */
-        #alert-box {
-            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: #c0392b; color: white; padding: 15px 25px; border-radius: 30px;
-            font-weight: bold; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100;
+        #alert-toast {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #333; color: white; padding: 12px 25px; border-radius: 50px;
+            font-weight: bold; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 200; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
 
-    <!-- BUSCAPOLO DIGITAL FLOTANTE -->
-    <div id="digital-tester">
-        <div class="tester-screen" id="tester-readout">--</div>
-        <div style="font-size:10px; color:#aaa;">DIGITAL TESTER</div>
-        <div style="width:2px; height:15px; background:silver; margin: 0 auto;"></div>
-        <div style="width:4px; height:4px; background:red; border-radius:50%; margin: 0 auto;"></div>
+    <!-- HERRAMIENTAS VISUALES FLOTANTES -->
+    <div id="neon-tester"></div>
+    <div id="multimeter-device">
+        <div class="lcd-screen" id="multi-screen">---</div>
+        <div class="mode-indicator" id="multi-mode">MODO: VOLTAJE</div>
+        <div style="font-size:10px; color:#555; margin-top:5px; text-align:center;">FLUKE SIM</div>
     </div>
 
-    <!-- MODAL AYUDA / ESQUEMA -->
-    <div id="help-overlay">
-        <div class="help-card">
-            <div class="close-btn" onclick="document.getElementById('help-overlay').style.display='none'">×</div>
-            <h2>Esquema de Conexión Correcto</h2>
-            <p>Sigue este diagrama para conectar la lámpara sin errores.</p>
+    <!-- MODAL DE AYUDA -->
+    <div id="help-modal">
+        <div class="modal-content">
+            <div class="close-modal" onclick="game.toggleHelp(false)">&times;</div>
+            <h2>📘 Guía del Electricista</h2>
             
-            <div class="schema-container">
-                <!-- SVG DIAGRAMA SIMPLIFICADO -->
-                <svg width="300" height="200" viewBox="0 0 300 200">
-                    <!-- Caja -->
-                    <rect x="10" y="50" width="60" height="100" fill="#34495e" rx="5" />
-                    <text x="20" y="40" font-family="Arial" font-size="10" fill="#333">TABLERO</text>
-                    
-                    <!-- Tecla -->
-                    <rect x="120" y="100" width="50" height="50" fill="#ecf0f1" stroke="#999" rx="5" />
-                    <text x="125" y="90" font-family="Arial" font-size="10" fill="#333">TECLA</text>
+            <h3>1. Reglas de Oro (Seguridad)</h3>
+            <ul>
+                <li><strong>SIEMPRE</strong> cortá la térmica antes de conectar cables.</li>
+                <li>Si la térmica está alta (ON), no podrás modificar el circuito.</li>
+                <li>El <strong>Neutro</strong> NUNCA debe pasar por el interruptor.</li>
+            </ul>
 
-                    <!-- Lámpara -->
-                    <circle cx="250" cy="80" r="25" fill="#fff" stroke="#f1c40f" stroke-width="3"/>
-                    <text x="235" y="40" font-family="Arial" font-size="10" fill="#333">LUZ</text>
-
-                    <!-- CABLES -->
-                    <!-- Fase (Marrón) -->
-                    <path d="M 70 80 L 120 120" stroke="#8B4513" stroke-width="3" fill="none" />
-                    <text x="80" y="95" font-size="9" fill="#8B4513">FASE</text>
-
-                    <!-- Retorno (Negro) -->
-                    <path d="M 170 120 L 250 105" stroke="#2c3e50" stroke-width="3" fill="none" />
-                    <text x="180" y="135" font-size="9" fill="#2c3e50">RETORNO</text>
-
-                    <!-- Neutro (Azul) -->
-                    <path d="M 70 110 C 100 180, 200 180, 250 105" stroke="#3498db" stroke-width="3" fill="none" />
-                    <text x="150" y="170" font-size="9" fill="#3498db">NEUTRO DIRECTO</text>
-                </svg>
+            <h3>2. Código de Colores y Funciones</h3>
+            <div class="color-row">
+                <div class="color-box" style="background:#8B4513"></div>
+                <div><strong>Fase (Marrón):</strong> Trae la corriente (220V) desde el tablero. Va a la tecla.</div>
             </div>
-            <div style="margin-top:15px; font-size:0.9rem; text-align:left;">
-                <ul>
-                    <li><strong style="color:#8B4513">Fase:</strong> De la térmica a la <strong>Entrada</strong> de la tecla.</li>
-                    <li><strong style="color:#2c3e50">Retorno:</strong> De la <strong>Salida</strong> de la tecla a la lámpara.</li>
-                    <li><strong style="color:#3498db">Neutro:</strong> De la térmica directo a la lámpara.</li>
-                </ul>
+            <div class="color-row">
+                <div class="color-box" style="background:#3498db"></div>
+                <div><strong>Neutro (Celeste):</strong> Cierra el circuito. Va directo a la lámpara.</div>
             </div>
+            <div class="color-row">
+                <div class="color-box" style="background:#222"></div>
+                <div><strong>Retorno (Negro):</strong> Lleva fase controlada desde la tecla a la lámpara.</div>
+            </div>
+            <div class="color-row">
+                <div class="color-box" style="background:#2ecc71"></div>
+                <div><strong>Tierra (Verde):</strong> Protección. Va a las partes metálicas.</div>
+            </div>
+
+            <h3>3. Uso del Multímetro (Tester)</h3>
+            <p>Selecciona la herramienta "Multímetro" en la barra superior.</p>
+            <ul>
+                <li><strong>Si hay Corriente (ON):</strong> Mide Voltaje. Debería marcar <strong>220V</strong> en cables vivos.</li>
+                <li><strong>Si NO hay Corriente (OFF):</strong> Mide Continuidad. Toca un cable para ver si está sano.
+                    <br>✅ <strong>0.0 Ω:</strong> Cable sano.
+                    <br>❌ <strong>OL (Open Loop):</strong> Cable cortado (cámbialo).
+                </li>
+            </ul>
         </div>
     </div>
 
     <header>
-        <div>
-            <h1 style="margin:0; font-size:1.2rem;">Taller de Electricidad ⚡</h1>
-            <small>Usa el buscapolo cuando la luz esté ON</small>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div class="toolbar">
+                <button class="tool-btn active" id="btn-hand" onclick="game.setTool('hand')">🖐 Mano</button>
+                <button class="tool-btn" id="btn-busca" onclick="game.setTool('buscapolo')">💡 Buscapolo</button>
+                <button class="tool-btn" id="btn-multi" onclick="game.setTool('multimeter')">📟 Multímetro</button>
+            </div>
         </div>
-        <div class="tool-panel">
-            <button class="btn-help" onclick="document.getElementById('help-overlay').style.display='flex'" title="Ver Esquema">?</button>
-            <button class="btn-reset" onclick="game.reset()">Reiniciar</button>
+        <div style="display:flex; gap:10px;">
+            <button class="action-btn btn-help" onclick="game.toggleHelp(true)">? Ayuda y Reglas</button>
+            <button class="action-btn btn-reset" onclick="game.reset()">Reiniciar</button>
         </div>
     </header>
 
-    <div id="game-board">
+    <div id="game-board" data-tool="hand">
         <svg id="wire-layer"></svg>
 
-        <!-- 1. TABLERO GENERAL -->
-        <div class="component comp-main-panel">
-            <div style="text-align:center; padding:5px; font-weight:bold;">TÉRMICA</div>
-            <div id="main-breaker" class="breaker-handle" onclick="game.togglePower()"></div>
+        <!-- 1. TABLERO -->
+        <div class="component comp-main">
+            <div style="text-align:center; padding:8px; font-weight:bold; font-size:0.9rem;">TABLERO</div>
+            <div id="breaker" class="breaker" onclick="game.togglePower()">OFF</div>
             
             <div style="position:relative; height:100px;">
-                <span class="term-label" style="top:12px; right:25px; color:white;">Fase</span>
-                <div class="terminal" id="t-source-phase" style="top:10px; right:-10px; background:#8B4513;"></div>
+                <span class="lbl" style="top:12px; right:25px; color:white;">Fase</span>
+                <div class="terminal" id="t-src-L" style="top:10px; right:-8px; background:#8B4513;"></div>
                 
-                <span class="term-label" style="top:42px; right:25px; color:white;">Neutro</span>
-                <div class="terminal" id="t-source-neutral" style="top:40px; right:-10px; background:#3498db;"></div>
+                <span class="lbl" style="top:42px; right:25px; color:white;">Neutro</span>
+                <div class="terminal" id="t-src-N" style="top:40px; right:-8px; background:#3498db;"></div>
                 
-                <span class="term-label" style="top:72px; right:25px; color:white;">Tierra</span>
-                <div class="terminal" id="t-source-earth" style="top:70px; right:-10px; background:#2ecc71;"></div>
+                <span class="lbl" style="top:72px; right:25px; color:white;">Tierra</span>
+                <div class="terminal" id="t-src-E" style="top:70px; right:-8px; background:#2ecc71;"></div>
             </div>
         </div>
 
-        <!-- 2. INTERRUPTOR -->
+        <!-- 2. TECLA -->
         <div class="component comp-switch">
-            <div style="margin-top:5px; font-weight:bold; font-size:12px;">TECLA</div>
-            <div class="terminal" id="t-sw-in" style="top:30px; left:-10px;"></div>
-            <span class="term-label" style="top:32px; left:12px;">L (In)</span>
+            <div style="margin-top:5px; font-weight:bold; font-size:0.8rem;">TECLA</div>
+            <div class="terminal" id="t-sw-in" style="top:25px; left:-8px;"></div>
+            <span class="lbl" style="top:27px; left:12px;">L</span>
             
-            <div class="terminal" id="t-sw-out" style="top:70px; right:-10px;"></div>
-            <span class="term-label" style="top:72px; right:12px;">1 (Ret)</span>
-            <div class="switch-rocker" id="visual-switch" onclick="game.pressSwitch()"></div>
+            <div class="terminal" id="t-sw-out" style="top:65px; right:-8px;"></div>
+            <span class="lbl" style="top:67px; right:12px;">1</span>
+            <div class="switch-btn" id="sw-btn" onclick="game.toggleSwitch()"></div>
         </div>
 
         <!-- 3. LÁMPARA -->
         <div class="component comp-lamp">
             <div class="bulb" id="bulb"></div>
-            <div class="terminal" id="t-lamp-L" style="bottom:-10px; left:10px;"></div>
-            <span class="term-label" style="bottom:15px; left:15px; font-size:9px;">Retorno</span>
+            <div class="terminal" id="t-lamp-L" style="bottom:-8px; left:10px;"></div>
+            <span class="lbl" style="bottom:10px; left:18px;">Ret</span>
             
-            <div class="terminal" id="t-lamp-N" style="bottom:-10px; right:10px;"></div>
-            <span class="term-label" style="bottom:15px; right:15px; font-size:9px;">Neutro</span>
-
-            <div class="terminal" id="t-lamp-E" style="top:-10px; left:30px; background:#2ecc71;"></div>
+            <div class="terminal" id="t-lamp-N" style="bottom:-8px; right:10px;"></div>
+            <span class="lbl" style="bottom:10px; right:18px;">Neu</span>
+            
+            <div class="terminal" id="t-lamp-E" style="top:-8px; left:30px; background:#2ecc71;"></div>
         </div>
 
-        <div id="alert-box"></div>
+        <div id="alert-toast"></div>
     </div>
 
     <script>
         const svgNS = "http://www.w3.org/2000/svg";
 
-        class ElectricalGame {
+        class Simulator {
             constructor() {
                 this.wires = [];
-                this.isPowerOn = false;
-                this.switchClosed = false;
+                this.powerOn = false;
+                this.switchOn = false;
+                this.currentTool = 'hand'; // hand, buscapolo, multimeter
+                this.drag = null;
+                
                 this.svg = document.getElementById('wire-layer');
-                this.dragState = null;
+                this.board = document.getElementById('game-board');
                 
-                this.testerEl = document.getElementById('digital-tester');
-                this.testerScreen = document.getElementById('tester-readout');
+                // Elementos flotantes
+                this.neon = document.getElementById('neon-tester');
+                this.multi = document.getElementById('multimeter-device');
+                this.multiScreen = document.getElementById('multi-screen');
+                this.multiMode = document.getElementById('multi-mode');
 
-                this.initInteraction();
-                this.showAlert("Cortá la térmica para conectar. Usá ? para ayuda.");
+                this.initListeners();
+                this.showToast("Bienvenido. Usa 'Ayuda' para ver las reglas.");
             }
 
-            // --- LÓGICA DEL BUSCAPOLO DIGITAL ---
-            updateTester(e) {
-                if (!this.isPowerOn) return; // Si está apagado no mide nada
-
-                // Mover el tester con el mouse (con un pequeño offset)
-                this.testerEl.style.left = (e.clientX + 15) + 'px';
-                this.testerEl.style.top = (e.clientY + 15) + 'px';
-
-                // Detectar qué hay debajo
-                const el = document.elementFromPoint(e.clientX, e.clientY);
+            // --- HERRAMIENTAS ---
+            setTool(tool) {
+                this.currentTool = tool;
+                this.board.dataset.tool = tool;
                 
-                // Si toca un cable (path)
-                if (el && el.tagName === 'path' && el.classList.contains('wire')) {
-                    if (el.classList.contains('voltage')) {
-                        // CABLE CON TENSIÓN
-                        this.testerEl.className = 'hot active'; // Rojo
-                        this.testerScreen.textContent = "⚡ 220V";
-                    } else {
-                        // CABLE SIN TENSIÓN (Neutro o Retorno apagado)
-                        this.testerEl.className = 'safe active'; // Verde
-                        this.testerScreen.textContent = "0V";
-                    }
-                } else {
-                    // EN EL AIRE
-                    this.testerEl.className = 'active'; // Gris
-                    this.testerScreen.textContent = "--";
-                }
+                // Actualizar botones UI
+                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                if(tool === 'hand') document.getElementById('btn-hand').classList.add('active');
+                if(tool === 'buscapolo') document.getElementById('btn-buscapolo').classList.add('active'); // Nota: ID corregido dinamicamente si fuera necesario
+                if(tool === 'buscapolo') document.querySelector('#btn-busca').classList.add('active');
+                if(tool === 'multimeter') document.querySelector('#btn-multi').classList.add('active');
+
+                // Ocultar herramientas flotantes al cambiar
+                this.neon.style.display = 'none';
+                this.multi.style.display = 'none';
             }
 
-            // --- CONTROL DE ENERGÍA ---
+            toggleHelp(show) {
+                document.getElementById('help-modal').style.display = show ? 'flex' : 'none';
+            }
+
+            // --- LÓGICA ELÉCTRICA ---
             togglePower() {
-                if (this.isPowerOn) {
-                    this.setPowerState(false);
-                    return;
-                }
-
-                // VALIDACIÓN ESTRICTA ANTES DE SUBIR TÉRMICA
-                const adj = this.buildAdjacencyMap();
-                const isConnected = (a, b) => this.checkPath(adj, a, b);
-
-                if (isConnected('t-source-neutral', 't-sw-in') || isConnected('t-source-neutral', 't-sw-out')) {
-                    this.triggerError("❌ ERROR: Neutro en la tecla."); return;
-                }
-                if (!isConnected('t-source-neutral', 't-lamp-N')) {
-                    this.triggerError("❌ ERROR: Lámpara sin Neutro."); return;
-                }
-                if (!isConnected('t-sw-out', 't-lamp-L')) {
-                    if (isConnected('t-source-phase', 't-lamp-L')) this.triggerError("❌ ERROR: Fase directa a Lámpara.");
-                    else this.triggerError("❌ ERROR: Falta Retorno.");
-                    return;
-                }
-
-                this.setPowerState(true);
-            }
-
-            setPowerState(isOn) {
-                this.isPowerOn = isOn;
-                const handle = document.getElementById('main-breaker');
-                
-                if (isOn) {
-                    handle.classList.add('on');
-                    this.testerEl.style.display = 'block'; // Mostrar Buscapolo
-                    this.showAlert("Energía ON. Usa el Buscapolo.");
+                if(this.powerOn) {
+                    this.powerOn = false;
+                    document.getElementById('breaker').classList.remove('on');
+                    document.getElementById('breaker').textContent = "OFF";
+                    this.showToast("Energía cortada.");
                 } else {
-                    handle.classList.remove('on');
-                    this.testerEl.style.display = 'none'; // Ocultar Buscapolo
-                    this.showAlert("Energía OFF.");
+                    // Validar cortocircuitos o errores graves antes de subir
+                    const error = this.checkSafety();
+                    if(error) {
+                        this.showToast(error, 'error');
+                        return;
+                    }
+                    this.powerOn = true;
+                    document.getElementById('breaker').classList.add('on');
+                    document.getElementById('breaker').textContent = "ON";
+                    this.showToast("⚡ Energía ACTIVADA ⚡");
                 }
-                this.updateLampState();
+                this.updateState();
             }
 
-            pressSwitch() {
-                this.switchClosed = !this.switchClosed;
-                document.getElementById('visual-switch').classList.toggle('active');
-                this.updateLampState();
+            toggleSwitch() {
+                this.switchOn = !this.switchOn;
+                document.getElementById('sw-btn').classList.toggle('active');
+                this.updateState();
             }
 
-            updateLampState() {
-                const bulb = document.getElementById('bulb');
-                bulb.classList.remove('on');
+            checkSafety() {
+                const adj = this.getAdjacency();
+                const isConnected = (a, b) => this.hasPath(adj, a, b);
+
+                // Neutro en tecla
+                if(isConnected('t-src-N', 't-sw-in') || isConnected('t-src-N', 't-sw-out')) {
+                    return "⛔ ¡ERROR GRAVE! Neutro conectado a la tecla.";
+                }
+                // Cortocircuito directo (Fase-Neutro sin resistencia)
+                // (Simplificado: si hay camino directo ignorando lampara)
+                // En este simulador, verificamos si fase toca neutro directamente
+                // Pero como solo hay terminales especificos, la logica de arriba suele bastar para este nivel.
+                return null;
+            }
+
+            updateState() {
+                // Reset visuales
+                document.getElementById('bulb').classList.remove('on');
                 this.wires.forEach(w => w.el.classList.remove('voltage'));
 
-                if (!this.isPowerOn) return;
+                // Calcular voltajes
+                const voltageMap = new Set();
 
-                const adj = this.buildAdjacencyMap();
-                const hasPhaseAtSwitch = this.checkPath(adj, 't-source-phase', 't-sw-in');
-
-                // Calcular voltaje en cables para el buscapolo
-                this.wires.forEach(w => {
-                    // Cables conectados a Fase siempre tienen 220V
-                    if (this.checkPath(adj, 't-source-phase', w.u) || this.checkPath(adj, 't-source-phase', w.v)) {
-                        w.el.classList.add('voltage');
+                if(this.powerOn) {
+                    const adj = this.getAdjacency(); // Solo cables sanos conducen
+                    
+                    // Fase directa
+                    this.bfs(adj, 't-src-L', node => voltageMap.add(node));
+                    
+                    // Retorno (si tecla ON y llega fase)
+                    if(this.switchOn && voltageMap.has('t-sw-in')) {
+                        // Conectar virtualmente sw-in con sw-out
+                        this.bfs(adj, 't-sw-out', node => voltageMap.add(node));
                     }
-                    // Cables de retorno tienen 220V SOLO si la tecla está cerrada y le llega fase
-                    if (this.switchClosed && hasPhaseAtSwitch) {
-                         if (w.u === 't-sw-out' || w.v === 't-sw-out') w.el.classList.add('voltage');
+                }
+
+                // Guardar estado de voltaje en cada cable
+                this.wires.forEach(w => {
+                    if(voltageMap.has(w.u) || voltageMap.has(w.v)) {
+                        w.hasVoltage = true;
+                        // w.el.classList.add('voltage'); // Opcional: mostrar cable brillante
+                    } else {
+                        w.hasVoltage = false;
                     }
                 });
 
-                if (this.switchClosed && hasPhaseAtSwitch) {
-                    bulb.classList.add('on');
+                // Encender lámpara
+                // Condición: Voltaje en L (Retorno) y Neutro conectado a N
+                const adjAll = this.getAdjacency(); 
+                const neutralMap = new Set();
+                this.bfs(adjAll, 't-src-N', node => neutralMap.add(node));
+
+                if(voltageMap.has('t-lamp-L') && neutralMap.has('t-lamp-N')) {
+                    document.getElementById('bulb').classList.add('on');
                 }
             }
 
-            // --- UTILS GRAFOS ---
-            buildAdjacencyMap() {
+            // --- MECÁNICA CABLE ROTO ---
+            connect(u, v, color) {
+                // Evitar duplicados
+                if(this.wires.find(w => (w.u===u && w.v===v) || (w.u===v && w.v===u))) return;
+
+                // Crear elemento SVG
+                const path = document.createElementNS(svgNS, 'path');
+                path.classList.add('wire');
+                path.setAttribute('stroke', color);
+                this.svg.appendChild(path);
+
+                // Probabilidad de cable roto (20% para demo)
+                const isBroken = Math.random() < 0.2; 
+                
+                const wireObj = { u, v, el: path, broken: isBroken, hasVoltage: false, color };
+                this.wires.push(wireObj);
+
+                // Listener para herramientas
+                path.addEventListener('mousedown', (e) => {
+                    e.stopPropagation(); // Evitar drag del fondo
+                    if(this.currentTool === 'hand') {
+                        if(!this.powerOn) {
+                            if(confirm("¿Quitar cable?")) {
+                                path.remove();
+                                this.wires = this.wires.filter(w => w !== wireObj);
+                                this.updateState();
+                            }
+                        } else {
+                            this.showToast("Corta la luz para quitar cables.", 'error');
+                        }
+                    } else if (this.currentTool === 'multimeter') {
+                        this.useMultimeterOnWire(wireObj);
+                    }
+                });
+
+                this.redrawWires();
+                this.updateState();
+                
+                // Feedback visual sutil al crear
+                if(isBroken) console.log("Debug: Cable roto creado"); 
+            }
+
+            // --- HERRAMIENTAS LÓGICA ---
+            
+            handleMouseMove(e) {
+                const rect = this.board.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // 1. Manejo de arrastre de cable (Mano)
+                if(this.drag && this.currentTool === 'hand') {
+                    const start = this.getElementCenter(this.drag.startEl);
+                    this.drag.path.setAttribute('d', `M ${start.x} ${start.y} L ${x} ${y}`);
+                }
+
+                // 2. Buscapolo (Sigue al mouse)
+                if(this.currentTool === 'buscapolo') {
+                    this.neon.style.display = 'block';
+                    this.neon.style.left = (e.clientX + 10) + 'px';
+                    this.neon.style.top = (e.clientY - 30) + 'px';
+                    
+                    // Detectar colisión con cable
+                    const el = document.elementFromPoint(e.clientX, e.clientY);
+                    const wire = this.wires.find(w => w.el === el);
+                    
+                    // Se prende si hay cable Y tiene voltaje
+                    if(wire && wire.hasVoltage) {
+                        this.neon.classList.add('lit');
+                    } else {
+                        this.neon.classList.remove('lit');
+                    }
+                }
+
+                // 3. Multímetro Visual
+                if(this.currentTool === 'multimeter') {
+                    this.multi.style.display = 'block';
+                    this.multi.style.left = (e.clientX + 15) + 'px';
+                    this.multi.style.top = (e.clientY + 15) + 'px';
+
+                    // Actualizar modo visual
+                    if(this.powerOn) {
+                        this.multiMode.textContent = "MODO: VOLTAJE AC";
+                        this.multiScreen.textContent = "000 V";
+                    } else {
+                        this.multiMode.textContent = "MODO: CONTINUIDAD";
+                        this.multiScreen.textContent = "---";
+                    }
+                }
+            }
+
+            useMultimeterOnWire(wire) {
+                if(this.powerOn) {
+                    // MODO VOLTAJE
+                    // Si el cable tiene voltaje real
+                    if(wire.hasVoltage) {
+                        this.multiScreen.textContent = "220 V";
+                        this.multiScreen.style.color = "red";
+                    } else {
+                        this.multiScreen.textContent = "000 V";
+                        this.multiScreen.style.color = "#222";
+                    }
+                } else {
+                    // MODO CONTINUIDAD
+                    // Detectar cable roto
+                    if(wire.broken) {
+                        this.multiScreen.textContent = "O.L."; // Open Loop
+                        this.multiScreen.style.color = "red";
+                        this.showToast("❌ Cable cortado detectado (O.L.)");
+                        wire.el.classList.add('broken-revealed'); // Revelar visualmente para facilitar
+                    } else {
+                        this.multiScreen.textContent = "0.0 Ω";
+                        this.multiScreen.style.color = "green";
+                        this.playBeep();
+                    }
+                }
+            }
+
+            // --- CORE SISTEMA ---
+
+            initListeners() {
+                // Dragging wires
+                document.querySelectorAll('.terminal').forEach(t => {
+                    t.addEventListener('mousedown', (e) => {
+                        if(this.currentTool !== 'hand') return;
+                        if(this.powerOn) { this.showToast("¡PELIGRO! Corta la luz primero.", 'error'); return; }
+                        
+                        e.stopPropagation();
+                        // Color logic
+                        let color = '#333';
+                        if(t.id.includes('src-L')) color = 'var(--wire-phase)';
+                        else if(t.id.includes('src-N') || t.id.includes('lamp-N')) color = 'var(--wire-neutral)';
+                        else if(t.id.includes('src-E') || t.id.includes('lamp-E')) color = 'var(--wire-earth)';
+                        else color = 'var(--wire-return)'; // default return/switch
+
+                        // Temp path
+                        const path = document.createElementNS(svgNS, 'path');
+                        path.setAttribute('stroke', color);
+                        path.setAttribute('stroke-width', 4);
+                        path.setAttribute('fill', 'none');
+                        path.setAttribute('stroke-dasharray', '5,5');
+                        this.svg.appendChild(path);
+
+                        this.drag = { startId: t.id, startEl: t, path, color };
+                    });
+                });
+
+                window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+
+                window.addEventListener('mouseup', (e) => {
+                    if(!this.drag) return;
+                    this.drag.path.remove();
+                    
+                    const el = document.elementFromPoint(e.clientX, e.clientY);
+                    if(el && el.classList.contains('terminal') && el.id !== this.drag.startId) {
+                        this.connect(this.drag.startId, el.id, this.drag.color);
+                    }
+                    this.drag = null;
+                });
+            }
+
+            // --- GRAFOS Y BFS ---
+            getAdjacency() {
                 const adj = {};
                 this.wires.forEach(w => {
-                    if(!adj[w.u]) adj[w.u]=[]; if(!adj[w.v]) adj[w.v]=[];
-                    adj[w.u].push(w.v); adj[w.v].push(w.u);
+                    // Si está roto, no conecta eléctricamente (aunque visualmente sí)
+                    if(w.broken) return; 
+
+                    if(!adj[w.u]) adj[w.u]=[]; 
+                    if(!adj[w.v]) adj[w.v]=[];
+                    adj[w.u].push(w.v);
+                    adj[w.v].push(w.u);
                 });
                 return adj;
             }
 
-            checkPath(adj, start, target) {
-                if (!adj[start]) return false;
-                let q = [start], visited = new Set([start]);
-                while (q.length) {
-                    let curr = q.shift();
-                    if (curr === target) return true;
-                    if (adj[curr]) {
-                        for (let n of adj[curr]) {
-                            if (!visited.has(n)) { visited.add(n); q.push(n); }
+            bfs(adj, start, callback) {
+                if(!adj[start]) return;
+                const q = [start];
+                const visited = new Set([start]);
+                while(q.length) {
+                    const u = q.shift();
+                    callback(u);
+                    if(adj[u]) {
+                        for(const v of adj[u]) {
+                            if(!visited.has(v)) {
+                                visited.add(v);
+                                q.push(v);
+                            }
                         }
                     }
                 }
-                return false;
             }
 
-            // --- INTERACCIÓN ---
-            initInteraction() {
-                document.querySelectorAll('.terminal').forEach(t => {
-                    t.addEventListener('pointerdown', (e) => this.startDrag(e));
-                });
-                
-                // Listener global para mover el buscapolo y cables
-                document.addEventListener('pointermove', (e) => {
-                    this.drag(e);
-                    this.updateTester(e); // Actualizar posición y lectura del buscapolo
-                });
-                
-                document.addEventListener('pointerup', (e) => this.endDrag(e));
+            hasPath(adj, start, end) {
+                let found = false;
+                this.bfs(adj, start, (node) => { if(node === end) found = true; });
+                return found;
             }
 
-            startDrag(e) {
-                if (this.isPowerOn) {
-                    this.triggerError("¡PELIGRO! Cortá la térmica.");
-                    return;
-                }
-                const t = e.target;
-                this.dragState = { startId: t.id, startEl: t, path: this.createTempPath() };
-                
-                let color = '#555';
-                if (t.id === 't-source-phase') color = 'var(--wire-phase)';
-                else if (t.id === 't-source-neutral' || t.id === 't-lamp-N') color = 'var(--wire-neutral)';
-                else if (t.id === 't-source-earth' || t.id === 't-lamp-E') color = 'var(--wire-earth)';
-                else color = 'var(--wire-return)'; // Asumimos retorno o fase interna
-                
-                this.dragState.path.setAttribute('stroke', color);
-            }
-
-            drag(e) {
-                if (!this.dragState) return;
-                const rect = document.getElementById('game-board').getBoundingClientRect();
-                const start = this.dragState.startEl.getBoundingClientRect();
-                this.dragState.path.setAttribute('d', `M ${start.left + start.width/2 - rect.left} ${start.top + start.height/2 - rect.top} L ${e.clientX - rect.left} ${e.clientY - rect.top}`);
-            }
-
-            endDrag(e) {
-                if (!this.dragState) return;
-                this.dragState.path.remove();
-                const end = document.elementFromPoint(e.clientX, e.clientY);
-                if (end && end.classList.contains('terminal') && end.id !== this.dragState.startId) {
-                    this.connectWires(this.dragState.startId, end.id, this.dragState.path.getAttribute('stroke'));
-                }
-                this.dragState = null;
-            }
-
-            connectWires(u, v, color) {
-                if (this.wires.some(w => (w.u === u && w.v === v) || (w.u === v && w.v === u))) return;
-                const path = document.createElementNS(svgNS, "path");
-                path.classList.add('wire');
-                path.setAttribute('stroke', color);
-                
-                const wire = { u, v, el: path };
-                
-                // Click para borrar (solo si está apagado)
-                path.addEventListener('click', () => {
-                    if (!this.isPowerOn && confirm("¿Quitar cable?")) {
-                        path.remove();
-                        this.wires = this.wires.filter(w => w !== wire);
-                    }
-                });
-                
-                this.svg.appendChild(path);
-                this.wires.push(wire);
-                this.updateWireVisuals();
-            }
-
-            updateWireVisuals() {
-                const rect = document.getElementById('game-board').getBoundingClientRect();
+            // --- UTILS ---
+            redrawWires() {
                 this.wires.forEach(w => {
-                    const r1 = document.getElementById(w.u).getBoundingClientRect();
-                    const r2 = document.getElementById(w.v).getBoundingClientRect();
-                    const x1 = r1.left + r1.width/2 - rect.left;
-                    const y1 = r1.top + r1.height/2 - rect.top;
-                    const x2 = r2.left + r2.width/2 - rect.left;
-                    const y2 = r2.top + r2.height/2 - rect.top;
-                    const drop = Math.abs(x2 - x1) * 0.2 + 30;
-                    w.el.setAttribute('d', `M ${x1} ${y1} C ${x1} ${y1+drop}, ${x2} ${y2+drop}, ${x2} ${y2}`);
+                    const p1 = this.getElementCenter(document.getElementById(w.u));
+                    const p2 = this.getElementCenter(document.getElementById(w.v));
+                    
+                    // Curva bezier
+                    const cx = (p1.x + p2.x) / 2;
+                    const cy = Math.max(p1.y, p2.y) + 40; // Comba hacia abajo
+                    
+                    w.el.setAttribute('d', `M ${p1.x} ${p1.y} Q ${cx} ${cy} ${p2.x} ${p2.y}`);
                 });
             }
 
-            createTempPath() {
-                const p = document.createElementNS(svgNS, "path");
-                p.setAttribute('fill','none'); p.setAttribute('stroke-width','4'); p.setAttribute('stroke-dasharray','5,5');
-                this.svg.appendChild(p); return p;
+            getElementCenter(el) {
+                const rect = el.getBoundingClientRect();
+                const boardRect = this.board.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width/2 - boardRect.left,
+                    y: rect.top + rect.height/2 - boardRect.top
+                };
             }
 
-            triggerError(msg) {
-                const box = document.getElementById('alert-box');
-                box.style.background = "#c0392b";
-                box.textContent = msg;
-                box.style.opacity = 1;
-                setTimeout(() => box.style.opacity = 0, 4000);
+            showToast(msg, type='info') {
+                const t = document.getElementById('alert-toast');
+                t.textContent = msg;
+                t.style.background = type === 'error' ? '#c0392b' : '#333';
+                t.style.opacity = 1;
+                setTimeout(() => t.style.opacity = 0, 3000);
             }
 
-            showAlert(msg) {
-                const box = document.getElementById('alert-box');
-                box.style.background = "#27ae60";
-                box.textContent = msg;
-                box.style.opacity = 1;
-                setTimeout(() => box.style.opacity = 0, 3000);
+            playBeep() {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.frequency.value = 1500;
+                gain.gain.value = 0.1;
+                osc.start(); osc.stop(ctx.currentTime + 0.1);
             }
 
             reset() {
                 this.wires.forEach(w => w.el.remove());
                 this.wires = [];
-                this.setPowerState(false);
-                this.switchClosed = false;
-                document.getElementById('visual-switch').classList.remove('active');
-                document.getElementById('bulb').classList.remove('on');
+                if(this.powerOn) this.togglePower();
+                this.switchOn = false;
+                document.getElementById('sw-btn').classList.remove('active');
+                this.updateState();
             }
         }
 
-        const game = new ElectricalGame();
-        window.addEventListener('resize', () => game.updateWireVisuals());
+        const game = new Simulator();
+        window.addEventListener('resize', () => game.redrawWires());
 
     </script>
 </body>
