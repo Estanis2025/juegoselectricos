@@ -13,7 +13,6 @@
             --wire-earth: #27ae60;
             --wire-return: #2c3e50;
             --bad-wire: #e17055;
-            --neon-orange: #ff6b00;
         }
 
         body {
@@ -61,27 +60,6 @@
         }
         #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
         
-        /* BUSCAPOLO */
-        #neon-pen {
-            position: absolute; width: 14px; height: 70px;
-            background: linear-gradient(to right, #2f3640 40%, #7f8fa6 100%); 
-            border: 1px solid #555; border-radius: 2px;
-            pointer-events: none; z-index: 100;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            transform: translate(-7px, -65px);
-        }
-        #neon-pen::after {
-            content: ''; position: absolute; bottom: -15px; left: 4px;
-            width: 6px; height: 15px; background: silver; clip-path: polygon(0 0, 100% 0, 50% 100%);
-        }
-        #neon-light {
-            width: 10px; height: 25px; margin: 5px auto; background: #444; border-radius: 2px;
-            transition: background 0.2s;
-        }
-        #neon-pen.active #neon-light {
-            background: var(--neon-orange); box-shadow: 0 0 15px var(--neon-orange), inset 0 0 5px red;
-        }
-
         /* COMPONENTES */
         .component { position: absolute; background: white; border: 1px solid #718093; box-shadow: 4px 4px 10px rgba(0,0,0,0.1); z-index: 2; border-radius: 4px; display: flex; flex-direction: column; align-items: center; }
         .comp-board { width: 110px; height: 150px; background: #2f3640; color: white; left: 5%; top: 15%; }
@@ -141,11 +119,6 @@
 </head>
 <body>
 
-    <!-- BUSCAPOLO -->
-    <div id="neon-pen">
-        <div id="neon-light"></div>
-    </div>
-
     <!-- MENUS Y MODALES -->
     <div id="ctx-menu">
         <div class="ctx-item" onclick="game.deleteWire()">🗑 Quitar Cable</div>
@@ -184,11 +157,6 @@
                 
                 <div class="instruction-step">
                     <div class="step-number">4</div>
-                    <div>Activa el <strong>buscapolo</strong> para detectar tensión en cables</div>
-                </div>
-                
-                <div class="instruction-step">
-                    <div class="step-number">5</div>
                     <div>Enciende la energía cuando tengas todas las conexiones</div>
                 </div>
             </div>
@@ -237,11 +205,8 @@
         </div>
         
         <div class="toolbar">
-            <button class="tool-btn active" id="btn-hand" onclick="game.selectTool('hand')">
+            <button class="tool-btn active" id="btn-hand">
                 🖐 Conectar
-            </button>
-            <button class="tool-btn" id="btn-neon" onclick="game.selectTool('neon')">
-                💡 Buscapolo
             </button>
             <button class="tool-btn btn-help" onclick="document.getElementById('help-modal').style.display = 'flex'">
                 ❓ Ayuda
@@ -305,13 +270,9 @@
                 // Referencias DOM
                 this.svg = document.getElementById('wire-layer');
                 this.board = document.getElementById('game-board');
-                this.uiNeon = document.getElementById('neon-pen');
 
                 this.ctxMenu = document.getElementById('ctx-menu');
                 this.selectedWire = null;
-
-                // Inicializar herramientas ocultas
-                this.uiNeon.style.display = 'none';
 
                 this.initInteraction();
                 this.showToast("Haz clic en los terminales para crear conexiones");
@@ -345,22 +306,6 @@
                 this.switchOn = false;
                 document.getElementById('sw-rocker').classList.remove('active');
                 this.updateCircuit();
-            }
-
-            selectTool(t) {
-                this.tool = t;
-                this.board.dataset.tool = t;
-                this.ctxMenu.style.display = 'none';
-
-                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                if(t==='hand') document.getElementById('btn-hand').classList.add('active');
-                if(t==='neon') document.getElementById('btn-neon').classList.add('active');
-
-                // Mostrar/Ocultar Buscapolo
-                this.uiNeon.style.display = t === 'neon' ? 'block' : 'none';
-                if(t === 'neon') {
-                    this.showToast("Mueve el buscapolo sobre cables para detectar tensión");
-                }
             }
 
             // --- LÓGICA ELÉCTRICA ---
@@ -419,18 +364,6 @@
                 
                 const potMap = this.getPotentialMap();
 
-                // Actualizar logica visual cables (para buscapolo)
-                this.wires.forEach(w => {
-                    // Si el cable está sano y conectado a algo con 220v
-                    const uPot = potMap.get(w.u);
-                    const vPot = potMap.get(w.v);
-                    if(!w.broken && (uPot === 220 || vPot === 220)) {
-                        w.hasVoltage = true;
-                    } else {
-                        w.hasVoltage = false;
-                    }
-                });
-
                 // Lámpara
                 const lmpL = potMap.get('t-lmp-L');
                 const lmpN = potMap.get('t-lmp-N');
@@ -447,7 +380,6 @@
 
             // --- CABLEADO AUTOMÁTICO ---
             handleTerminalClick(terminalId) {
-                if(this.tool !== 'hand') return;
                 if(this.powerOn) { 
                     this.showToast("Peligro: Tensión ON", "error"); 
                     return; 
@@ -492,7 +424,7 @@
                 const failChance = this.level === 1 ? 0 : 0.2 * (this.level - 1);
                 const isBroken = Math.random() < Math.min(failChance, 0.6);
 
-                const wireObj = { u, v, el: path, broken: isBroken, hasVoltage: false, color };
+                const wireObj = { u, v, el: path, broken: isBroken, color };
                 this.wires.push(wireObj);
 
                 // Click derecho para borrar
@@ -526,38 +458,6 @@
                 this.selectedWire = null;
             }
 
-            // --- BUSCAPOLO LOGIC ---
-            updateNeonPen(x, y) {
-                this.uiNeon.style.left = x + 'px';
-                this.uiNeon.style.top = y + 'px';
-                
-                // Verificar si está sobre un cable con tensión
-                const el = document.elementFromPoint(x, y);
-                let hasVoltage = false;
-                
-                // Verificar cables
-                this.wires.forEach(w => {
-                    if(w.el === el && w.hasVoltage) {
-                        hasVoltage = true;
-                    }
-                });
-                
-                // Verificar terminales
-                if(el && el.classList.contains('terminal')) {
-                    const map = this.getPotentialMap();
-                    const terminalId = el.id;
-                    if(map.get(terminalId) === 220) {
-                        hasVoltage = true;
-                    }
-                }
-                
-                if(hasVoltage) {
-                    this.uiNeon.classList.add('active');
-                } else {
-                    this.uiNeon.classList.remove('active');
-                }
-            }
-
             // --- INTERACCIÓN ---
             initInteraction() {
                 // Clic en terminales para crear cables
@@ -567,8 +467,6 @@
                         this.handleTerminalClick(t.id);
                     });
                 });
-
-                window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
                 
                 window.addEventListener('click', (e) => {
                     // Resetear selección si se hace clic fuera de un terminal
@@ -582,13 +480,6 @@
                         this.ctxMenu.style.display = 'none';
                     }
                 });
-            }
-
-            handleMouseMove(e) {
-                // Move Buscapolo
-                if(this.tool === 'neon') {
-                    this.updateNeonPen(e.clientX, e.clientY);
-                }
             }
 
             // UTILS
