@@ -148,7 +148,6 @@
             }
         }
 
-        /* Resto del CSS se mantiene igual */
         /* HEADER */
         header {
             background: var(--panel-bg);
@@ -261,24 +260,6 @@
         #modal h2 { color: #f1c40f; margin-bottom: 10px; }
         #modal p { max-width: 500px; line-height: 1.5; margin-bottom: 20px; }
         .hidden { display: none !important; }
-
-        /* ADVERTENCIA LÁMPARAS */
-        .lamp-warning {
-            background: #f39c12; color: white; padding: 8px 15px;
-            border-radius: 4px; margin: 10px 0; font-size: 0.9rem;
-            text-align: center; display: none;
-            max-width: 400px;
-        }
-        .warning-title {
-            font-weight: bold; margin-bottom: 8px; display: block;
-        }
-        .warning-item {
-            display: flex; align-items: center; margin: 5px 0;
-            font-size: 0.85rem;
-        }
-        .warning-icon {
-            margin-right: 8px; font-size: 1rem;
-        }
 
         /* Buscapolo Neon - POSICIÓN CORREGIDA */
         #neon-pen {
@@ -401,33 +382,7 @@
         <div class="header-left">
             <h1 id="level-title">Nivel 1</h1>
             <small id="level-objective">Conecta la lámpara</small>
-            <div class="lamp-warning" id="lamp-warning-header">
-                <span class="warning-title">⚠️ CONEXIÓN CORRECTA DE LÁMPARAS</span>
-                <div class="warning-item">
-                    <span class="warning-icon">💡</span>
-                    Una lámpara solo puede encender si existe un circuito cerrado entre:
-                </div>
-                <div class="warning-item">
-                    <span class="warning-icon">⚡</span>
-                    Fase (energía) - Cable MARRÓN
-                </div>
-                <div class="warning-item">
-                    <span class="warning-icon">🔵</span>
-                    Neutro (retorno) - Cable AZUL
-                </div>
-                <div class="warning-item">
-                    <span class="warning-icon">⚫</span>
-                    Retorno de lámpara - Cable NEGRO
-                </div>
-                <div class="warning-item">
-                    <span class="warning-icon">✅</span>
-                    Y es obligatorio por norma de seguridad que:
-                </div>
-                <div class="warning-item">
-                    <span class="warning-icon">🔌</span>
-                    El interruptor corte la fase, nunca el neutro.
-                </div>
-            </div>
+            <!-- ELIMINADO: Menú amarillo de conexión correcta de lámparas -->
         </div>
         <div class="stats">
             <div class="stat-badge">⚡ <span id="status-text">OFF</span></div>
@@ -543,9 +498,8 @@
                 // Actualizar información en pantalla de inicio
                 updateStartScreenInfo(idx);
                 
-                // Mostrar advertencia sobre lámparas
+                // Mostrar advertencia sobre lámparas (solo en el modal)
                 const hasLamps = lvl.comps.some(c => c.type === 'lamp');
-                document.getElementById('lamp-warning-header').style.display = hasLamps ? 'block' : 'none';
                 document.getElementById('lamp-warning-modal').style.display = hasLamps ? 'block' : 'none';
                 
                 this.wires = [];
