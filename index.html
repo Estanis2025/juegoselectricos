@@ -166,27 +166,6 @@
 
         @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
         @keyframes shakeWire { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
-const buscapolo = document.getElementById("buscapolo");
-const gameBoard = document.getElementById("game-board");
-
-// Movimiento con mouse
-gameBoard.addEventListener("mousemove", (e) => {
-    const rect = gameBoard.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    buscapolo.style.left = x + "px";
-    buscapolo.style.top = y + "px";
-});
-
-// Movimiento táctil
-gameBoard.addEventListener("touchmove", (e) => {
-    const rect = gameBoard.getBoundingClientRect();
-    const touch = e.touches[0];
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    buscapolo.style.left = x + "px";
-    buscapolo.style.top = y + "px";
-});
 
     </style>
 </head>
