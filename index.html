@@ -135,12 +135,14 @@
         .terminal {
             width: var(--terminal-size); height: var(--terminal-size);
             background: #95a5a6; border: 2px solid #666; border-radius: 50%;
-            position: absolute; cursor: crosshair; z-index: 3; transition: transform 0.2s;
+            position: absolute; cursor: crosshair; z-index: 3; transition: transform 0.2s, background 0.3s;
         }
         .terminal:hover, .terminal.highlight { transform: scale(1.3); background: #f39c12; border-color: white; }
-        .terminal[data-role="phase"] { background: var(--phase-color); }
-        .terminal[data-role="neutral"] { background: var(--neutral-color); }
-        .terminal[data-role="return"] { background: var(--return-color); }
+        
+        /* Colores dinámicos para terminales de lámpara */
+        .terminal.lamp-phase { background: var(--phase-color); }
+        .terminal.lamp-neutral { background: var(--neutral-color); }
+        .terminal.lamp-return { background: var(--return-color); }
 
         /* CABLES SVG */
         path.wire { fill: none; stroke-width: 5; stroke-linecap: round; cursor: pointer; transition: stroke 0.2s; }
@@ -184,7 +186,7 @@
             margin-right: 8px; font-size: 1rem;
         }
 
-        /* Buscapolo Neon */
+        /* Buscapolo Neon - POSICIÓN CORREGIDA */
         #neon-pen {
             position: absolute;
             width: 14px;
@@ -196,7 +198,8 @@
             pointer-events: none;
             z-index: 100;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            transform: translate(-7px, -35px);
+            /* Posición corregida - centrado en el cursor */
+            transform: translate(-50%, -100%);
         }
 
         #neon-pen::after {
@@ -430,9 +433,9 @@
                             <span style="position:absolute; top:102px; right:12px; font-size:10px; color: #3498db; font-weight: bold;">N</span>`;
                 } else if (data.type === 'lamp') {
                     html = `<div class="bulb-glass" id="bulb-${data.id}"></div>
-                            <div class="terminal" id="t-${data.id}-1" data-role="phase" style="bottom:5px; left:-9px;"></div>
-                            <div class="terminal" id="t-${data.id}-2" data-role="return" style="bottom:5px; right:-9px;"></div>`;
-                    this.components[data.id] = { type: 'lamp' };
+                            <div class="terminal" id="t-${data.id}-1" style="bottom:5px; left:-9px;"></div>
+                            <div class="terminal" id="t-${data.id}-2" style="bottom:5px; right:-9px;"></div>`;
+                    this.components[data.id] = { type: 'lamp', terminals: [`t-${data.id}-1`, `t-${data.id}-2`] };
                 } else if (data.type === 'switch') {
                     html = `<label>${data.id}</label>
                             <div class="switch-lever" id="sw-${data.id}" onclick="game.toggleSwitch('${data.id}')">
@@ -508,7 +511,7 @@
             }
 
             updateBuscapolo(e) {
-                // Posicionar el buscapolo en la posición del cursor
+                // POSICIÓN CORREGIDA - Centrado exacto en el cursor
                 this.uiNeon.style.left = e.clientX + 'px';
                 this.uiNeon.style.top = e.clientY + 'px';
 
@@ -542,7 +545,8 @@
             checkElementVoltage(element) {
                 // Verificar si es un terminal con fase
                 if (element.classList.contains('terminal')) {
-                    const isPhaseTerminal = element.dataset.role === 'phase';
+                    const isPhaseTerminal = element.classList.contains('lamp-phase') || 
+                                           (element.dataset.role === 'phase');
                     const hasPhaseConnection = this.checkPhaseConnection(element.id);
                     return isPhaseTerminal && hasPhaseConnection;
                 }
@@ -576,11 +580,11 @@
                 const el = document.getElementById(id);
                 
                 // Asignar colores según el tipo de terminal
-                if(el.dataset.role === 'phase') {
+                if(el.dataset.role === 'phase' || el.classList.contains('lamp-phase')) {
                     path.setAttribute("stroke", "var(--phase-color)"); // Marrón
-                } else if(el.dataset.role === 'neutral') {
+                } else if(el.dataset.role === 'neutral' || el.classList.contains('lamp-neutral')) {
                     path.setAttribute("stroke", "var(--neutral-color)"); // Azul
-                } else if(el.dataset.role === 'return') {
+                } else if(el.classList.contains('lamp-return')) {
                     path.setAttribute("stroke", "var(--return-color)"); // Negro
                 } else {
                     path.setAttribute("stroke", "#555"); // Gris por defecto
@@ -649,12 +653,16 @@
                 const tA = document.getElementById(idA);
                 let color = "#555";
                 
-                // Asignar color según el tipo de terminal de origen
-                if(tA.dataset.role === 'phase') {
+                // Determinar color basado en la conexión
+                const terminalAColor = this.getTerminalColor(idA, idB);
+                const terminalBColor = this.getTerminalColor(idB, idA);
+                
+                // Usar el color del terminal de origen
+                if(terminalAColor === 'phase') {
                     color = "var(--phase-color)"; // Marrón
-                } else if(tA.dataset.role === 'neutral') {
+                } else if(terminalAColor === 'neutral') {
                     color = "var(--neutral-color)"; // Azul
-                } else if(tA.dataset.role === 'return') {
+                } else if(terminalAColor === 'return') {
                     color = "var(--return-color)"; // Negro
                 }
                 
@@ -670,7 +678,118 @@
                 this.wires.push(wire);
                 this.drawWires(); 
                 this.playSound('click'); 
+                
+                // Actualizar colores de terminales después de conectar
+                this.updateTerminalColors();
                 this.checkCircuit();
+            }
+
+            getTerminalColor(terminalId, connectedToId) {
+                const terminal = document.getElementById(terminalId);
+                
+                // Si es terminal de fuente
+                if(terminalId === 't-phase') return 'phase';
+                if(terminalId === 't-neutral') return 'neutral';
+                
+                // Si es terminal de interruptor o disyuntor
+                if(terminal && terminal.dataset.role === 'phase') return 'phase';
+                
+                // Si es terminal de lámpara
+                if(terminalId.includes('L') && terminalId.includes('t-')) {
+                    // Determinar basado en la conexión
+                    if(this.checkPhaseConnection(terminalId)) return 'phase';
+                    if(this.checkNeutralConnection(terminalId)) return 'neutral';
+                    if(this.checkReturnConnection(terminalId)) return 'return';
+                }
+                
+                return 'default';
+            }
+
+            checkNeutralConnection(terminalId) {
+                const adj = {};
+                const addEdge = (a,b) => { 
+                    if(!adj[a]) adj[a]=[]; 
+                    if(!adj[b]) adj[b]=[]; 
+                    adj[a].push(b); 
+                    adj[b].push(a); 
+                };
+                this.wires.forEach(w => addEdge(w.u, w.v));
+
+                Object.keys(this.components).forEach(id => {
+                    const c = this.components[id];
+                    if(c.type === 'switch' && c.state) addEdge(`t-${id}-1`, `t-${id}-2`);
+                    if(c.type === 'breaker' && c.state) { 
+                        addEdge(`t-${id}-1`, `t-${id}-3`); 
+                        addEdge(`t-${id}-2`, `t-${id}-4`); 
+                    }
+                    if(c.type === 'lamp') addEdge(`t-${id}-1`, `t-${id}-2`);
+                });
+
+                const findPath = (start, end, avoidLamps) => {
+                    if(!adj[start]) return false;
+                    let Q = [start], visited = new Set([start]);
+                    while(Q.length) {
+                        let u = Q.shift();
+                        if(u === end) return true;
+                        if(adj[u]) for(let v of adj[u]) {
+                            if(avoidLamps && u.includes('L') && v.includes('L') && u.split('-')[1]===v.split('-')[1]) continue;
+                            if(!visited.has(v)) { visited.add(v); Q.push(v); }
+                        }
+                    } return false;
+                };
+
+                return findPath('t-neutral', terminalId, false);
+            }
+
+            checkReturnConnection(terminalId) {
+                // Un terminal es de retorno si está conectado a un interruptor
+                const adj = {};
+                const addEdge = (a,b) => { 
+                    if(!adj[a]) adj[a]=[]; 
+                    if(!adj[b]) adj[b]=[]; 
+                    adj[a].push(b); 
+                    adj[b].push(a); 
+                };
+                this.wires.forEach(w => addEdge(w.u, w.v));
+
+                // Buscar si está conectado a un interruptor
+                for(let wire of this.wires) {
+                    if(wire.u === terminalId || wire.v === terminalId) {
+                        const otherId = wire.u === terminalId ? wire.v : wire.u;
+                        if(otherId.includes('S') && otherId.includes('t-')) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            updateTerminalColors() {
+                // Resetear todos los terminales de lámpara a gris
+                document.querySelectorAll('.terminal').forEach(terminal => {
+                    if(terminal.id.includes('L') && terminal.id.includes('t-')) {
+                        terminal.classList.remove('lamp-phase', 'lamp-neutral', 'lamp-return');
+                    }
+                });
+
+                // Aplicar colores basados en conexiones
+                Object.keys(this.components).forEach(id => {
+                    const comp = this.components[id];
+                    if(comp.type === 'lamp' && comp.terminals) {
+                        comp.terminals.forEach(terminalId => {
+                            const terminal = document.getElementById(terminalId);
+                            if(terminal) {
+                                if(this.checkPhaseConnection(terminalId)) {
+                                    terminal.classList.add('lamp-phase');
+                                } else if(this.checkNeutralConnection(terminalId)) {
+                                    terminal.classList.add('lamp-neutral');
+                                } else if(this.checkReturnConnection(terminalId)) {
+                                    terminal.classList.add('lamp-return');
+                                }
+                            }
+                        });
+                    }
+                });
             }
 
             drawWires() {
