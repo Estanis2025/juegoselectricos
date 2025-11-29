@@ -1,807 +1,182 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Juego: Conecta el Interruptor</title>
-<style>
-  :root{
-    --bg:#0f1724; --card:#0b1220; --accent:#10b981; --muted:#94a3b8; --danger:#ef4444;
-    --phase:#b91c1c; --neutral:#0ea5a4; --ground:#65a30d; --tester-off:#334155; --tester-on:#f97316;
-  }
-  body{
-    margin:0;
-    font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-    color:#e6eef8;
-    background:linear-gradient(180deg,#071025 0%, #071226 60%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    height:100vh;
-    overflow:hidden;
-  }
-  .container{
-    width:980px;
-    max-width:96%;
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    border-radius:12px;
-    box-shadow:0 10px 30px rgba(2,6,23,0.7);
-    padding:20px;
-    display:grid;
-    grid-template-columns:380px 1fr;
-    gap:18px;
-  }
-  .panel{
-    background:rgba(255,255,255,0.02);
-    border-radius:10px;
-    padding:14px;
-    min-height:420px;
-    display:flex;
-    flex-direction:column;
-    align-items:center
-  }
-  h1{
-    margin:0 0 8px 0;
-    font-size:18px;
-    color:var(--accent)
-  }
-  p.lead{
-    color:var(--muted);
-    margin:6px 0 12px 0;
-    font-size:13px;
-    text-align:center
-  }
-  .board{
-    width:100%;
-    height:360px;
-    background:linear-gradient(180deg,#071a2b,#052037);
-    border-radius:8px;
-    position:relative;
-    overflow:hidden;
-    border:1px solid rgba(255,255,255,0.03)
-  }
-  /* Source box */
-  .source{
-    position:absolute;
-    left:18px;
-    top:28px;
-    background:#071826;
-    border:1px solid rgba(255,255,255,0.03);
-    padding:10px;
-    border-radius:8px;
-    width:120px;
-    box-shadow:0 6px 14px rgba(8,18,30,0.6);
-    z-index:10;
-  }
-  .wire-pill{
-    display:flex;
-    gap:8px;
-    flex-direction:column
-  }
-  .wire{
-    height:28px;
-    border-radius:6px;
-    display:flex;
-    align-items:center;
-    justify-content:flex-start;
-    padding:6px 8px;
-    color:#fff;
-    font-weight:600;
-    cursor:grab;
-    user-select:none;
-    transition:all 0.2s ease;
-    position:relative;
-  }
-  .wire[data-type="fase"]{ background:var(--phase) }
-  .wire[data-type="neutro"]{ background:var(--neutral) }
-  .wire[data-type="tierra"]{ background:var(--ground) }
-  .wire.dragging{ transform:scale(1.05); box-shadow:0 4px 12px rgba(0,0,0,0.4); }
-  .wire.connected{ opacity:0.7; }
-  
-  /* Buscapolo */
-  .tester{
-    position:absolute;
-    left:18px;
-    top:180px;
-    background:#1e293b;
-    border-radius:8px;
-    padding:10px;
-    width:120px;
-    box-shadow:0 6px 14px rgba(8,18,30,0.6);
-    z-index:10;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:8px;
-  }
-  .tester-body{
-    width:80px;
-    height:24px;
-    background:#334155;
-    border-radius:4px;
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:10px;
-    color:#94a3b8;
-  }
-  .tester-light{
-    width:12px;
-    height:12px;
-    border-radius:50%;
-    background:var(--tester-off);
-    transition:background 0.3s ease;
-    margin-left:8px;
-  }
-  .tester-light.on{
-    background:var(--tester-on);
-    box-shadow:0 0 8px var(--tester-on);
-  }
-  .tester-probe{
-    width:4px;
-    height:20px;
-    background:#64748b;
-    border-radius:2px;
-    cursor:pointer;
-  }
-  
-  .terminals{
-    position:absolute;
-    right:36px;
-    top:28px;
-    width:160px;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    align-items:center
-  }
-  .lamp{
-    width:110px;
-    height:140px;
-    background:linear-gradient(180deg,#fff2,#fff0);
-    border-radius:14px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    color:#04293a;
-    transition:all 0.3s ease;
-  }
-  .lamp.lit{
-    background:linear-gradient(180deg,#fff6,#fff3);
-    box-shadow:0 0 20px rgba(255,255,150,0.3);
-  }
-  .lamp .socket{
-    width:56px;
-    height:40px;
-    background:#222;
-    border-radius:6px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#e6eef8;
-    font-size:12px;
-  }
-  .plug{
-    margin-top:6px;
-    font-size:12px;
-    color:var(--muted)
-  }
-  .switch-box{
-    position:absolute;
-    left:40%;
-    top:55%;
-    transform:translateX(-50%);
-    width:160px;
-    height:88px;
-    background:#061522;
-    border-radius:10px;
-    border:1px solid rgba(255,255,255,0.03);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-direction:column;
-    color:var(--muted);
-  }
-  .switch-plate{
-    width:84px;
-    height:42px;
-    background:#0b1724;
-    border-radius:6px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    box-shadow:inset 0 -3px rgba(0,0,0,0.15);
-    transition:all 0.1s ease;
-  }
-  .switch-plate:active{
-    transform:translateY(2px);
-    box-shadow:inset 0 -1px rgba(0,0,0,0.15);
-  }
-  .switch-plate.on{
-    background:#1e293b;
-  }
-  .target{
-    width:18px;
-    height:18px;
-    border-radius:50%;
-    border:2px dashed rgba(255,255,255,0.06);
-    display:inline-block;
-    margin:0 6px;
-    transition:all 0.2s ease;
-  }
-  .target.highlight{
-    border-color:rgba(255,255,255,0.4);
-    box-shadow:0 0 8px rgba(255,255,255,0.2);
-  }
-  .target.connected{
-    border-style:solid;
-    border-width:3px;
-  }
-  .target.connected[data-wire="fase"]{ border-color:var(--phase); }
-  .target.connected[data-wire="neutro"]{ border-color:var(--neutral); }
-  .target.connected[data-wire="tierra"]{ border-color:var(--ground); }
-  
-  .status{
-    margin-top:12px;
-    font-size:14px;
-    color:var(--muted);
-    min-height:20px;
-    text-align:center;
-  }
-  .controls{
-    display:flex;
-    gap:8px;
-    margin-top:12px;
-  }
-  button{
-    background:var(--card);
-    color:#e6eef8;
-    padding:8px 12px;
-    border-radius:8px;
-    border:1px solid rgba(255,255,255,0.03);
-    cursor:pointer;
-    transition:all 0.2s ease;
-  }
-  button:hover{
-    background:rgba(255,255,255,0.05);
-  }
-  button.primary{
-    background:var(--accent);
-    border:0;
-    color:#04293a;
-    font-weight:700;
-  }
-  button.primary:hover{
-    background:#34d399;
-  }
-  footer.small{
-    font-size:12px;
-    color:var(--muted);
-    margin-top:auto
-  }
-  /* SVG overlay for wires */
-  svg.wires{
-    position:absolute;
-    left:0;
-    top:0;
-    width:100%;
-    height:100%;
-    pointer-events:none
-  }
-  .score{
-    position:absolute;
-    left:18px;
-    bottom:18px;
-    color:var(--muted);
-    font-size:13px;
-  }
-  .level-indicator{
-    position:absolute;
-    right:18px;
-    bottom:18px;
-    color:var(--muted);
-    font-size:13px;
-  }
-  @media(max-width:840px){
-    .container{ grid-template-columns:1fr; }
-  }
-  
-  /* Animation for correct connection */
-  @keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-  }
-  .correct {
-    animation: pulse 0.5s ease;
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Juegos Eléctricos: Master Electrician</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --panel-bg: #ffffff;
+            --phase-color: #e74c3c;
+            --neutral-color: #3498db;
+            --wire-default: #7f8c8d;
+            --terminal-size: 18px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            overflow: hidden;
+            touch-action: none;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* HEADER */
+        header {
+            background: var(--panel-bg);
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            z-index: 10;
+        }
+
+        .header-left h1 { margin: 0; font-size: 1.1rem; color: #2c3e50; }
+        .header-left small { color: #7f8c8d; }
+        
+        .stats { display: flex; gap: 10px; align-items: center; }
+        .stat-badge { 
+            background: #ecf0f1; padding: 5px 8px; border-radius: 4px; font-size: 0.85rem; 
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .btn {
+            border: none; padding: 6px 12px; border-radius: 4px; 
+            cursor: pointer; font-weight: bold; color: white; font-size: 0.85rem;
+            transition: transform 0.1s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-help { background: #f39c12; }
+        .btn-reset { background: #c0392b; }
+        .btn-next { background: #2980b9; display: none; }
+
+        /* GAME BOARD */
+        #game-board {
+            position: relative;
+            flex-grow: 1;
+            background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        #wire-layer {
+            position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1;
+        }
+
+        /* COMPONENTES GENÉRICOS */
+        .component {
+            position: absolute;
+            background: white;
+            border: 2px solid #95a5a6;
+            border-radius: 6px;
+            box-shadow: var(--shadow);
+            z-index: 2;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .component label {
+            position: absolute; top: -20px; font-size: 10px; color: #555; font-weight: bold; width: 100%; text-align: center;
+        }
+
+        /* FUENTE (SOURCE) */
+        .comp-source {
+            width: 70px; height: 140px; background: #34495e; color: white; border: none;
+        }
+
+        /* LÁMPARA */
+        .comp-lamp {
+            width: 80px; height: 80px; border-radius: 50%; border: 4px solid #bdc3c7;
+        }
+        .bulb-glass {
+            width: 100%; height: 100%; border-radius: 50%; background: #bdc3c7;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .bulb-glass.on {
+            background: #f1c40f;
+            box-shadow: 0 0 40px 10px rgba(241, 196, 15, 0.6);
+        }
+
+        /* INTERRUPTOR */
+        .comp-switch { width: 80px; height: 50px; }
+        .switch-lever {
+            width: 40px; height: 20px; background: #e74c3c; border-radius: 10px; position: relative; cursor: pointer;
+        }
+        .switch-lever.active { background: #2ecc71; }
+        .switch-knob {
+            width: 16px; height: 16px; background: white; border-radius: 50%;
+            position: absolute; top: 2px; left: 2px; transition: left 0.2s;
+        }
+        .switch-lever.active .switch-knob { left: 22px; }
+
+        /* DISYUNTOR (BREAKER) */
+        .comp-breaker { width: 60px; height: 90px; background: #ecf0f1; border: 2px solid #7f8c8d; }
+        .breaker-lever {
+            width: 15px; height: 40px; background: #2c3e50; margin: 5px; cursor: pointer;
+            position: relative; transition: transform 0.2s; border-radius: 3px;
+        }
+        .breaker-lever::after { content:'ON'; color:white; font-size:8px; position:absolute; bottom:2px; left:2px; display:none;}
+        .breaker-lever.active { background: #27ae60; transform: scaleY(-1); } /* Visual flip for ON/OFF */
+        .comp-breaker.tripped { border-color: red; animation: shake 0.5s; }
+
+        /* TERMINALES */
+        .terminal {
+            width: var(--terminal-size); height: var(--terminal-size);
+            background: #95a5a6; border: 2px solid #666; border-radius: 50%;
+            position: absolute; cursor: crosshair; z-index: 3;
+            transition: transform 0.2s;
+        }
+        .terminal:hover, .terminal.highlight { transform: scale(1.3); background: #f39c12; border-color: white; }
+        .terminal[data-role="phase"] { background: var(--phase-color); }
+        .terminal[data-role="neutral"] { background: var(--neutral-color); }
+
+        /* SVG CABLES */
+        path.wire {
+            fill: none; stroke-width: 5; stroke-linecap: round;
+            cursor: pointer; transition: stroke 0.2s;
+        }
+        path.wire:hover { stroke-width: 8; opacity: 0.7; }
+        path.wire.live { stroke: #f1c40f; stroke-opacity: 0.8; filter: drop-shadow(0 0 2px orange); }
+        path.wire.short { stroke: #c0392b !important; animation: shakeWire 0.1s infinite; }
+
+        /* OVERLAYS */
+        #message-area {
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.85); color: white;
+            font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.3s; text-align: center;
+            width: 80%; max-width: 400px;
+        }
+        
+        #modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: white; text-align: center; padding: 20px; box-sizing: border-box;
+        }
+        #modal h2 { color: #f1c40f; margin-bottom: 10px; }
+        #modal p { max-width: 500px; line-height: 1.5; margin-bottom: 20px; }
+
+        .hidden { display: none !important; }
+
+        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
+        @keyframes shakeWire { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
+
+    </style>
 </head>
 <body>
-<div class="container" role="application" aria-label="Juego de Conexiones">
-  <div class="panel" aria-hidden="false">
-    <h1>Conecta el interruptor</h1>
-    <p class="lead">Arrastra los cables desde la fuente hasta los terminales. Usa el buscapolo para detectar fase.</p>
-    <div class="board" id="board" tabindex="0" aria-label="Tablero de juego">
-      <!-- Fuente -->
-      <div class="source" id="source">
-        <strong style="display:block;color:#cfeff2;margin-bottom:6px">Fuente</strong>
-        <div class="wire-pill" id="wires">
-          <div class="wire" draggable="true" data-type="fase" id="wire-fase">Fase (L)</div>
-          <div class="wire" draggable="true" data-type="neutro" id="wire-neutro">Neutro (N)</div>
-          <div class="wire" draggable="true" data-type="tierra" id="wire-tierra">Tierra (G)</div>
-        </div>
-      </div>
 
-      <!-- Buscapolo -->
-      <div class="tester" id="tester">
-        <div style="color:#cfeff2;font-size:12px">Buscapolo</div>
-        <div class="tester-body">
-          <div class="tester-light" id="tester-light"></div>
-          <span>Prueba</span>
-        </div>
-        <div class="tester-probe" id="tester-probe" title="Toca los cables con la punta"></div>
-      </div>
-
-      <!-- Switch box visual -->
-      <div class="switch-box" id="switchBox" aria-label="Caja del interruptor">
-        <div style="color:#9fb9c6;font-size:13px;margin-bottom:8px">Caja del interruptor</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="target" id="term-com" title="COM (conectar FASE)"></span>
-          <div class="switch-plate" id="switchPlate" role="button" aria-pressed="false">Tecla</div>
-          <span class="target" id="term-return" title="RETORNO (hacia lámpara)"></span>
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:8px">Terminales: COM | RET</div>
-      </div>
-
-      <!-- Lamp / receptor -->
-      <div class="terminals" id="terms">
-        <div class="lamp" id="lamp" aria-hidden="false">
-          <div style="font-size:12px;color:#072b34;font-weight:700">LÁMPARA</div>
-          <div class="socket" id="lampSocket">E27</div>
-          <div class="plug">Terminales: <span id="lampN">N</span> • <span id="lampL">L</span></div>
-        </div>
-      </div>
-
-      <!-- SVG overlay for wires -->
-      <svg class="wires" id="svgWires" viewBox="0 0 1000 600" preserveAspectRatio="none" aria-hidden="true"></svg>
-
-      <div class="score" id="score">Puntaje: 0</div>
-      <div class="level-indicator" id="level">Nivel: 1</div>
-    </div>
-
-    <div class="controls" style="margin-top:10px">
-      <button id="checkBtn" class="primary">Comprobar</button>
-      <button id="resetBtn">Reiniciar</button>
-      <button id="hintBtn">Mostrar pista</button>
-      <button id="nextBtn">Siguiente nivel</button>
-    </div>
-
-    <div class="status" id="status">Estado: esperando conexiones...</div>
-    <footer class="small">Nota: esto es educativo. No desconectes instalaciones reales sin conocimiento técnico.</footer>
-  </div>
-
-  <div class="panel" style="align-items:flex-start">
-    <h1 style="color:#7dd3fc">Instrucciones / Modos</h1>
-    <p class="lead">Modos disponibles:</p>
-    <ol style="color:var(--muted);font-size:14px">
-      <li><strong>Fácil:</strong> Solo conectar fase y neutro correctamente.</li>
-      <li><strong>Normal:</strong> Conectar fase → COM, retorno → Lámpara, neutro → Lámpara.</li>
-      <li><strong>Avanzado:</strong> Simula bucle en la luminaria (switch loop) — el blanco puede actuar como fase.</li>
-    </ol>
-    <div style="width:100%;margin-top:10px">
-      <label style="color:var(--muted);font-size:13px">Seleccionar modo:</label>
-      <select id="mode" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;background:#071826;color:#e6eef8;border:1px solid rgba(255,255,255,0.03)">
-        <option value="normal">Normal</option>
-        <option value="easy">Fácil</option>
-        <option value="loop">Switch loop (avanzado)</option>
-      </select>
-    </div>
-
-    <div style="margin-top:14px;color:var(--muted);font-size:13px">
-      Consejos rápidos:
-      <ul>
-        <li>La tecla corta la <strong>fase</strong>.</li>
-        <li>El <strong>neutro</strong> va directo a la lámpara (no al switch), salvo en un switch-loop.</li>
-        <li>Usa el buscapolo para identificar el cable de fase.</li>
-        <li>Usa la pista si estás atascado.</li>
-      </ul>
-    </div>
-    
-    <div style="margin-top:14px;color:var(--muted);font-size:13px">
-      <strong>Buscapolo:</strong> Toca los cables con la punta del buscapolo. Se encenderá en naranja si detecta fase.
-    </div>
-  </div>
-</div>
-
-<script>
-/* Juego: Conecta con arrastrar y soltar. 
-   - Modelo simple: mapeo entre terminals y tipos de cable.
-   - Gestión de líneas SVG para visualizar conexiones.
-   - Buscapolo funcional para detectar fase.
-*/
-
-const board = document.getElementById('board');
-const wires = document.getElementById('wires');
-const svg = document.getElementById('svgWires');
-const status = document.getElementById('status');
-const scoreEl = document.getElementById('score');
-const levelEl = document.getElementById('level');
-const lampEl = document.getElementById('lamp');
-const switchPlate = document.getElementById('switchPlate');
-const testerProbe = document.getElementById('tester-probe');
-const testerLight = document.getElementById('tester-light');
-
-let score = 0;
-let level = 1;
-let switchState = false;
-let testerActive = false;
-
-const targets = {
-  'term-com': null,      // COM (switch): espera FASE
-  'term-return': null,   // RETORNO: espera RETORNO hacia lámpara (puede aceptar 'fase' en loop mode)
-  'lampL': null,         // Lámpara L (hot)
-  'lampN': null          // Lámpara N (neutral)
-};
-
-// adaptamos posicion para el SVG (normalizamos)
-function getPagePos(el){
-  const r = el.getBoundingClientRect();
-  const c = board.getBoundingClientRect();
-  return { x: r.left - c.left + r.width/2, y: r.top - c.top + r.height/2 };
-}
-
-// crear targets clickeables (usamos elementos existentes)
-const termComEl = document.getElementById('term-com');
-const termReturnEl = document.getElementById('term-return');
-const lampSocketEl = document.getElementById('lampSocket');
-const lampLEl = document.getElementById('lampL');
-const lampNEl = document.getElementById('lampN');
-
-// map visual element ids to target ids
-const visualTargets = {
-  'term-com': termComEl,
-  'term-return': termReturnEl,
-  'lampL': lampLEl,
-  'lampN': lampNEl
-};
-
-// Setup drag events for each wire
-document.querySelectorAll('.wire').forEach(w => {
-  w.addEventListener('dragstart', e=>{
-    e.dataTransfer.setData('text/plain', w.dataset.type);
-    e.dataTransfer.effectAllowed = 'move';
-    w.classList.add('dragging');
-  });
-  w.addEventListener('dragend', e=>{
-    w.classList.remove('dragging');
-  });
-});
-
-// Create droppable areas by listening to board drop and calculating nearest target
-board.addEventListener('dragover', e=>{ 
-  e.preventDefault(); 
-  e.dataTransfer.dropEffect='move'; 
-  
-  // Highlight nearest target
-  const x = e.clientX; 
-  const y = e.clientY;
-  let closest = null; 
-  let dist = Infinity;
-  
-  for (const [tid, el] of Object.entries(visualTargets)){
-    const r = el.getBoundingClientRect();
-    const cx = r.left + r.width/2; 
-    const cy = r.top + r.height/2;
-    const d = Math.hypot(cx - x, cy - y);
-    if (d < dist){ 
-      dist = d; 
-      closest = tid; 
-    }
-  }
-  
-  // Remove highlight from all
-  document.querySelectorAll('.target').forEach(t => t.classList.remove('highlight'));
-  
-  // Highlight closest if within range
-  if (dist < 100 && closest) {
-    visualTargets[closest].classList.add('highlight');
-  }
-});
-
-board.addEventListener('drop', e=>{
-  e.preventDefault();
-  const type = e.dataTransfer.getData('text/plain');
-  const x = e.clientX; const y = e.clientY;
-  // find closest visual target
-  let closest = null; let dist = Infinity;
-  for (const [tid, el] of Object.entries(visualTargets)){
-    const r = el.getBoundingClientRect();
-    const cx = r.left + r.width/2; const cy = r.top + r.height/2;
-    const d = Math.hypot(cx - x, cy - y);
-    if (d < dist){ dist = d; closest = tid; }
-  }
-  // if too far, ignore (must drop cerca)
-  if (dist > 160){ 
-    status.innerText = 'Suelta más cerca del objetivo.'; 
-    // Remove highlight
-    document.querySelectorAll('.target').forEach(t => t.classList.remove('highlight'));
-    return; 
-  }
-  // register connection
-  connectWire(closest, type);
-  
-  // Remove highlight
-  document.querySelectorAll('.target').forEach(t => t.classList.remove('highlight'));
-});
-
-// conexión lógica: anotar y dibujar
-function connectWire(targetId, type){
-  // reglas según modo
-  const mode = document.getElementById('mode').value;
-  // consumidores: lampL/lampN are text elements, map them
-  if (targetId === 'lampL') targetId = 'lampL';
-  if (targetId === 'lampN') targetId = 'lampN';
-
-  targets[targetId] = type;
-  
-  // Update visual connection indicator
-  if (visualTargets[targetId]) {
-    visualTargets[targetId].classList.add('connected');
-    visualTargets[targetId].setAttribute('data-wire', type);
-  }
-  
-  drawWires();
-  status.innerText = `Conectado ${type} → ${targetId}`;
-  
-  // Play connection sound
-  playSound('connect');
-}
-
-// reiniciar
-function resetGame(){
-  for(const k in targets) targets[k]=null;
-  score = 0; 
-  scoreEl.innerText = `Puntaje: ${score}`;
-  level = 1;
-  levelEl.innerText = `Nivel: ${level}`;
-  status.innerText = 'Reiniciado. Comienza de nuevo.';
-  switchState = false;
-  switchPlate.classList.remove('on');
-  lampEl.classList.remove('lit');
-  clearSVG();
-  
-  // Reset connection indicators
-  document.querySelectorAll('.target').forEach(t => {
-    t.classList.remove('connected');
-    t.removeAttribute('data-wire');
-  });
-  
-  // Reset wires
-  document.querySelectorAll('.wire').forEach(w => {
-    w.classList.remove('connected');
-  });
-}
-document.getElementById('resetBtn').addEventListener('click', resetGame);
-
-// mostrar pista
-document.getElementById('hintBtn').addEventListener('click', ()=>{
-  const mode = document.getElementById('mode').value;
-  if (mode === 'easy') alert('Conecta Fase → COM y Neutro → Lámpara N.');
-  else if (mode === 'normal') alert('COM (tecla) debe recibir FASE. Retorno debe ir a L (lámpara). Neutro directo a N.');
-  else alert('En switch loop, el blanco puede estar marcado como fase; observa colores.');
-});
-
-// check
-document.getElementById('checkBtn').addEventListener('click', ()=>{
-  const mode = document.getElementById('mode').value;
-  const ok = validate(mode);
-  if (ok) { 
-    score += 10; 
-    status.innerText = '¡Correcto! Circuito válido. +10 puntos'; 
-    playSound('success');
-    
-    // Visual feedback
-    lampEl.classList.add('lit');
-    document.querySelectorAll('.target.connected').forEach(t => {
-      t.classList.add('correct');
-      setTimeout(() => t.classList.remove('correct'), 500);
-    });
-  }
-  else { 
-    score = Math.max(0, score-5); 
-    status.innerText = 'Incorrecto. Revisa las conexiones. -5 puntos'; 
-    playSound('error');
-  }
-  scoreEl.innerText = `Puntaje: ${score}`;
-});
-
-// Siguiente nivel
-document.getElementById('nextBtn').addEventListener('click', ()=>{
-  level++;
-  levelEl.innerText = `Nivel: ${level}`;
-  resetGame();
-  status.innerText = `Nivel ${level}. ¡Nuevo desafío!`;
-});
-
-// validación de conexiones
-function validate(mode){
-  // reglas:
-  // easy: COM must be 'fase' and lampN 'neutro'
-  // normal: COM='fase', term-return = 'fase' (retorno towards lamp), lampL = 'fase' or term_return implies lampL, lampN='neutro'
-  // loop: allow white marked as fase (we simulate if type 'neutro' used as hot on return allow)
-  const com = targets['term-com'];
-  const ret = targets['term-return'];
-  const lampL = targets['lampL'];
-  const lampN = targets['lampN'];
-
-  if (mode === 'easy'){
-    return com === 'fase' && lampN === 'neutro';
-  }
-  if (mode === 'normal'){
-    // expect COM=fase, RETORNO=fase, Lámpara N = neutro
-    if (com !== 'fase') return false;
-    if (ret !== 'fase') return false;
-    if (lampN !== 'neutro') return false;
-    // optionally lampL can be fase or empty (we infer from retorno)
-    return true;
-  }
-  if (mode === 'loop'){
-    // accept if com === 'fase' OR com === 'neutro' (if neutral used as marked hot)
-    if (!(com === 'fase' || com === 'neutro')) return false;
-    if (lampN !== 'neutro') return false;
-    return true;
-  }
-  return false;
-}
-
-// draw wires on SVG between source and target positions
-function drawWires(){
-  clearSVG();
-  const boardRect = board.getBoundingClientRect();
-  // helper to add path from source wire pill to target element
-  function addPathFromSource(type, targetEl){
-    const sourceEl = document.querySelector('.wire[data-type="'+type+'"]');
-    if (!sourceEl || !targetEl) return;
-    const s = getPagePos(sourceEl);
-    const t = getPagePos(targetEl);
-    // normalize to svg viewbox (we set viewBox 0..1000,600)
-    const sx = (s.x / boardRect.width) * 1000;
-    const sy = (s.y / boardRect.height) * 600;
-    const tx = (t.x / boardRect.width) * 1000;
-    const ty = (t.y / boardRect.height) * 600;
-    const color = type === 'fase' ? '#ff6b6b' : (type === 'neutro' ? '#34d7d1' : '#8bd34a');
-    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-    const dx = Math.abs(tx - sx) * 0.4;
-    const d = `M ${sx} ${sy} C ${sx+dx} ${sy} ${tx-dx} ${ty} ${tx} ${ty}`;
-    path.setAttribute('d', d);
-    path.setAttribute('stroke', color);
-    path.setAttribute('stroke-width', '4');
-    path.setAttribute('fill','none');
-    path.setAttribute('stroke-linecap','round');
-    svg.appendChild(path);
-  }
-
-  // draw connections recorded in targets
-  if (targets['term-com']) addPathFromSource(targets['term-com'], termComEl);
-  if (targets['term-return']) addPathFromSource(targets['term-return'], termReturnEl);
-  if (targets['lampL']) addPathFromSource(targets['lampL'], lampLEl);
-  if (targets['lampN']) addPathFromSource(targets['lampN'], lampNEl);
-}
-
-// clear svg
-function clearSVG(){ while(svg.firstChild) svg.removeChild(svg.firstChild); }
-
-// Buscapolo functionality
-testerProbe.addEventListener('mousedown', () => {
-  testerActive = true;
-  testerProbe.style.background = '#cbd5e1';
-});
-
-document.addEventListener('mouseup', () => {
-  testerActive = false;
-  testerProbe.style.background = '#64748b';
-  testerLight.classList.remove('on');
-});
-
-board.addEventListener('mousemove', (e) => {
-  if (!testerActive) return;
-  
-  const x = e.clientX;
-  const y = e.clientY;
-  
-  // Check if over a wire
-  let overWire = false;
-  let wireType = null;
-  
-  document.querySelectorAll('.wire').forEach(wire => {
-    const rect = wire.getBoundingClientRect();
-    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-      overWire = true;
-      wireType = wire.dataset.type;
-    }
-  });
-  
-  // Check if over a connected target
-  document.querySelectorAll('.target.connected').forEach(target => {
-    const rect = target.getBoundingClientRect();
-    if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-      overWire = true;
-      wireType = target.getAttribute('data-wire');
-    }
-  });
-  
-  // Light up if over fase
-  if (overWire && wireType === 'fase') {
-    testerLight.classList.add('on');
-    playSound('tester');
-  } else {
-    testerLight.classList.remove('on');
-  }
-});
-
-// Switch functionality
-switchPlate.addEventListener('click', () => {
-  switchState = !switchState;
-  
-  if (switchState) {
-    switchPlate.classList.add('on');
-    switchPlate.textContent = "ON";
-    
-    // Check if circuit is complete to light the lamp
-    const mode = document.getElementById('mode').value;
-    if (validate(mode)) {
-      lampEl.classList.add('lit');
-      playSound('switch');
-    }
-  } else {
-    switchPlate.classList.remove('on');
-    switchPlate.textContent = "OFF";
-    lampEl.classList.remove('lit');
-    playSound('switch');
-  }
-});
-
-// Sound effects
-function playSound(type) {
-  // In a real implementation, you would use actual audio files
-  // For this example, we'll just log the sound type
-  console.log(`Playing sound: ${type}`);
-  
-  // Example of how to implement actual sounds:
-  /*
-  const audio = new Audio();
-  switch(type) {
-    case 'connect':
-      audio.src = 'sounds/connect.mp3';
-      break;
-    case 'success':
-      audio.src = 'sounds/success.mp3';
-      break;
-    case 'error':
-      audio.src = 'sounds/error.mp3';
-      break;
-    case 'switch':
-      audio.src = 'sounds/switch.mp3';
-      break;
-    case 'tester':
-      audio.src = 'sounds/tester.mp3';
-      break;
-  }
-  audio.play();
-  */
-}
-
-// On resize recalc
-window.addEventListener('resize', drawWires);
-document.getElementById('mode').addEventListener('change', ()=>{ resetGame(); });
-
-// inicial
-resetGame();
-drawWires();
-</script>
-</body>
-</html>
+    <!-- MODAL INSTRUCCIONES / NIVEL -->
+    <div id="modal">
+        <h2 id="modal-title">Juegos Eléctricos ⚡</h2>
+        <p id="modal-desc">
+            Bienvenido al curso de electricista.<br>
+            Arrastra cables desde los terminales para conectar los circuitos.<br>
+            Evita cortocircuitos (Fase directo a Neutro).
+        </p>
+        <button class="btn btn-help" style="font-size:1.2rem; padding:10px 20px;" onc
