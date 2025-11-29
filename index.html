@@ -15,6 +15,8 @@
             --terminal-size: 18px;
             --shadow: 0 4px 6px rgba(0,0,0,0.1);
             --neon-orange: #ff6b00;
+            --primary-color: #f1c40f;
+            --primary-dark: #f39c12;
         }
 
         body {
@@ -29,7 +31,7 @@
             user-select: none;
         }
 
-        /* --- PANTALLA DE INICIO --- */
+        /* --- PANTALLA DE INICIO MEJORADA --- */
         #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #2c3e50, #34495e);
@@ -37,24 +39,116 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: white;
             transition: opacity 0.5s;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
         }
-        #start-screen h1 { font-size: 2.5rem; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        #start-screen p { color: #bdc3c7; font-size: 1.1rem; margin-bottom: 40px; }
-        .logo-icon { font-size: 5rem; margin-bottom: 20px; animation: pulseLogo 2s infinite; }
+        #start-screen h1 { 
+            font-size: 2.5rem; 
+            margin-bottom: 10px; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+            text-align: center;
+        }
+        #start-screen p { 
+            color: #bdc3c7; 
+            font-size: 1.1rem; 
+            margin-bottom: 40px; 
+            text-align: center;
+            max-width: 600px;
+        }
+        .logo-icon { 
+            font-size: 5rem; 
+            margin-bottom: 20px; 
+            animation: pulseLogo 2s infinite; 
+        }
         
         .btn-big {
-            font-size: 1.5rem; padding: 15px 50px;
-            background: #f1c40f; color: #2c3e50;
-            border: none; border-radius: 50px;
-            cursor: pointer; font-weight: bold;
+            font-size: 1.5rem; 
+            padding: 15px 50px;
+            background: var(--primary-color); 
+            color: #2c3e50;
+            border: none; 
+            border-radius: 50px;
+            cursor: pointer; 
+            font-weight: bold;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: transform 0.2s, background 0.2s;
+            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
         }
-        .btn-big:hover { transform: scale(1.05); background: #f39c12; }
-        .btn-big:active { transform: scale(0.95); }
+        .btn-big:hover { 
+            transform: scale(1.05); 
+            background: var(--primary-dark);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .btn-big:active { 
+            transform: scale(0.95); 
+        }
+        .btn-big::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        .btn-big:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
 
-        @keyframes pulseLogo { 0% { transform: scale(1); text-shadow: 0 0 0px #f1c40f; } 50% { transform: scale(1.1); text-shadow: 0 0 20px #f1c40f; } 100% { transform: scale(1); } }
+        /* Contenedor de información del nivel */
+        .level-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            max-width: 500px;
+            text-align: center;
+        }
+        .level-info h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .level-difficulty {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        .difficulty-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #34495e;
+            margin: 0 3px;
+        }
+        .difficulty-dot.active {
+            background: var(--primary-color);
+        }
+        
+        /* Animaciones mejoradas */
+        @keyframes pulseLogo { 
+            0% { transform: scale(1); text-shadow: 0 0 0px var(--primary-color); } 
+            50% { transform: scale(1.1); text-shadow: 0 0 20px var(--primary-color); } 
+            100% { transform: scale(1); } 
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
 
+        /* Resto del CSS se mantiene igual */
         /* HEADER */
         header {
             background: var(--panel-bg);
@@ -243,12 +337,30 @@
 </head>
 <body>
 
-    <!-- PANTALLA DE INICIO (NUEVO) -->
+    <!-- PANTALLA DE INICIO MEJORADA -->
     <div id="start-screen">
         <div class="logo-icon">⚡</div>
         <h1>Juegos Eléctricos</h1>
-        <p>Aprende a conectar circuitos reales</p>
-        <button class="btn-big" onclick="startGame()">Comenzar Juego</button>
+        <p>Aprende a conectar circuitos eléctricos reales de forma interactiva y divertida</p>
+        
+        <div class="level-info">
+            <h2>Nivel 1: Conexión Básica</h2>
+            <p>Haz que la bombilla encienda conectando Fase y Neutro</p>
+            <div class="level-difficulty">
+                <div class="difficulty-dot active"></div>
+                <div class="difficulty-dot"></div>
+                <div class="difficulty-dot"></div>
+                <div class="difficulty-dot"></div>
+                <div class="difficulty-dot"></div>
+            </div>
+            <p><small>Dificultad: Fácil</small></p>
+        </div>
+        
+        <button class="btn-big" onclick="startGame()" id="start-button">Comenzar Juego</button>
+        
+        <div style="margin-top: 30px; font-size: 0.9rem; color: #bdc3c7;">
+            <p>Total de niveles: 10 | Progreso: 0%</p>
+        </div>
     </div>
 
     <!-- MODAL INSTRUCCIONES NIVEL -->
@@ -340,31 +452,63 @@
     <script>
         // CONFIGURACIÓN DE NIVELES (10 NIVELES)
         const levels = [
-            { id: 1, title: "Conexión Básica", objective: "Haz que la bombilla encienda conectando Fase y Neutro.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'lamp', id: 'L1', x: 60, y: 40 }] },
-            { id: 2, title: "El Interruptor", objective: "Intercala el interruptor para controlar la luz.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 40, y: 70 }, { type: 'lamp', id: 'L1', x: 70, y: 30 }] },
-            { id: 3, title: "Circuito en Serie", objective: "Conecta dos lámparas en fila (una tras otra).", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 70 }, { type: 'lamp', id: 'L1', x: 55, y: 30 }, { type: 'lamp', id: 'L2', x: 80, y: 30 }] },
-            { id: 4, title: "Seguridad: Disyuntor", objective: "Protege el circuito pasando primero por el disyuntor.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 40 }] },
-            { id: 5, title: "Instalación Completa", objective: "Fuente → Disyuntor → Interruptor → Lámpara.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 25, y: 40 }, { type: 'switch', id: 'S1', x: 50, y: 70 }, { type: 'lamp', id: 'L1', x: 80, y: 30 }] },
-            { id: 6, title: "Circuito en Paralelo", objective: "Conecta dos lámparas para que brillen al máximo (caminos separados).", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 80 }, { type: 'lamp', id: 'L1', x: 60, y: 20 }, { type: 'lamp', id: 'L2', x: 60, y: 60 }] },
-            { id: 7, title: "Protección Paralela", objective: "Usa el disyuntor para proteger un circuito paralelo directo.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'lamp', id: 'L2', x: 70, y: 60 }] },
-            { id: 8, title: "Doble Control", objective: "Cada interruptor debe controlar su propia lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'switch', id: 'S1', x: 35, y: 20 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'switch', id: 'S2', x: 35, y: 80 }, { type: 'lamp', id: 'L2', x: 70, y: 80 }] },
-            { id: 9, title: "Sala de Estar", objective: "Disyuntor general y luego interruptor para dos luces.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 25, y: 50 }, { type: 'switch', id: 'S1', x: 50, y: 80 }, { type: 'lamp', id: 'L1', x: 80, y: 20 }, { type: 'lamp', id: 'L2', x: 80, y: 50 }] },
-            { id: 10, title: "Maestro Electricista", objective: "Complejo: Protege todo y conecta cada interruptor a su lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 20, y: 50 }, { type: 'switch', id: 'S1', x: 40, y: 20 }, { type: 'lamp', id: 'L1', x: 65, y: 20 }, { type: 'switch', id: 'S2', x: 40, y: 80 }, { type: 'lamp', id: 'L2', x: 65, y: 80 }, { type: 'lamp', id: 'L3', x: 90, y: 50 }] }
+            { id: 1, title: "Conexión Básica", objective: "Haz que la bombilla encienda conectando Fase y Neutro.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'lamp', id: 'L1', x: 60, y: 40 }], difficulty: 1 },
+            { id: 2, title: "El Interruptor", objective: "Intercala el interruptor para controlar la luz.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 40, y: 70 }, { type: 'lamp', id: 'L1', x: 70, y: 30 }], difficulty: 2 },
+            { id: 3, title: "Circuito en Serie", objective: "Conecta dos lámparas en fila (una tras otra).", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 70 }, { type: 'lamp', id: 'L1', x: 55, y: 30 }, { type: 'lamp', id: 'L2', x: 80, y: 30 }], difficulty: 2 },
+            { id: 4, title: "Seguridad: Disyuntor", objective: "Protege el circuito pasando primero por el disyuntor.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 40 }], difficulty: 3 },
+            { id: 5, title: "Instalación Completa", objective: "Fuente → Disyuntor → Interruptor → Lámpara.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 25, y: 40 }, { type: 'switch', id: 'S1', x: 50, y: 70 }, { type: 'lamp', id: 'L1', x: 80, y: 30 }], difficulty: 3 },
+            { id: 6, title: "Circuito en Paralelo", objective: "Conecta dos lámparas para que brillen al máximo (caminos separados).", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 80 }, { type: 'lamp', id: 'L1', x: 60, y: 20 }, { type: 'lamp', id: 'L2', x: 60, y: 60 }], difficulty: 4 },
+            { id: 7, title: "Protección Paralela", objective: "Usa el disyuntor para proteger un circuito paralelo directo.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'lamp', id: 'L2', x: 70, y: 60 }], difficulty: 4 },
+            { id: 8, title: "Doble Control", objective: "Cada interruptor debe controlar su propia lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'switch', id: 'S1', x: 35, y: 20 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'switch', id: 'S2', x: 35, y: 80 }, { type: 'lamp', id: 'L2', x: 70, y: 80 }], difficulty: 5 },
+            { id: 9, title: "Sala de Estar", objective: "Disyuntor general y luego interruptor para dos luces.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 25, y: 50 }, { type: 'switch', id: 'S1', x: 50, y: 80 }, { type: 'lamp', id: 'L1', x: 80, y: 20 }, { type: 'lamp', id: 'L2', x: 80, y: 50 }], difficulty: 5 },
+            { id: 10, title: "Maestro Electricista", objective: "Complejo: Protege todo y conecta cada interruptor a su lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 20, y: 50 }, { type: 'switch', id: 'S1', x: 40, y: 20 }, { type: 'lamp', id: 'L1', x: 65, y: 20 }, { type: 'switch', id: 'S2', x: 40, y: 80 }, { type: 'lamp', id: 'L2', x: 65, y: 80 }, { type: 'lamp', id: 'L3', x: 90, y: 50 }], difficulty: 5 }
         ];
 
         const svgNS = "http://www.w3.org/2000/svg";
 
-        // FUNCIÓN GLOBAL INICIO
+        // FUNCIÓN GLOBAL INICIO MEJORADA
         function startGame() {
             const startScreen = document.getElementById('start-screen');
-            startScreen.style.opacity = '0';
+            const startButton = document.getElementById('start-button');
+            
+            // Animación del botón al hacer clic
+            startButton.style.transform = 'scale(0.95)';
+            
             setTimeout(() => {
-                startScreen.classList.add('hidden');
-                // Inicializar Audio Context ahora que tenemos interacción
-                if(game.audioCtx) game.audioCtx.resume();
-                // Mostrar instrucciones nivel 1
-                document.getElementById('modal').classList.remove('hidden');
-            }, 500);
+                startScreen.style.opacity = '0';
+                setTimeout(() => {
+                    startScreen.classList.add('hidden');
+                    // Inicializar Audio Context ahora que tenemos interacción
+                    if(game.audioCtx) game.audioCtx.resume();
+                    // Mostrar instrucciones nivel 1
+                    document.getElementById('modal').classList.remove('hidden');
+                }, 500);
+            }, 150);
+        }
+
+        // Actualizar información del nivel en la pantalla de inicio
+        function updateStartScreenInfo(levelIdx) {
+            const level = levels[levelIdx];
+            const levelInfo = document.querySelector('.level-info');
+            const difficultyDots = document.querySelectorAll('.difficulty-dot');
+            const progressElement = document.querySelector('#start-screen p:last-child');
+            
+            // Actualizar información del nivel
+            levelInfo.querySelector('h2').textContent = `Nivel ${level.id}: ${level.title}`;
+            levelInfo.querySelector('p').textContent = level.objective;
+            
+            // Actualizar indicador de dificultad
+            difficultyDots.forEach((dot, index) => {
+                if (index < level.difficulty) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+            
+            // Actualizar progreso
+            const progress = Math.round((levelIdx / levels.length) * 100);
+            progressElement.innerHTML = `Total de niveles: ${levels.length} | Progreso: ${progress}%`;
         }
 
         class GameManager {
@@ -395,6 +539,9 @@
                 document.getElementById('modal-title').textContent = lvl.title;
                 document.getElementById('modal-desc').textContent = lvl.objective;
                 document.getElementById('next-btn').style.display = 'none';
+                
+                // Actualizar información en pantalla de inicio
+                updateStartScreenInfo(idx);
                 
                 // Mostrar advertencia sobre lámparas
                 const hasLamps = lvl.comps.some(c => c.type === 'lamp');
@@ -457,6 +604,7 @@
                 this.compLayer.appendChild(el);
             }
 
+            // Resto de métodos de la clase GameManager se mantienen igual
             initInput() {
                 this.compLayer.addEventListener('pointerdown', (e) => {
                     if(e.target.classList.contains('terminal')) {
