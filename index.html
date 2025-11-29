@@ -71,7 +71,7 @@
 
         #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
 
-        /* --- HERRAMIENTAS FLOTANTES MEJORADAS --- */
+        /* --- HERRAMIENTAS FLOTANTES --- */
         
         /* 1. Multímetro */
         #multimeter {
@@ -115,8 +115,8 @@
             transition: 0.1s;
         }
         #neon-pen.active #neon-light {
-            background: var(--neon-glow);
-            box-shadow: 0 0 15px var(--neon-glow), inset 0 0 8px orangered;
+            background: #ff9f43; /* Luz naranja */
+            box-shadow: 0 0 15px #ff9f43, inset 0 0 8px #ff9f43;
             animation: flicker 0.1s infinite alternate;
         }
         @keyframes flicker { from { opacity: 0.8; } to { opacity: 1; } }
@@ -146,7 +146,7 @@
         .comp-ac { width: 120px; height: 80px; background: #f5f6fa; }
         .ac-icon { font-size: 2rem; margin-top: 10px; }
 
-        .comp-outlet { width: 80px; height: 60px; background: #f5f6fa; }
+        .comp-outlet { width: 80px; height: 80px; background: #f5f6fa; }
         .outlet-icon { font-size: 1.5rem; margin-top: 5px; }
 
         .terminal {
@@ -159,7 +159,6 @@
         /* CABLES */
         path.wire { fill: none; stroke-width: 5; stroke-linecap: round; cursor: pointer; opacity: 0.9; }
         path.wire:hover { stroke-width: 9; }
-        path.wire.exposed-bad { stroke: var(--bad-wire) !important; stroke-dasharray: 5,5; opacity: 0.8; }
 
         /* ALERTA TOAST */
         #toast {
@@ -207,9 +206,9 @@
         <div class="probe-tip"></div>
         <div class="lcd-screen" id="multi-lcd">---</div>
         <div style="font-size:0.7rem; text-align:center; color:#2f3640; font-weight:bold; border-top:1px solid #666; padding-top:4px;" id="multi-mode">
-            CONTINUIDAD
+            VOLTAJE AC
         </div>
-        <div style="font-size:0.6rem; text-align:center; color:#666; margin-top:2px;">(Mantén click para medir)</div>
+        <div style="font-size:0.6rem; text-align:center; color:#666; margin-top:2px;">(Pasa el mouse sobre cables)</div>
     </div>
 
     <div id="neon-pen">
@@ -242,7 +241,7 @@
                         <ul>
                             <li>Selecciona el buscapolo en la barra de herramientas</li>
                             <li>Acerca la punta a cables o terminales</li>
-                            <li>Si hay tensión (220V), la luz interior se encenderá</li>
+                            <li>Si hay tensión (220V), la luz interior se encenderá en color NARANJA</li>
                             <li>La luz parpadeante indica presencia de fase</li>
                         </ul>
                         <p><strong>Precauciones:</strong> Solo detecta fase activa, no indica neutro ni tierra.</p>
@@ -255,18 +254,17 @@
                 <div class="help-tool">
                     <div class="help-tool-icon">📟</div>
                     <div class="help-tool-desc">
-                        <p><strong>Función:</strong> Mide voltaje y continuidad eléctrica.</p>
+                        <p><strong>Función:</strong> Mide voltaje en cables y componentes.</p>
                         <p><strong>Cómo usar:</strong></p>
                         <ul>
                             <li>Selecciona el tester en la barra de herramientas</li>
-                            <li>Haz clic y mantén presionado sobre un cable o terminal</li>
-                            <li>Con energía activada: Mide voltaje (0V o 220V)</li>
-                            <li>Sin energía: Mide continuidad (0.0Ω o O.L. - circuito abierto)</li>
+                            <li>Pasa el mouse sobre cables para medir voltaje</li>
+                            <li>Muestra 220V en cables con fase activa</li>
+                            <li>Muestra 0V en cables sin tensión</li>
                         </ul>
-                        <p><strong>Modos de operación:</strong></p>
+                        <p><strong>Modo de operación:</strong></p>
                         <ul>
-                            <li><strong>Voltaje AC:</strong> Muestra 220V en fase, 0V en neutro</li>
-                            <li><strong>Continuidad:</strong> 0.0Ω = cable sano, O.L. = cable cortado</li>
+                            <li><strong>Voltaje AC:</strong> Mide automáticamente al pasar el mouse</li>
                         </ul>
                     </div>
                 </div>
@@ -309,7 +307,7 @@
             <button class="tool-btn active" id="btn-hand" onclick="game.selectTool('hand')" title="Conectar / Desconectar">
                 🖐 Mano
             </button>
-            <button class="tool-btn" id="btn-multi" onclick="game.selectTool('multimeter')" title="Mide Voltaje o Continuidad">
+            <button class="tool-btn" id="btn-multi" onclick="game.selectTool('multimeter')" title="Mide Voltaje">
                 📟 Tester
             </button>
             <button class="tool-btn" id="btn-neon" onclick="game.selectTool('neon')" title="Detecta Fase">
@@ -365,7 +363,6 @@
                 this.switchOn = false;
                 this.tool = 'hand';
                 this.drag = null;
-                this.isMeasuring = false;
                 this.components = [];
                 this.voltageTooltip = null;
 
@@ -523,6 +520,7 @@
                     <div class="terminal" id="t-${id}-N" style="bottom:-7px; right:20px;"></div>
                     <span class="term-lbl" style="bottom:10px; right:28px;">Neu</span>
                     <div class="terminal" id="t-${id}-E" style="top:-7px; left:35px; background:#27ae60;"></div>
+                    <span class="term-lbl" style="top:10px; left:42px;">Tierra</span>
                 `;
                 
                 this.componentsContainer.appendChild(outletEl);
@@ -570,8 +568,6 @@
             selectTool(t) {
                 this.tool = t;
                 this.board.dataset.tool = t;
-                this.isMeasuring = false;
-                this.stopBeep();
 
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
                 if(t==='hand') document.getElementById('btn-hand').classList.add('active');
@@ -645,7 +641,7 @@
 
                 // Marcar cables con voltaje
                 this.wires.forEach(w => {
-                    if(!w.broken && (voltageNodes.has(w.u) || voltageNodes.has(w.v))) {
+                    if(voltageNodes.has(w.u) || voltageNodes.has(w.v)) {
                         w.voltage = true;
                     }
                 });
@@ -737,11 +733,7 @@
                 path.setAttribute('stroke', color);
                 this.svg.appendChild(path);
 
-                // Probabilidad de falla aumenta con el nivel
-                const failChance = this.level === 1 ? 0 : 0.1 * this.level; 
-                const isBroken = Math.random() < Math.min(failChance, 0.5);
-
-                const wireObj = { u, v, el: path, broken: isBroken, voltage: false, color };
+                const wireObj = { u, v, el: path, voltage: false, color };
                 this.wires.push(wireObj);
 
                 // Eventos Mouse
@@ -755,35 +747,32 @@
                         } else {
                             this.showToast("¡Peligro! Corta la luz primero.", "error");
                         }
-                    } else if (this.tool === 'multimeter') {
-                        this.isMeasuring = true;
-                        this.diagnoseWire(wireObj);
-                    }
-                });
-
-                // Detener medición al soltar
-                path.addEventListener('mouseup', () => {
-                    if(this.tool === 'multimeter') {
-                        this.isMeasuring = false;
-                        this.resetTesterDisplay();
                     }
                 });
 
                 // Mostrar voltaje al pasar el mouse
                 path.addEventListener('mouseenter', (e) => {
-                    if(this.tool === 'hand' && this.powerOn) {
+                    if(this.tool === 'multimeter' && this.powerOn) {
+                        this.showVoltageMeasurement(e, wireObj);
+                    } else if(this.tool === 'hand' && this.powerOn) {
                         this.showVoltageTooltip(e, wireObj);
                     }
                 });
                 
                 path.addEventListener('mousemove', (e) => {
-                    if(this.tool === 'hand' && this.powerOn && this.voltageTooltip) {
+                    if(this.tool === 'multimeter' && this.powerOn) {
+                        this.updateVoltageMeasurement(e);
+                    } else if(this.tool === 'hand' && this.powerOn && this.voltageTooltip) {
                         this.updateVoltageTooltip(e);
                     }
                 });
                 
                 path.addEventListener('mouseleave', () => {
-                    this.hideVoltageTooltip();
+                    if(this.tool === 'multimeter') {
+                        this.hideVoltageMeasurement();
+                    } else {
+                        this.hideVoltageTooltip();
+                    }
                 });
 
                 // Actualizar
@@ -805,7 +794,21 @@
                     
                     const el = document.elementFromPoint(e.clientX, e.clientY);
                     const wire = this.wires.find(w => w.el === el);
+                    const terminal = el && el.classList.contains('terminal') ? el : null;
+                    
+                    // Verificar si hay voltaje en el elemento bajo el cursor
+                    let hasVoltage = false;
+                    
                     if(wire && wire.voltage) {
+                        hasVoltage = true;
+                    } else if(terminal) {
+                        const adj = this.getAdjacency(false);
+                        const voltageNodes = new Set();
+                        this.bfs(adj, 't-src-L', n => voltageNodes.add(n));
+                        hasVoltage = voltageNodes.has(terminal.id);
+                    }
+                    
+                    if(hasVoltage) {
                         this.uiNeon.classList.add('active');
                     } else {
                         this.uiNeon.classList.remove('active');
@@ -817,10 +820,6 @@
                     this.uiMulti.style.display = 'block';
                     this.uiMulti.style.left = (e.clientX + 5) + 'px';
                     this.uiMulti.style.top = (e.clientY + 5) + 'px';
-                    
-                    if(!this.isMeasuring) {
-                        this.resetTesterDisplay();
-                    }
                 }
 
                 // 3. Arrastre Cable
@@ -830,38 +829,28 @@
                 }
             }
 
-            resetTesterDisplay() {
-                this.stopBeep();
-                this.uiLcd.className = "lcd-screen";
-                if(this.powerOn) {
-                    this.uiMode.textContent = "MODO: VOLTAJE AC";
-                    this.uiLcd.textContent = "000 V";
+            // --- MEDICIÓN DE VOLTAJE CON TESTER ---
+            showVoltageMeasurement(e, wire) {
+                this.uiLcd.className = "lcd-screen active";
+                this.uiLcd.textContent = wire.voltage ? "220 V" : "000 V";
+                if(wire.voltage) {
+                    this.uiLcd.style.color = "#c0392b";
+                    this.uiMode.textContent = "VOLTAJE AC: FASE";
                 } else {
-                    this.uiMode.textContent = "MODO: CONTINUIDAD";
-                    this.uiLcd.textContent = "---";
+                    this.uiLcd.style.color = "#2980b9";
+                    this.uiMode.textContent = "VOLTAJE AC: NEUTRO";
                 }
             }
-
-            diagnoseWire(wire) {
-                if(this.powerOn) {
-                    // VOLTAJE
-                    this.uiLcd.className = "lcd-screen active";
-                    this.uiLcd.textContent = wire.voltage ? "220 V" : "005 V";
-                    if(wire.voltage) this.uiLcd.style.color = "#c0392b";
-                    else this.uiLcd.style.color = "#2d3436";
-                } else {
-                    // CONTINUIDAD
-                    if(wire.broken) {
-                        this.uiLcd.textContent = "O.L.";
-                        this.uiLcd.className = "lcd-screen error";
-                        wire.el.classList.add('exposed-bad');
-                        this.showToast("Cable Cortado", "error");
-                    } else {
-                        this.uiLcd.textContent = "0.0 Ω";
-                        this.uiLcd.className = "lcd-screen active";
-                        this.startBeep();
-                    }
-                }
+            
+            updateVoltageMeasurement(e) {
+                this.uiMulti.style.left = (e.clientX + 15) + 'px';
+                this.uiMulti.style.top = (e.clientY + 15) + 'px';
+            }
+            
+            hideVoltageMeasurement() {
+                this.uiLcd.className = "lcd-screen";
+                this.uiLcd.textContent = "---";
+                this.uiMode.textContent = "VOLTAJE AC";
             }
 
             // --- TOOLTIP DE VOLTAJE ---
@@ -895,19 +884,6 @@
             }
 
             // --- AUDIO ---
-            startBeep() {
-                if(this.osc) return;
-                this.osc = this.audioCtx.createOscillator();
-                this.gain = this.audioCtx.createGain();
-                this.osc.connect(this.gain);
-                this.gain.connect(this.audioCtx.destination);
-                this.osc.frequency.value = 1800;
-                this.gain.gain.value = 0.1;
-                this.osc.start();
-            }
-            stopBeep() {
-                if(this.osc) { this.osc.stop(); this.osc.disconnect(); this.osc = null; }
-            }
             playSound(f, d, t) {
                 const o=this.audioCtx.createOscillator(); const g=this.audioCtx.createGain();
                 o.connect(g); g.connect(this.audioCtx.destination);
@@ -947,10 +923,6 @@
                         }
                         this.drag = null;
                     }
-                    if(this.tool === 'multimeter') {
-                        this.isMeasuring = false;
-                        this.resetTesterDisplay();
-                    }
                 });
             }
             
@@ -986,7 +958,6 @@
             getAdjacency(includeBroken) {
                 const adj = {};
                 this.wires.forEach(w => {
-                    if(!includeBroken && w.broken) return;
                     if(!adj[w.u]) adj[w.u]=[]; if(!adj[w.v]) adj[w.v]=[];
                     adj[w.u].push(w.v); adj[w.v].push(w.u);
                 });
