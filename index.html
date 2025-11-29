@@ -348,33 +348,6 @@
     <div id="modal" class="hidden">
         <h2 id="modal-title">Nivel 1</h2>
         <p id="modal-desc">Objetivo...</p>
-        <div class="lamp-warning" id="lamp-warning-modal">
-            <span class="warning-title">⚠️ CONEXIÓN CORRECTA DE LÁMPARAS</span>
-            <div class="warning-item">
-                <span class="warning-icon">💡</span>
-                Una lámpara solo puede encender si existe un circuito cerrado entre:
-            </div>
-            <div class="warning-item">
-                <span class="warning-icon">⚡</span>
-                Fase (energía) - Cable MARRÓN
-            </div>
-            <div class="warning-item">
-                <span class="warning-icon">🔵</span>
-                Neutro (retorno) - Cable AZUL
-            </div>
-            <div class="warning-item">
-                <span class="warning-icon">⚫</span>
-                Retorno de lámpara - Cable NEGRO
-            </div>
-            <div class="warning-item">
-                <span class="warning-icon">✅</span>
-                Y es obligatorio por norma de seguridad que:
-            </div>
-            <div class="warning-item">
-                <span class="warning-icon">🔌</span>
-                El interruptor corte la fase, nunca el neutro.
-            </div>
-        </div>
         <button class="btn btn-help" style="font-size:1.2rem; padding:10px 20px;" onclick="game.closeModal()">Entendido</button>
     </div>
 
@@ -382,7 +355,6 @@
         <div class="header-left">
             <h1 id="level-title">Nivel 1</h1>
             <small id="level-objective">Conecta la lámpara</small>
-            <!-- ELIMINADO: Menú amarillo de conexión correcta de lámparas -->
         </div>
         <div class="stats">
             <div class="stat-badge">⚡ <span id="status-text">OFF</span></div>
@@ -497,10 +469,6 @@
                 
                 // Actualizar información en pantalla de inicio
                 updateStartScreenInfo(idx);
-                
-                // Mostrar advertencia sobre lámparas (solo en el modal)
-                const hasLamps = lvl.comps.some(c => c.type === 'lamp');
-                document.getElementById('lamp-warning-modal').style.display = hasLamps ? 'block' : 'none';
                 
                 this.wires = [];
                 this.svgLayer.innerHTML = ''; 
