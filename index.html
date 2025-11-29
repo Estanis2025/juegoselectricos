@@ -239,6 +239,23 @@
 
         @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
         @keyframes shakeWire { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
+
+        /* OCULTAR CURSOR REAL */
+        #game-board {
+            cursor: none;
+        }
+
+        /* BUSCAPOLO COMO CURSOR */
+        #buscapolo {
+            position: absolute;
+            width: 14px;
+            height: 55px;
+            background: linear-gradient(to bottom, #111, #555);
+            border-radius: 6px;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -90%);
+        }
     </style>
 </head>
 <body>
@@ -336,6 +353,8 @@
         <div id="components-layer"></div>
         <div id="message-area"></div>
     </div>
+
+    <div id="buscapolo"></div>
 
     <script>
         // CONFIGURACIÓN DE NIVELES (10 NIVELES)
@@ -982,6 +1001,28 @@
 
         const game = new GameManager();
         window.addEventListener('resize', () => game.drawWires());
+
+        const buscapolo = document.getElementById("buscapolo");
+        const gameBoard = document.getElementById("game-board");
+
+        // Movimiento con mouse
+        gameBoard.addEventListener("mousemove", (e) => {
+            const rect = gameBoard.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            buscapolo.style.left = x + "px";
+            buscapolo.style.top = y + "px";
+        });
+
+        // Movimiento táctil
+        gameBoard.addEventListener("touchmove", (e) => {
+            const rect = gameBoard.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            buscapolo.style.left = x + "px";
+            buscapolo.style.top = y + "px";
+        });
     </script>
 </body>
 </html>
