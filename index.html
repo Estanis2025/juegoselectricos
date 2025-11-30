@@ -1,403 +1,890 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
-  <title>Juegos Eléctricos — Móvil</title>
-  <meta name="theme-color" content="#0b1220" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Master Electrician: Edición Profesional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #1a1a2e;
+            --bg-panel: #16213e;
+            --primary: #f1c40f; /* Amarillo Electricidad */
+            --primary-glow: rgba(241, 196, 15, 0.5);
+            --accent: #e94560; /* Rojo Alerta */
+            --text-main: #ecf0f1;
+            --text-muted: #95a5a6;
+            --wire-phase: #d35400; /* Marrón/Naranja oscuro para fase */
+            --wire-neutral: #3498db; /* Azul para neutro */
+            --wire-return: #2c3e50; /* Gris oscuro para retorno */
+            --wire-default: #7f8c8d;
+            --terminal-size: 20px;
+            --shadow-card: 0 8px 16px rgba(0,0,0,0.3);
+            --neon-blue: #00f3ff;
+        }
 
-  <!-- Simple styling adaptado a pantallas móviles -->
-  <style>
-    :root{
-      --bg:#071026;
-      --card:#0f2233;
-      --accent:#ffd24a;
-      --muted:#9fb4c9;
-      --success:#38d39f;
-      --danger:#ff5c5c;
-    }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#021220);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial; color:#e6f0f8}
-    .app {
-      box-sizing:border-box;
-      padding:12px;
-      max-width:900px;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      height:100vh;
-    }
+        * { box-sizing: border-box; }
 
-    header{display:flex;align-items:center;gap:10px}
-    header .logo{font-size:20px;font-weight:700;color:var(--accent)}
-    header .meta{flex:1;text-align:right;font-size:12px;color:var(--muted)}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            touch-action: none;
+        }
 
-    /* Canvas area */
-    .game-wrap{
-      flex:1;
-      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
-      border-radius:14px;
-      padding:10px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      min-height:320px;
-      position:relative;
-      overflow:hidden;
-    }
+        /* --- UI COMPONENTS --- */
+        .btn {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-primary { background: linear-gradient(135deg, var(--primary), #f39c12); color: #1a1a2e; }
+        .btn-danger { background: linear-gradient(135deg, #c0392b, #e74c3c); }
+        .btn-info { background: linear-gradient(135deg, #2980b9, #3498db); }
+        .btn-tool { background: #4b6584; border: 1px solid #778ca3; }
+        .btn-tool.active { 
+            background: var(--accent); 
+            box-shadow: 0 0 15px var(--accent);
+            border-color: #ff7675;
+        }
 
-    #gameCanvas{
-      background:linear-gradient(180deg,#062734, #022022);
-      border-radius:10px;
-      width:100%;
-      height:100%;
-      display:block;
-      touch-action:none; /* we handle touches */
-    }
+        /* --- HEADER --- */
+        header {
+            background: var(--bg-panel);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+            z-index: 100;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
 
-    .controls {
-      display:flex;
-      gap:8px;
-      align-items:center;
-      justify-content:space-between;
-    }
+        .level-info h1 { margin: 0; font-size: 1.2rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
+        .level-info small { color: var(--text-muted); font-size: 0.85rem; }
 
-    .btn {
-      background:var(--card);
-      color:var(--accent);
-      padding:8px 12px;
-      border-radius:10px;
-      border:1px solid rgba(255,255,255,0.03);
-      font-weight:600;
-      font-size:14px;
-    }
+        .controls { display: flex; gap: 10px; align-items: center; }
+        
+        .status-badge {
+            background: rgba(0,0,0,0.3);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-weight: bold;
+            border: 1px solid rgba(255,255,255,0.1);
+            min-width: 80px;
+            text-align: center;
+        }
+        .status-badge.ok { color: #2ecc71; border-color: #2ecc71; box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); }
+        .status-badge.error { color: #e74c3c; border-color: #e74c3c; animation: pulseError 1s infinite; }
 
-    .hud {
-      position:absolute;
-      top:12px;
-      left:12px;
-      background:rgba(0,0,0,0.25);
-      padding:8px 10px;
-      border-radius:10px;
-      font-size:13px;
-      color:var(--muted);
-      display:flex;
-      gap:10px;
-      align-items:center;
-    }
+        /* --- GAME BOARD --- */
+        #game-board {
+            flex-grow: 1;
+            position: relative;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            overflow: hidden;
+            cursor: default;
+        }
+        
+        #game-board.buscapolo-mode { cursor: none; }
 
-    .toast {
-      position:absolute;
-      bottom:18px;
-      left:50%;
-      transform:translateX(-50%);
-      background:rgba(0,0,0,0.5);
-      padding:8px 14px;
-      border-radius:999px;
-      color:var(--accent);
-      font-weight:600;
-      display:none;
-    }
+        /* --- LAYERS --- */
+        #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        #components-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
 
-    /* Small mobile adjustments */
-    @media (max-width:420px){
-      header .logo{font-size:18px}
-      .btn{padding:8px 10px;font-size:13px}
-    }
-  </style>
+        /* --- COMPONENTS --- */
+        .component {
+            position: absolute;
+            background: #ecf0f1;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .component:hover { transform: scale(1.02); z-index: 10; }
+        
+        .component-label {
+            position: absolute;
+            top: -25px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        /* Specific Components */
+        .comp-source {
+            width: 90px; height: 160px;
+            background: linear-gradient(to bottom, #2c3e50, #34495e);
+            border: 2px solid #7f8c8d;
+            color: white;
+        }
+        .comp-source::after { content: '220V'; font-weight: 800; font-size: 1.5rem; opacity: 0.5; }
+
+        .comp-lamp {
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            background: #bdc3c7;
+            border: 4px solid #95a5a6;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        }
+        .bulb-glass {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.1));
+            opacity: 0.3;
+            transition: all 0.3s;
+        }
+        .comp-lamp.on .bulb-glass {
+            background: radial-gradient(circle, #fff, var(--primary));
+            opacity: 1;
+            box-shadow: 0 0 60px 20px var(--primary-glow);
+        }
+
+        .comp-switch { width: 80px; height: 120px; background: #dfe6e9; border: 1px solid #b2bec3; }
+        .switch-body { 
+            width: 40px; height: 70px; background: #b2bec3; border-radius: 4px; position: relative; cursor: pointer; 
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .switch-rocker {
+            width: 100%; height: 50%; background: white; position: absolute; bottom: 0;
+            border-radius: 2px; transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .comp-switch.active .switch-rocker { top: 0; bottom: auto; background: var(--primary); }
+
+        .comp-breaker { width: 70px; height: 130px; background: #ecf0f1; border: 1px solid #bdc3c7; }
+        .breaker-lever {
+            width: 20px; height: 50px; background: #2c3e50; border-radius: 4px; cursor: pointer;
+            position: relative; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 10px;
+        }
+        .comp-breaker.active .breaker-lever { transform: scaleY(-1); background: #27ae60; }
+        .comp-breaker.tripped { animation: shake 0.5s; border-color: #e74c3c; }
+        .comp-breaker.tripped .breaker-lever { background: #e74c3c; }
+
+        /* --- TERMINALS --- */
+        .terminal {
+            width: var(--terminal-size); height: var(--terminal-size);
+            background: #95a5a6;
+            border: 2px solid #7f8c8d;
+            border-radius: 50%;
+            position: absolute;
+            cursor: crosshair;
+            z-index: 20;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .terminal:hover { transform: scale(1.4); background: white; border-color: var(--primary); }
+        .terminal.highlight { animation: pulseTerminal 1s infinite; }
+        
+        /* Terminal Colors based on role */
+        .terminal[data-role="phase"], .terminal.phase { background: var(--wire-phase); border-color: #a04000; }
+        .terminal[data-role="neutral"], .terminal.neutral { background: var(--wire-neutral); border-color: #2980b9; }
+        .terminal.return { background: var(--wire-return); border-color: #000; }
+
+        /* --- WIRES --- */
+        path.wire {
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            cursor: pointer;
+            transition: stroke 0.3s, stroke-width 0.2s, filter 0.2s;
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+        }
+        path.wire:hover { stroke-width: 10; filter: drop-shadow(0 0 5px white); }
+        path.wire.live { stroke: var(--primary); filter: drop-shadow(0 0 8px var(--primary)); }
+        path.wire.short { stroke: #e74c3c !important; animation: shakeWire 0.1s infinite; }
+
+        /* --- BUSCAPOLO --- */
+        #neon-pen {
+            position: fixed;
+            width: 16px; height: 100px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.2), transparent);
+            background-color: rgba(255, 165, 0, 0.8); /* Cuerpo naranja transparente */
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 4px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            transform: translate(-50%, -100%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            backdrop-filter: blur(2px);
+        }
+        #neon-pen::before { /* Punta metálica */
+            content: ''; position: absolute; bottom: -20px; left: 4px;
+            width: 8px; height: 20px; background: linear-gradient(90deg, #bdc3c7, #7f8c8d);
+            clip-path: polygon(0 0, 100% 0, 50% 100%);
+        }
+        #neon-light {
+            width: 8px; height: 30px; margin: 10px auto;
+            background: #333; border-radius: 2px;
+            transition: all 0.1s;
+        }
+        #neon-pen.active #neon-light {
+            background: #ff4500;
+            box-shadow: 0 0 15px #ff4500, inset 0 0 5px #fff;
+        }
+
+        /* --- OVERLAYS --- */
+        #start-screen, #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 20, 0.95);
+            z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.5s;
+        }
+        
+        .logo { font-size: 4rem; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        
+        .card {
+            background: rgba(255,255,255,0.05);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .level-dots { display: flex; gap: 8px; justify-content: center; margin: 20px 0; }
+        .dot { width: 10px; height: 10px; background: #34495e; border-radius: 50%; }
+        .dot.active { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
+
+        #message-toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: rgba(255,255,255,0.9); color: #1a1a2e;
+            padding: 15px 30px; border-radius: 50px;
+            font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 3000;
+            display: flex; align-items: center; gap: 10px;
+        }
+        #message-toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes pulseError { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } }
+        @keyframes shakeWire { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(2px, 2px); } }
+        @keyframes pulseTerminal { 0% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(241, 196, 15, 0); } 100% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); } }
+
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+    </style>
 </head>
 <body>
-  <div class="app" id="app">
+
+    <!-- START SCREEN -->
+    <div id="start-screen">
+        <div class="logo">⚡</div>
+        <div class="card">
+            <h1>Master Electrician</h1>
+            <p style="color: var(--text-muted); margin-bottom: 30px;">Domina el arte de las instalaciones eléctricas residenciales.</p>
+            
+            <div class="level-preview">
+                <h2 id="start-level-title" style="color: var(--primary);">Nivel 1</h2>
+                <p id="start-level-desc">Conceptos básicos de Fase y Neutro.</p>
+                <div class="level-dots" id="level-dots"></div>
+            </div>
+
+            <button class="btn btn-primary" onclick="game.start()" style="font-size: 1.2rem; padding: 15px 40px; margin-top: 20px;">
+                INICIAR JUEGO
+            </button>
+        </div>
+    </div>
+
+    <!-- LEVEL INSTRUCTIONS MODAL -->
+    <div id="modal-overlay" class="hidden">
+        <div class="card">
+            <h2 id="modal-title" style="color: var(--primary);">Instrucciones</h2>
+            <p id="modal-desc" style="font-size: 1.1rem; line-height: 1.6;">...</p>
+            <button class="btn btn-primary" onclick="game.closeModal()">Entendido</button>
+        </div>
+    </div>
+
+    <!-- MAIN INTERFACE -->
     <header>
-      <div class="logo">⚡ Juegos Eléctricos</div>
-      <div class="meta">Nivel 1 · Dificultad: Fácil</div>
+        <div class="level-info">
+            <h1 id="ui-level-title">Nivel 1</h1>
+            <small id="ui-level-obj">Conecta la lámpara</small>
+        </div>
+        
+        <div class="controls">
+            <div id="status-badge" class="status-badge">OFF</div>
+            <button class="btn btn-tool" id="btn-neon" onclick="game.toggleBuscapolo()" title="Herramienta de prueba">
+                <span>💡</span> Buscapolo
+            </button>
+            <button class="btn btn-info" onclick="game.showHint()" title="Mostrar ayuda">
+                <span>❓</span> Pista
+            </button>
+            <button class="btn btn-danger" onclick="game.resetLevel()" title="Reiniciar conexiones">
+                <span>⟳</span> Reiniciar
+            </button>
+            <button id="btn-next" class="btn btn-primary hidden" onclick="game.nextLevel()">
+                Siguiente ➜
+            </button>
+        </div>
     </header>
 
-    <div class="game-wrap" id="game-wrap">
-      <!-- HUD -->
-      <div class="hud" id="hud">
-        <div id="objective">Objetivo: Conectar la lámpara</div>
-        <div id="progress">Progreso: 0%</div>
-      </div>
-
-      <!-- Canvas para el juego -->
-      <canvas id="gameCanvas" width="800" height="1400" aria-label="Área de juego táctil"></canvas>
-
-      <div class="toast" id="toast">¡Correcto!</div>
+    <div id="game-board">
+        <svg id="wire-layer"></svg>
+        <div id="components-layer"></div>
+        
+        <!-- Buscapolo Element -->
+        <div id="neon-pen">
+            <div id="neon-light"></div>
+        </div>
     </div>
 
-    <div class="controls">
-      <button class="btn" id="btnHint">Pista</button>
-      <button class="btn" id="btnReset">Reiniciar</button>
-      <button class="btn" id="btnFullscreen">Pantalla completa</button>
-    </div>
-  </div>
+    <div id="message-toast">Mensaje del sistema</div>
 
-  <script>
-  /* =====================================================
-     Versión móvil básica: arrastrar/soltar cables y tocar sockets.
-     Estructura:
-       - Canvas dibuja: sockets (puntos) y una lámpara (estado ON/OFF).
-       - El usuario toca y arrastra desde un terminal (fase/neutro) y suelta en el socket.
-       - Lógica simple de validación: si ambos terminales conectados, la bombilla enciende.
-     ===================================================== */
+    <script>
+        // --- DATA & CONFIG ---
+        const LEVELS = [
+            { id: 1, title: "Conexión Básica", objective: "Haz que la bombilla encienda conectando Fase y Neutro.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'lamp', id: 'L1', x: 60, y: 40 }] },
+            { id: 2, title: "El Interruptor", objective: "Intercala el interruptor en la FASE para controlar la luz.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 40, y: 70 }, { type: 'lamp', id: 'L1', x: 70, y: 30 }] },
+            { id: 3, title: "Circuito en Serie", objective: "Conecta dos lámparas en serie (una tras otra).", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 70 }, { type: 'lamp', id: 'L1', x: 55, y: 30 }, { type: 'lamp', id: 'L2', x: 80, y: 30 }] },
+            { id: 4, title: "Seguridad: Disyuntor", objective: "Protege el circuito pasando primero por el disyuntor.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 40 }] },
+            { id: 5, title: "Instalación Estándar", objective: "Fuente → Disyuntor → Interruptor → Lámpara.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 25, y: 40 }, { type: 'switch', id: 'S1', x: 50, y: 70 }, { type: 'lamp', id: 'L1', x: 80, y: 30 }] },
+            { id: 6, title: "Circuito en Paralelo", objective: "Conecta dos lámparas en paralelo (brillo máximo).", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 80 }, { type: 'lamp', id: 'L1', x: 60, y: 20 }, { type: 'lamp', id: 'L2', x: 60, y: 60 }] },
+            { id: 7, title: "Protección Total", objective: "Usa el disyuntor para proteger un circuito paralelo.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'lamp', id: 'L2', x: 70, y: 60 }] },
+            { id: 8, title: "Control Independiente", objective: "Cada interruptor debe controlar su propia lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'switch', id: 'S1', x: 35, y: 20 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'switch', id: 'S2', x: 35, y: 80 }, { type: 'lamp', id: 'L2', x: 70, y: 80 }] },
+            { id: 9, title: "Sala de Estar", objective: "Disyuntor general + Interruptor controlando dos luces.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 25, y: 50 }, { type: 'switch', id: 'S1', x: 50, y: 80 }, { type: 'lamp', id: 'L1', x: 80, y: 20 }, { type: 'lamp', id: 'L2', x: 80, y: 50 }] },
+            { id: 10, title: "Maestro Electricista", objective: "Complejo: Protege todo. S1->L1, S2->L2, L3 directa.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 20, y: 50 }, { type: 'switch', id: 'S1', x: 40, y: 20 }, { type: 'lamp', id: 'L1', x: 65, y: 20 }, { type: 'switch', id: 'S2', x: 40, y: 80 }, { type: 'lamp', id: 'L2', x: 65, y: 80 }, { type: 'lamp', id: 'L3', x: 90, y: 50 }] }
+        ];
 
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d', {alpha:false});
-  const toast = document.getElementById('toast');
-  const progressEl = document.getElementById('progress');
+        // --- AUDIO MANAGER ---
+        class AudioManager {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.masterGain = this.ctx.createGain();
+                this.masterGain.connect(this.ctx.destination);
+                this.masterGain.gain.value = 0.3; // Volumen global
+            }
 
-  // Escala para pantallas móviles: ajusta canvas tamaño real al contenedor
-  function resizeCanvas(){
-    const rect = canvas.getBoundingClientRect();
-    const ratio = window.devicePixelRatio || 1;
-    canvas.width = Math.round(rect.width * ratio);
-    canvas.height = Math.round(rect.height * ratio);
-    ctx.setTransform(ratio,0,0,ratio,0,0);
-    draw();
-  }
-  window.addEventListener('resize', resizeCanvas);
-  setTimeout(resizeCanvas, 30);
+            resume() { if(this.ctx.state === 'suspended') this.ctx.resume(); }
 
-  // Game objects (en unidades de CSS pixels)
-  const sockets = [
-    {id:'fase', x:60, y:120, r:18, color:'#ffb84d', type:'source', label:'Fase', connectedTo:null},
-    {id:'neutro', x:60, y:220, r:18, color:'#a0d6ff', type:'source', label:'Neutro', connectedTo:null},
-    {id:'lamp', x:canvas.clientWidth - 70, y:170, r:32, color:'#f5e6c4', type:'lamp', state:false}
-  ];
+            playTone(freq, type, duration, vol = 1) {
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                
+                osc.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
 
-  // For dynamic layout compute positions relative to canvas size
-  function layoutSockets(){
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    sockets[0].x = 40; sockets[0].y = Math.round(h*0.25);
-    sockets[1].x = 40; sockets[1].y = Math.round(h*0.55);
-    sockets[2].x = Math.round(w - 60); sockets[2].y = Math.round(h*0.4);
-  }
+            playClick() { this.playTone(600, 'sine', 0.1); }
+            playSnap() { this.playTone(800, 'triangle', 0.05, 0.5); }
+            playZap() { 
+                // Sonido de corto
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
+                osc.connect(gain); gain.connect(this.masterGain);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.3);
+            }
+            playWin() {
+                this.playTone(440, 'sine', 0.2);
+                setTimeout(() => this.playTone(554, 'sine', 0.2), 100);
+                setTimeout(() => this.playTone(659, 'sine', 0.4), 200);
+            }
+        }
 
-  layoutSockets();
+        // --- GAME MANAGER ---
+        class GameManager {
+            constructor() {
+                this.levelIdx = 0;
+                this.wires = [];
+                this.components = {};
+                this.audio = new AudioManager();
+                
+                // DOM Elements
+                this.board = document.getElementById('game-board');
+                this.svgLayer = document.getElementById('wire-layer');
+                this.compLayer = document.getElementById('components-layer');
+                this.neonPen = document.getElementById('neon-pen');
+                
+                // State
+                this.drag = { active: false, startId: null, tempLine: null };
+                this.isBuscapoloMode = false;
+                this.neonTimer = null;
 
-  // drag state
-  let dragging = null; // {fromSocket, x, y}
-  let lines = []; // {fromId, toX,toY, toId|null}
+                this.initEvents();
+                this.renderStartScreen();
+            }
 
-  // draw
-  function draw(){
-    layoutSockets();
-    // background
-    ctx.fillStyle = '#041a21';
-    ctx.fillRect(0,0,canvas.clientWidth, canvas.clientHeight);
+            renderStartScreen() {
+                const dots = document.getElementById('level-dots');
+                dots.innerHTML = '';
+                LEVELS.forEach((_, i) => {
+                    const d = document.createElement('div');
+                    d.className = `dot ${i === 0 ? 'active' : ''}`;
+                    dots.appendChild(d);
+                });
+            }
 
-    // draw wires
-    ctx.lineCap = 'round';
-    lines.forEach(l => {
-      const from = sockets.find(s=>s.id===l.fromId);
-      ctx.strokeStyle = from ? from.color : '#ddd';
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(from.x, from.y);
-      ctx.lineTo(l.toX,l.toY);
-      ctx.stroke();
-    });
+            start() {
+                this.audio.resume();
+                document.getElementById('start-screen').classList.add('hidden');
+                this.loadLevel(0);
+            }
 
-    // draw dragging line
-    if (dragging){
-      ctx.strokeStyle = dragging.fromSocket.color;
-      ctx.lineWidth = 8;
-      ctx.beginPath();
-      ctx.moveTo(dragging.fromSocket.x, dragging.fromSocket.y);
-      ctx.lineTo(dragging.x, dragging.y);
-      ctx.stroke();
-    }
+            loadLevel(idx) {
+                this.levelIdx = idx;
+                const level = LEVELS[idx];
+                
+                // UI Updates
+                document.getElementById('ui-level-title').textContent = `Nivel ${level.id}: ${level.title}`;
+                document.getElementById('ui-level-obj').textContent = level.objective;
+                document.getElementById('modal-title').textContent = level.title;
+                document.getElementById('modal-desc').textContent = level.objective;
+                document.getElementById('btn-next').classList.add('hidden');
+                this.updateStatus('OFF');
 
-    // draw sockets
-    sockets.forEach(s=>{
-      if (s.type==='lamp'){
-        // lamp circle + glow if on
-        ctx.beginPath();
-        ctx.fillStyle = s.state ? '#fff4c2' : '#f3e9d9';
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-        ctx.fill();
-        ctx.lineWidth = 3;
-        ctx.strokeStyle = s.state ? '#ffd24a' : '#b59d7a';
-        ctx.stroke();
+                // Reset Board
+                this.wires = [];
+                this.components = {};
+                this.svgLayer.innerHTML = '';
+                this.compLayer.innerHTML = '';
+                this.setBuscapolo(false);
 
-        // filament icon
-        ctx.beginPath();
-        ctx.strokeStyle = s.state ? '#b36a00' : '#6a5840';
-        ctx.lineWidth = 2;
-        ctx.moveTo(s.x-10,s.y+6);
-        ctx.lineTo(s.x+10,s.y+6);
-        ctx.stroke();
-      } else {
-        // source socket
-        ctx.beginPath();
-        ctx.fillStyle = s.color;
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#002';
-        ctx.stroke();
-      }
+                // Create Components
+                level.comps.forEach(c => this.createComponent(c));
 
-      // labels
-      ctx.font = '14px system-ui,Arial';
-      ctx.fillStyle = '#cfe9ff';
-      ctx.textAlign = 'center';
-      ctx.fillText(s.label || s.id, s.x, s.y + s.r + 16);
-    });
-  }
+                // Show Instructions
+                document.getElementById('modal-overlay').classList.remove('hidden');
+                
+                this.checkCircuit();
+            }
 
-  // Utility: get socket under point
-  function socketAt(x,y){
-    for (let s of sockets){
-      const dx = x - s.x;
-      const dy = y - s.y;
-      if (Math.sqrt(dx*dx+dy*dy) <= s.r + 8) return s;
-    }
-    return null;
-  }
+            createComponent(data) {
+                const el = document.createElement('div');
+                el.className = `component comp-${data.type}`;
+                el.style.left = `${data.x}%`;
+                el.style.top = `${data.y}%`;
+                el.id = `comp-${data.id || 'src'}`;
 
-  // Convert touch/mouse events to canvas coords
-  function getPos(clientX,clientY){
-    const rect = canvas.getBoundingClientRect();
-    return {x: clientX - rect.left, y: clientY - rect.top};
-  }
+                let html = '';
+                if (data.type === 'source') {
+                    html = `<div class="terminal" id="t-phase" data-role="phase" style="top:60px; right:-10px;" title="Fase (L)"></div>
+                            <div class="terminal" id="t-neutral" data-role="neutral" style="top:110px; right:-10px;" title="Neutro (N)"></div>`;
+                } else if (data.type === 'lamp') {
+                    html = `<div class="component-label">${data.id}</div>
+                            <div class="bulb-glass" id="bulb-${data.id}"></div>
+                            <div class="terminal" id="t-${data.id}-1" style="bottom:5px; left:-10px;"></div>
+                            <div class="terminal" id="t-${data.id}-2" style="bottom:5px; right:-10px;"></div>`;
+                    this.components[data.id] = { type: 'lamp', terminals: [`t-${data.id}-1`, `t-${data.id}-2`] };
+                } else if (data.type === 'switch') {
+                    html = `<div class="component-label">${data.id}</div>
+                            <div class="switch-body" onclick="game.toggleSwitch('${data.id}')">
+                                <div class="switch-rocker"></div>
+                            </div>
+                            <div class="terminal" id="t-${data.id}-1" data-role="phase" style="top:20px; left:-10px;"></div>
+                            <div class="terminal" id="t-${data.id}-2" data-role="phase" style="top:20px; right:-10px;"></div>`;
+                    this.components[data.id] = { type: 'switch', state: false };
+                } else if (data.type === 'breaker') {
+                    html = `<div class="component-label">Disyuntor</div>
+                            <div class="breaker-lever" id="bk-${data.id}" onclick="game.toggleBreaker('${data.id}')"></div>
+                            <div class="terminal" id="t-${data.id}-1" data-role="phase" style="top:15px; left:-10px;"></div>
+                            <div class="terminal" id="t-${data.id}-2" data-role="phase" style="top:15px; right:-10px;"></div>
+                            <div class="terminal" id="t-${data.id}-3" data-role="phase" style="bottom:15px; left:-10px;"></div>
+                            <div class="terminal" id="t-${data.id}-4" data-role="phase" style="bottom:15px; right:-10px;"></div>`;
+                    this.components[data.id] = { type: 'breaker', state: true, elId: el.id };
+                }
 
-  // Start drag from a source socket
-  function startDrag(fromSocket, x, y){
-    dragging = {fromSocket, x, y};
-    draw();
-  }
+                el.innerHTML = html;
+                this.compLayer.appendChild(el);
+            }
 
-  // End drag: if released over a socket, create connection
-  function endDrag(x,y){
-    if (!dragging) return;
-    const target = socketAt(x,y);
-    if (target && target.id !== dragging.fromSocket.id){
-      // register a wire ending at target
-      lines.push({fromId: dragging.fromSocket.id, toX: target.x, toY: target.y, toId: target.id});
-      // store connection mapping
-      dragging.fromSocket.connectedTo = target.id;
-      // if both fase and neutro connected to lamp -> light on
-      checkLampState();
-      showToast('Conectado: ' + dragging.fromSocket.label + ' → ' + target.label);
-      updateProgress();
-    } else {
-      // cancel
-    }
-    dragging = null;
-    draw();
-  }
+            // --- INTERACTION ---
+            initEvents() {
+                // Dragging Logic
+                this.compLayer.addEventListener('pointerdown', e => {
+                    if (e.target.classList.contains('terminal')) {
+                        if (this.isBuscapoloMode) return;
+                        e.stopPropagation();
+                        this.startDrag(e.target.id, e);
+                    }
+                });
 
-  // Check lamp: if lamp has two different connections from phase+neutral -> on
-  function checkLampState(){
-    const lamp = sockets.find(s=>s.type==='lamp');
-    const fase = sockets.find(s=>s.id==='fase');
-    const neutro = sockets.find(s=>s.id==='neutro');
+                window.addEventListener('pointermove', e => {
+                    if (this.drag.active) this.updateDrag(e);
+                    if (this.isBuscapoloMode) this.updateBuscapolo(e);
+                });
 
-    if (fase.connectedTo === lamp.id && neutro.connectedTo === lamp.id){
-      lamp.state = true;
-      showToast('La lámpara está ENCENDIDA', 1200);
-    } else {
-      lamp.state = false;
-    }
-    draw();
-  }
+                window.addEventListener('pointerup', e => {
+                    if (this.drag.active) this.endDrag(e);
+                });
 
-  function showToast(msg, ms=900){
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    clearTimeout(toast._t);
-    toast._t = setTimeout(()=> toast.style.display = 'none', ms);
-  }
+                window.addEventListener('resize', () => this.redrawWires());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', e => {
+                    if(e.key === 'Escape' && this.isBuscapoloMode) this.setBuscapolo(false);
+                });
+            }
 
-  function updateProgress(){
-    const totalRequired = 2;
-    const connected = ['fase','neutro'].filter(id=>{
-      const s = sockets.find(x=>x.id===id);
-      return s && s.connectedTo === 'lamp';
-    }).length;
-    const pct = Math.round((connected/totalRequired)*100);
-    progressEl.textContent = 'Progreso: ' + pct + '%';
-  }
+            startDrag(id, e) {
+                this.drag.active = true;
+                this.drag.startId = id;
+                
+                // Create temp line
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("stroke", "#7f8c8d");
+                path.setAttribute("stroke-width", "4");
+                path.setAttribute("fill", "none");
+                path.setAttribute("stroke-dasharray", "5,5");
+                this.svgLayer.appendChild(path);
+                this.drag.tempLine = path;
+                
+                this.audio.playClick();
+            }
 
-  // Reset
-  function resetGame(){
-    lines = [];
-    sockets.forEach(s=>{
-      if (s.type === 'source') s.connectedTo = null;
-      if (s.type === 'lamp') s.state = false;
-    });
-    updateProgress();
-    draw();
-  }
+            updateDrag(e) {
+                const startEl = document.getElementById(this.drag.startId);
+                if(!startEl) return;
+                
+                const r1 = startEl.getBoundingClientRect();
+                const boardRect = this.board.getBoundingClientRect();
+                
+                const x1 = r1.left + r1.width/2 - boardRect.left;
+                const y1 = r1.top + r1.height/2 - boardRect.top;
+                const x2 = e.clientX - boardRect.left;
+                const y2 = e.clientY - boardRect.top;
+                
+                this.drag.tempLine.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
+            }
 
-  // Touch / mouse handlers (support both)
-  function onPointerDown(clientX, clientY){
-    const p = getPos(clientX, clientY);
-    const s = socketAt(p.x,p.y);
-    // start only if touching a source-type socket (fase/neutro)
-    if (s && s.type === 'source'){
-      startDrag(s, p.x, p.y);
-    }
-  }
+            endDrag(e) {
+                this.drag.active = false;
+                if(this.drag.tempLine) this.drag.tempLine.remove();
+                
+                const el = document.elementFromPoint(e.clientX, e.clientY);
+                if (el && el.classList.contains('terminal') && el.id !== this.drag.startId) {
+                    this.connect(this.drag.startId, el.id);
+                }
+            }
 
-  function onPointerMove(clientX, clientY){
-    if (!dragging) return;
-    const p = getPos(clientX, clientY);
-    dragging.x = p.x; dragging.y = p.y;
-    draw();
-  }
+            connect(idA, idB) {
+                // Prevent duplicates
+                if (this.wires.some(w => (w.u === idA && w.v === idB) || (w.u === idB && w.v === idA))) return;
 
-  function onPointerUp(clientX, clientY){
-    const p = getPos(clientX, clientY);
-    endDrag(p.x,p.y);
-  }
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.classList.add('wire');
+                
+                // Determine Color based on source
+                const color = this.determineWireColor(idA);
+                path.setAttribute("stroke", color);
+                
+                this.svgLayer.appendChild(path);
+                
+                const wire = { u: idA, v: idB, el: path };
+                
+                // Remove on double click
+                path.addEventListener('dblclick', () => {
+                    path.remove();
+                    this.wires = this.wires.filter(w => w !== wire);
+                    this.audio.playSnap();
+                    this.checkCircuit();
+                });
 
-  // Mouse support
-  canvas.addEventListener('mousedown', e => { e.preventDefault(); onPointerDown(e.clientX,e.clientY); });
-  window.addEventListener('mousemove', e => { if (dragging) { onPointerMove(e.clientX,e.clientY); }});
-  window.addEventListener('mouseup', e => { if (dragging) onPointerUp(e.clientX,e.clientY); });
+                this.wires.push(wire);
+                this.redrawWires();
+                this.audio.playSnap();
+                this.checkCircuit();
+            }
 
-  // Touch support
-  canvas.addEventListener('touchstart', e => {
-    e.preventDefault();
-    const t = e.changedTouches[0];
-    onPointerDown(t.clientX, t.clientY);
-  }, {passive:false});
-  canvas.addEventListener('touchmove', e => {
-    e.preventDefault();
-    const t = e.changedTouches[0];
-    onPointerMove(t.clientX, t.clientY);
-  }, {passive:false});
-  canvas.addEventListener('touchend', e => {
-    e.preventDefault();
-    const t = e.changedTouches[0];
-    onPointerUp(t.clientX, t.clientY);
-  }, {passive:false});
+            determineWireColor(id) {
+                const el = document.getElementById(id);
+                if(el.dataset.role === 'phase' || el.classList.contains('phase')) return 'var(--wire-phase)';
+                if(el.dataset.role === 'neutral' || el.classList.contains('neutral')) return 'var(--wire-neutral)';
+                return 'var(--wire-return)';
+            }
 
-  // Buttons
-  document.getElementById('btnReset').addEventListener('click', resetGame);
-  document.getElementById('btnHint').addEventListener('click', ()=> showToast('Conecta Fase y Neutro a la lámpara'));
-  document.getElementById('btnFullscreen').addEventListener('click', async ()=>{
-    try {
-      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-      else await document.exitFullscreen();
-    } catch(e){ console.warn(e) }
-  });
+            redrawWires() {
+                const boardRect = this.board.getBoundingClientRect();
+                this.wires.forEach(w => {
+                    const r1 = document.getElementById(w.u).getBoundingClientRect();
+                    const r2 = document.getElementById(w.v).getBoundingClientRect();
+                    
+                    const x1 = r1.left + r1.width/2 - boardRect.left;
+                    const y1 = r1.top + r1.height/2 - boardRect.top;
+                    const x2 = r2.left + r2.width/2 - boardRect.left;
+                    const y2 = r2.top + r2.height/2 - boardRect.top;
+                    
+                    const drop = Math.abs(x2 - x1) * 0.2 + 40; // Curvature
+                    w.el.setAttribute("d", `M ${x1} ${y1} C ${x1} ${y1+drop}, ${x2} ${y2+drop}, ${x2} ${y2}`);
+                });
+            }
 
-  // initial
-  resetGame();
-  draw();
+            // --- LOGIC ---
+            toggleSwitch(id) {
+                this.components[id].state = !this.components[id].state;
+                const el = document.getElementById(`comp-${id}`);
+                if(this.components[id].state) el.classList.add('active');
+                else el.classList.remove('active');
+                this.audio.playClick();
+                this.checkCircuit();
+            }
 
-  // Accessibility: allow keyboard connect for desktop testing
-  window.addEventListener('keydown', (e)=>{
-    if (e.key === '1') { sockets[0].connectedTo = 'lamp'; lines.push({fromId:'fase',toX:sockets[2].x,toY:sockets[2].y,toId:'lamp'}); checkLampState(); updateProgress(); }
-    if (e.key === '2') { sockets[1].connectedTo = 'lamp'; lines.push({fromId:'neutro',toX:sockets[2].x,toY:sockets[2].y,toId:'lamp'}); checkLampState(); updateProgress(); }
-    if (e.key === 'r') resetGame();
-  });
+            toggleBreaker(id) {
+                const comp = this.components[id];
+                const el = document.getElementById(comp.elId);
+                
+                if(el.classList.contains('tripped')) {
+                    // Resetear si estaba saltado
+                    el.classList.remove('tripped');
+                    comp.state = true;
+                    el.classList.add('active');
+                } else {
+                    comp.state = !comp.state;
+                    if(comp.state) el.classList.add('active');
+                    else el.classList.remove('active');
+                }
+                this.audio.playClick();
+                this.checkCircuit();
+            }
 
-  </script>
+            checkCircuit() {
+                // Reset Visuals
+                this.wires.forEach(w => { w.el.classList.remove('live'); w.el.classList.remove('short'); });
+                document.querySelectorAll('.comp-lamp').forEach(l => l.classList.remove('on'));
+                
+                // Build Graph
+                const adj = {};
+                const addEdge = (a, b) => {
+                    if(!adj[a]) adj[a]=[]; if(!adj[b]) adj[b]=[];
+                    adj[a].push(b); adj[b].push(a);
+                };
+                
+                this.wires.forEach(w => addEdge(w.u, w.v));
+                
+                // Internal connections
+                Object.keys(this.components).forEach(id => {
+                    const c = this.components[id];
+                    if(c.type === 'switch' && c.state) addEdge(`t-${id}-1`, `t-${id}-2`);
+                    if(c.type === 'breaker' && c.state) {
+                        addEdge(`t-${id}-1`, `t-${id}-3`);
+                        addEdge(`t-${id}-2`, `t-${id}-4`);
+                    }
+                    if(c.type === 'lamp') addEdge(`t-${id}-1`, `t-${id}-2`);
+                });
+
+                // BFS Helper
+                const findPath = (start, end, avoidLamps = false) => {
+                    if(!adj[start]) return false;
+                    let Q = [start], visited = new Set([start]);
+                    while(Q.length) {
+                        let u = Q.shift();
+                        if(u === end) return true;
+                        if(adj[u]) for(let v of adj[u]) {
+                            if(avoidLamps && u.includes('L') && v.includes('L') && u.split('-')[1]===v.split('-')[1]) continue;
+                            if(!visited.has(v)) { visited.add(v); Q.push(v); }
+                        }
+                    }
+                    return false;
+                };
+
+                // 1. Check Short Circuit (Phase to Neutral without Load)
+                if(findPath('t-phase', 't-neutral', true)) {
+                    this.triggerShortCircuit();
+                    return;
+                }
+
+                // 2. Check Lamps
+                let lampsOn = 0;
+                let totalLamps = 0;
+                
+                Object.keys(this.components).forEach(id => {
+                    if(this.components[id].type === 'lamp') {
+                        totalLamps++;
+                        const t1 = `t-${id}-1`, t2 = `t-${id}-2`;
+                        // Check if one side is Phase and other is Neutral
+                        const t1_L = findPath('t-phase', t1);
+                        const t2_N = findPath('t-neutral', t2);
+                        const t1_N = findPath('t-neutral', t1);
+                        const t2_L = findPath('t-phase', t2);
+
+                        if((t1_L && t2_N) || (t1_N && t2_L)) {
+                            document.getElementById(`comp-${id}`).classList.add('on');
+                            lampsOn++;
+                        }
+                    }
+                });
+
+                // 3. Update Status
+                if(lampsOn > 0 && lampsOn === totalLamps) {
+                    this.updateStatus('OK');
+                    if(document.getElementById('btn-next').classList.contains('hidden')) {
+                        this.audio.playWin();
+                        this.showToast("¡Excelente! Circuito completado.");
+                        document.getElementById('btn-next').classList.remove('hidden');
+                        this.wires.forEach(w => w.el.classList.add('live'));
+                    }
+                } else {
+                    this.updateStatus('OFF');
+                    document.getElementById('btn-next').classList.add('hidden');
+                }
+                
+                // Update Terminal Colors dynamically
+                this.updateTerminalVisuals(findPath);
+            }
+
+            triggerShortCircuit() {
+                this.updateStatus('CORTO');
+                this.audio.playZap();
+                this.wires.forEach(w => w.el.classList.add('short'));
+                
+                // Trip Breaker if exists
+                const breakerId = Object.keys(this.components).find(k => this.components[k].type === 'breaker' && this.components[k].state);
+                if(breakerId) {
+                    setTimeout(() => {
+                        this.components[breakerId].state = false;
+                        const el = document.getElementById(`comp-${breakerId}`);
+                        el.classList.remove('active');
+                        el.classList.add('tripped');
+                        this.showToast("¡El disyuntor saltó por seguridad!");
+                        this.checkCircuit(); // Re-check to clear short visuals
+                    }, 500);
+                } else {
+                    this.showToast("¡CORTOCIRCUITO! Peligro.");
+                }
+            }
+
+            updateTerminalVisuals(findPathFn) {
+                // Reset
+                document.querySelectorAll('.terminal').forEach(t => {
+                    if(t.id.startsWith('t-L')) t.className = 'terminal';
+                });
+
+                // Apply colors if connected to Phase/Neutral
+                Object.keys(this.components).forEach(id => {
+                    if(this.components[id].type === 'lamp') {
+                       [`t-${id}-1`, `t-${id}-2`].forEach(tid => {
+                           const el = document.getElementById(tid);
+                           if(findPathFn('t-phase', tid)) el.classList.add('phase');
+                           else if(findPathFn('t-neutral', tid)) el.classList.add('neutral');
+                       });
+                    }
+                });
+            }
+
+            // --- TOOLS ---
+            toggleBuscapolo() {
+                this.setBuscapolo(!this.isBuscapoloMode);
+            }
+
+            setBuscapolo(active) {
+                this.isBuscapoloMode = active;
+                const btn = document.getElementById('btn-neon');
+                if(active) {
+                    this.board.classList.add('buscapolo-mode');
+                    btn.classList.add('active');
+                    this.neonPen.style.display = 'block';
+                    this.showToast("Buscapolo activo: Pasa sobre los cables.");
+                } else {
+                    this.board.classList.remove('buscapolo-mode');
+                    btn.classList.remove('active');
+                    this.neonPen.style.display = 'none';
+                }
+            }
+
+            updateBuscapolo(e) {
+                this.neonPen.style.left = e.clientX + 'px';
+                this.neonPen.style.top = e.clientY + 'px';
+                
+                // Detection Logic
+                const el = document.elementFromPoint(e.clientX, e.clientY);
+                let detected = false;
+                
+                if(el) {
+                    // Check Terminal
+                    if(el.classList.contains('terminal')) {
+                        if(el.classList.contains('phase') || el.dataset.role === 'phase') detected = true;
+                    }
+                    // Check Wire
+                    else if(el.classList.contains('wire')) {
+                        // Simple check: if wire is orange/brown
+                        if(el.getAttribute('stroke').includes('d35400') || el.classList.contains('live')) detected = true;
+                    }
+                }
+
+                if(detected) {
+                    this.neonPen.classList.add('active');
+                    if(!this.neonTimer) {
+                        this.neonTimer = setTimeout(() => this.audio.playTone(1000, 'square', 0.05, 0.1), 50);
+                    }
+                } else {
+                    this.neonPen.classList.remove('active');
+                    clearTimeout(this.neonTimer);
+                    this.neonTimer = null;
+                }
+            }
+
+            // --- HELPERS ---
+            updateStatus(status) {
+                const badge = document.getElementById('status-badge');
+                badge.textContent = status;
+                badge.className = 'status-badge ' + (status === 'OK' ? 'ok' : (status === 'CORTO' ? 'error' : ''));
+            }
+
+            showToast(msg) {
+                const toast = document.getElementById('message-toast');
+                toast.textContent = msg;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            showHint() {
+                document.querySelectorAll('.terminal').forEach(t => t.classList.add('highlight'));
+                setTimeout(() => document.querySelectorAll('.terminal').forEach(t => t.classList.remove('highlight')), 2000);
+            }
+
+            resetLevel() { this.loadLevel(this.levelIdx); }
+            nextLevel() { if(this.levelIdx < LEVELS.length-1) this.loadLevel(this.levelIdx + 1); else this.showToast("¡Juego Completado!"); }
+            closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+        }
+
+        const game = new GameManager();
+    </script>
 </body>
 </html>
