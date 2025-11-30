@@ -1,1057 +1,403 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Juegos Eléctricos: Master Electrician</title>
-    <style>
-        :root {
-            --bg-color: #f0f4f8;
-            --panel-bg: #ffffff;
-            --phase-color: #8B4513; /* Marrón para fase */
-            --neutral-color: #3498db; /* Azul para neutro */
-            --return-color: #000000; /* Negro para retorno */
-            --wire-default: #7f8c8d;
-            --terminal-size: 18px;
-            --shadow: 0 4px 6px rgba(0,0,0,0.1);
-            --neon-orange: #ff6b00;
-            --primary-color: #f1c40f;
-            --primary-dark: #f39c12;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <title>Juegos Eléctricos — Móvil</title>
+  <meta name="theme-color" content="#0b1220" />
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            overflow: hidden;
-            touch-action: none;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            user-select: none;
-        }
+  <!-- Simple styling adaptado a pantallas móviles -->
+  <style>
+    :root{
+      --bg:#071026;
+      --card:#0f2233;
+      --accent:#ffd24a;
+      --muted:#9fb4c9;
+      --success:#38d39f;
+      --danger:#ff5c5c;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#021220);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial; color:#e6f0f8}
+    .app {
+      box-sizing:border-box;
+      padding:12px;
+      max-width:900px;
+      margin:0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      height:100vh;
+    }
 
-        /* --- PANTALLA DE INICIO MEJORADA --- */
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            z-index: 1000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: white;
-            transition: opacity 0.5s;
-            overflow-y: auto;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        #start-screen h1 { 
-            font-size: 2.5rem; 
-            margin-bottom: 10px; 
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3); 
-            text-align: center;
-        }
-        #start-screen p { 
-            color: #bdc3c7; 
-            font-size: 1.1rem; 
-            margin-bottom: 40px; 
-            text-align: center;
-            max-width: 600px;
-        }
-        .logo-icon { 
-            font-size: 5rem; 
-            margin-bottom: 20px; 
-            animation: pulseLogo 2s infinite; 
-        }
-        
-        .btn-big {
-            font-size: 1.5rem; 
-            padding: 15px 50px;
-            background: var(--primary-color); 
-            color: #2c3e50;
-            border: none; 
-            border-radius: 50px;
-            cursor: pointer; 
-            font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-big:hover { 
-            transform: scale(1.05); 
-            background: var(--primary-dark);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-        }
-        .btn-big:active { 
-            transform: scale(0.95); 
-        }
-        .btn-big::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 5px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.5);
-            opacity: 0;
-            border-radius: 100%;
-            transform: scale(1, 1) translate(-50%);
-            transform-origin: 50% 50%;
-        }
-        .btn-big:focus:not(:active)::after {
-            animation: ripple 1s ease-out;
-        }
+    header{display:flex;align-items:center;gap:10px}
+    header .logo{font-size:20px;font-weight:700;color:var(--accent)}
+    header .meta{flex:1;text-align:right;font-size:12px;color:var(--muted)}
 
-        /* Contenedor de información del nivel */
-        .level-info {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            max-width: 500px;
-            text-align: center;
-        }
-        .level-info h2 {
-            margin-top: 0;
-            color: var(--primary-color);
-        }
-        .level-difficulty {
-            display: flex;
-            justify-content: center;
-            margin: 10px 0;
-        }
-        .difficulty-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #34495e;
-            margin: 0 3px;
-        }
-        .difficulty-dot.active {
-            background: var(--primary-color);
-        }
-        
-        /* Animaciones mejoradas */
-        @keyframes pulseLogo { 
-            0% { transform: scale(1); text-shadow: 0 0 0px var(--primary-color); } 
-            50% { transform: scale(1.1); text-shadow: 0 0 20px var(--primary-color); } 
-            100% { transform: scale(1); } 
-        }
-        
-        @keyframes ripple {
-            0% {
-                transform: scale(0, 0);
-                opacity: 0.5;
-            }
-            100% {
-                transform: scale(20, 20);
-                opacity: 0;
-            }
-        }
+    /* Canvas area */
+    .game-wrap{
+      flex:1;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+      border-radius:14px;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-height:320px;
+      position:relative;
+      overflow:hidden;
+    }
 
-        /* HEADER */
-        header {
-            background: var(--panel-bg);
-            padding: 10px 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: var(--shadow); z-index: 10;
-        }
-        .header-left h1 { margin: 0; font-size: 1.1rem; color: #2c3e50; }
-        .header-left small { color: #7f8c8d; }
-        
-        .stats { display: flex; gap: 10px; align-items: center; }
-        .stat-badge { 
-            background: #ecf0f1; padding: 5px 8px; border-radius: 4px; font-size: 0.85rem; 
-            display: flex; align-items: center; gap: 5px;
-        }
+    #gameCanvas{
+      background:linear-gradient(180deg,#062734, #022022);
+      border-radius:10px;
+      width:100%;
+      height:100%;
+      display:block;
+      touch-action:none; /* we handle touches */
+    }
 
-        .btn {
-            border: none; padding: 6px 12px; border-radius: 4px; 
-            cursor: pointer; font-weight: bold; color: white; font-size: 0.85rem;
-            transition: transform 0.1s;
-        }
-        .btn:active { transform: scale(0.95); }
-        .btn-help { background: #f39c12; }
-        .btn-reset { background: #c0392b; }
-        .btn-next { background: #2980b9; display: none; }
+    .controls {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      justify-content:space-between;
+    }
 
-        /* HERRAMIENTAS */
-        .tool-btn {
-            border: none; padding: 6px 12px; border-radius: 4px; 
-            cursor: pointer; font-weight: bold; color: white; font-size: 0.85rem;
-            transition: transform 0.1s;
-            background: #7f8c8d;
-        }
-        .tool-btn.active {
-            background: #8e44ad;
-            box-shadow: 0 0 5px rgba(142, 68, 173, 0.7);
-        }
+    .btn {
+      background:var(--card);
+      color:var(--accent);
+      padding:8px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.03);
+      font-weight:600;
+      font-size:14px;
+    }
 
-        /* GAME BOARD */
-        #game-board {
-            position: relative; flex-grow: 1;
-            background-image: radial-gradient(#bdc3c7 1px, transparent 1px);
-            background-size: 20px 20px; overflow: hidden;
-            cursor: default;
-        }
-        
-        #game-board.buscapolo-mode {
-            cursor: none;
-        }
-        
-        #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+    .hud {
+      position:absolute;
+      top:12px;
+      left:12px;
+      background:rgba(0,0,0,0.25);
+      padding:8px 10px;
+      border-radius:10px;
+      font-size:13px;
+      color:var(--muted);
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
 
-        /* COMPONENTES */
-        .component {
-            position: absolute; background: white;
-            border: 2px solid #95a5a6; border-radius: 6px;
-            box-shadow: var(--shadow); z-index: 2;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .component label { position: absolute; top: -20px; font-size: 10px; color: #555; font-weight: bold; width: 100%; text-align: center; }
+    .toast {
+      position:absolute;
+      bottom:18px;
+      left:50%;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,0.5);
+      padding:8px 14px;
+      border-radius:999px;
+      color:var(--accent);
+      font-weight:600;
+      display:none;
+    }
 
-        /* ESTILOS ESPECÍFICOS COMPONENTES */
-        .comp-source { width: 70px; height: 140px; background: #34495e; color: white; border: none; }
-        .comp-lamp { width: 80px; height: 80px; border-radius: 50%; border: 4px solid #bdc3c7; }
-        .bulb-glass { width: 100%; height: 100%; border-radius: 50%; background: #bdc3c7; transition: background 0.3s, box-shadow 0.3s; }
-        .bulb-glass.on { background: #f1c40f; box-shadow: 0 0 40px 10px rgba(241, 196, 15, 0.6); }
-        .comp-switch { width: 80px; height: 50px; }
-        .switch-lever { width: 40px; height: 20px; background: #e74c3c; border-radius: 10px; position: relative; cursor: pointer; }
-        .switch-lever.active { background: #2ecc71; }
-        .switch-knob { width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; left: 2px; transition: left 0.2s; }
-        .switch-lever.active .switch-knob { left: 22px; }
-        .comp-breaker { width: 60px; height: 90px; background: #ecf0f1; border: 2px solid #7f8c8d; }
-        .breaker-lever { width: 15px; height: 40px; background: #2c3e50; margin: 5px; cursor: pointer; position: relative; transition: transform 0.2s; border-radius: 3px; }
-        .breaker-lever.active { background: #27ae60; transform: scaleY(-1); }
-        .comp-breaker.tripped { border-color: red; animation: shake 0.5s; }
-
-        /* TERMINALES */
-        .terminal {
-            width: var(--terminal-size); height: var(--terminal-size);
-            background: #95a5a6; border: 2px solid #666; border-radius: 50%;
-            position: absolute; cursor: crosshair; z-index: 3; transition: transform 0.2s, background 0.3s;
-        }
-        .terminal:hover, .terminal.highlight { transform: scale(1.3); background: #f39c12; border-color: white; }
-        
-        /* Colores dinámicos para terminales de lámpara */
-        .terminal.lamp-phase { background: var(--phase-color); }
-        .terminal.lamp-neutral { background: var(--neutral-color); }
-        .terminal.lamp-return { background: var(--return-color); }
-
-        /* CABLES SVG */
-        path.wire { fill: none; stroke-width: 5; stroke-linecap: round; cursor: pointer; transition: stroke 0.2s; }
-        path.wire:hover { stroke-width: 8; opacity: 0.7; }
-        path.wire.live { stroke: #f1c40f; stroke-opacity: 0.8; filter: drop-shadow(0 0 2px orange); }
-        path.wire.short { stroke: #c0392b !important; animation: shakeWire 0.1s infinite; }
-
-        /* MENSAJES */
-        #message-area {
-            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-            padding: 10px 20px; border-radius: 20px; background: rgba(0,0,0,0.85); color: white;
-            font-weight: bold; pointer-events: none; opacity: 0; transition: opacity 0.3s; text-align: center;
-            width: 80%; max-width: 400px;
-        }
-        
-        #modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); z-index: 100;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            color: white; text-align: center; padding: 20px; box-sizing: border-box;
-        }
-        #modal h2 { color: #f1c40f; margin-bottom: 10px; }
-        #modal p { max-width: 500px; line-height: 1.5; margin-bottom: 20px; }
-        .hidden { display: none !important; }
-
-        /* Buscapolo Neon - POSICIÓN CORREGIDA */
-        #neon-pen {
-            position: absolute;
-            width: 14px;
-            height: 70px;
-            background: linear-gradient(to right, #2f3640 40%, #7f8fa6 100%);
-            border: 1px solid #555;
-            border-radius: 2px;
-            display: none;
-            pointer-events: none;
-            z-index: 100;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            /* Posición corregida - centrado en el cursor */
-            transform: translate(-50%, -100%);
-        }
-
-        #neon-pen::after {
-            content: '';
-            position: absolute;
-            bottom: -15px;
-            left: 4px;
-            width: 6px;
-            height: 15px;
-            background: silver;
-            clip-path: polygon(0 0, 100% 0, 50% 100%);
-        }
-
-        #neon-light {
-            width: 10px;
-            height: 25px;
-            margin: 5px auto;
-            background: #444;
-            border-radius: 2px;
-            transition: background 0.2s, box-shadow 0.2s;
-        }
-
-        #neon-pen.active #neon-light {
-            background: var(--neon-orange);
-            box-shadow: 0 0 15px var(--neon-orange), inset 0 0 5px red;
-            animation: neonGlow 1s infinite alternate;
-        }
-
-        @keyframes neonGlow {
-            from {
-                box-shadow: 0 0 10px var(--neon-orange), inset 0 0 5px red;
-            }
-            to {
-                box-shadow: 0 0 20px var(--neon-orange), inset 0 0 8px red;
-            }
-        }
-
-        @keyframes shake { 0% { transform: rotate(0deg); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } 100% { transform: rotate(0deg); } }
-        @keyframes shakeWire { 0% { transform: translate(1px, 1px); } 100% { transform: translate(-1px, -1px); } }
-    </style>
+    /* Small mobile adjustments */
+    @media (max-width:420px){
+      header .logo{font-size:18px}
+      .btn{padding:8px 10px;font-size:13px}
+    }
+  </style>
 </head>
 <body>
-
-    <!-- PANTALLA DE INICIO MEJORADA -->
-    <div id="start-screen">
-        <div class="logo-icon">⚡</div>
-        <h1>Juegos Eléctricos</h1>
-        <p>Aprende a conectar circuitos eléctricos reales de forma interactiva y divertida</p>
-        
-        <div class="level-info">
-            <h2>Nivel 1: Conexión Básica</h2>
-            <p>Haz que la bombilla encienda conectando Fase y Neutro</p>
-            <div class="level-difficulty">
-                <div class="difficulty-dot active"></div>
-                <div class="difficulty-dot"></div>
-                <div class="difficulty-dot"></div>
-                <div class="difficulty-dot"></div>
-                <div class="difficulty-dot"></div>
-            </div>
-            <p><small>Dificultad: Fácil</small></p>
-        </div>
-        
-        <button class="btn-big" onclick="startGame()" id="start-button">Comenzar Juego</button>
-        
-        <div style="margin-top: 30px; font-size: 0.9rem; color: #bdc3c7;">
-            <p>Total de niveles: 10 | Progreso: 0%</p>
-        </div>
-    </div>
-
-    <!-- MODAL INSTRUCCIONES NIVEL -->
-    <div id="modal" class="hidden">
-        <h2 id="modal-title">Nivel 1</h2>
-        <p id="modal-desc">Objetivo...</p>
-        <button class="btn btn-help" style="font-size:1.2rem; padding:10px 20px;" onclick="game.closeModal()">Entendido</button>
-    </div>
-
+  <div class="app" id="app">
     <header>
-        <div class="header-left">
-            <h1 id="level-title">Nivel 1</h1>
-            <small id="level-objective">Conecta la lámpara</small>
-        </div>
-        <div class="stats">
-            <div class="stat-badge">⚡ <span id="status-text">OFF</span></div>
-            <button class="btn btn-help" onclick="game.showHint()" title="Ver pista">Pista</button>
-            <button class="btn btn-reset" onclick="game.reloadLevel()" title="Reiniciar nivel">⟳</button>
-            <button id="next-btn" class="btn btn-next" onclick="game.nextLevel()">Siguiente >></button>
-            <button class="tool-btn" id="btn-neon" onclick="game.toggleBuscapolo()">
-                💡 Buscapolo
-            </button>
-        </div>
+      <div class="logo">⚡ Juegos Eléctricos</div>
+      <div class="meta">Nivel 1 · Dificultad: Fácil</div>
     </header>
 
-    <div id="game-board">
-        <div id="neon-pen">
-            <div id="neon-light"></div>
-        </div>
-        <svg id="wire-layer"></svg>
-        <div id="components-layer"></div>
-        <div id="message-area"></div>
+    <div class="game-wrap" id="game-wrap">
+      <!-- HUD -->
+      <div class="hud" id="hud">
+        <div id="objective">Objetivo: Conectar la lámpara</div>
+        <div id="progress">Progreso: 0%</div>
+      </div>
+
+      <!-- Canvas para el juego -->
+      <canvas id="gameCanvas" width="800" height="1400" aria-label="Área de juego táctil"></canvas>
+
+      <div class="toast" id="toast">¡Correcto!</div>
     </div>
 
-    <script>
-        // CONFIGURACIÓN DE NIVELES (10 NIVELES)
-        const levels = [
-            { id: 1, title: "Conexión Básica", objective: "Haz que la bombilla encienda conectando Fase y Neutro.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'lamp', id: 'L1', x: 60, y: 40 }], difficulty: 1 },
-            { id: 2, title: "El Interruptor", objective: "Intercala el interruptor para controlar la luz.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 40, y: 70 }, { type: 'lamp', id: 'L1', x: 70, y: 30 }], difficulty: 2 },
-            { id: 3, title: "Circuito en Serie", objective: "Conecta dos lámparas en fila (una tras otra).", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 70 }, { type: 'lamp', id: 'L1', x: 55, y: 30 }, { type: 'lamp', id: 'L2', x: 80, y: 30 }], difficulty: 2 },
-            { id: 4, title: "Seguridad: Disyuntor", objective: "Protege el circuito pasando primero por el disyuntor.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 40 }], difficulty: 3 },
-            { id: 5, title: "Instalación Completa", objective: "Fuente → Disyuntor → Interruptor → Lámpara.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 25, y: 40 }, { type: 'switch', id: 'S1', x: 50, y: 70 }, { type: 'lamp', id: 'L1', x: 80, y: 30 }], difficulty: 3 },
-            { id: 6, title: "Circuito en Paralelo", objective: "Conecta dos lámparas para que brillen al máximo (caminos separados).", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 80 }, { type: 'lamp', id: 'L1', x: 60, y: 20 }, { type: 'lamp', id: 'L2', x: 60, y: 60 }], difficulty: 4 },
-            { id: 7, title: "Protección Paralela", objective: "Usa el disyuntor para proteger un circuito paralelo directo.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'lamp', id: 'L2', x: 70, y: 60 }], difficulty: 4 },
-            { id: 8, title: "Doble Control", objective: "Cada interruptor debe controlar su propia lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'switch', id: 'S1', x: 35, y: 20 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'switch', id: 'S2', x: 35, y: 80 }, { type: 'lamp', id: 'L2', x: 70, y: 80 }], difficulty: 5 },
-            { id: 9, title: "Sala de Estar", objective: "Disyuntor general y luego interruptor para dos luces.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 25, y: 50 }, { type: 'switch', id: 'S1', x: 50, y: 80 }, { type: 'lamp', id: 'L1', x: 80, y: 20 }, { type: 'lamp', id: 'L2', x: 80, y: 50 }], difficulty: 5 },
-            { id: 10, title: "Maestro Electricista", objective: "Complejo: Protege todo y conecta cada interruptor a su lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 20, y: 50 }, { type: 'switch', id: 'S1', x: 40, y: 20 }, { type: 'lamp', id: 'L1', x: 65, y: 20 }, { type: 'switch', id: 'S2', x: 40, y: 80 }, { type: 'lamp', id: 'L2', x: 65, y: 80 }, { type: 'lamp', id: 'L3', x: 90, y: 50 }], difficulty: 5 }
-        ];
+    <div class="controls">
+      <button class="btn" id="btnHint">Pista</button>
+      <button class="btn" id="btnReset">Reiniciar</button>
+      <button class="btn" id="btnFullscreen">Pantalla completa</button>
+    </div>
+  </div>
 
-        const svgNS = "http://www.w3.org/2000/svg";
+  <script>
+  /* =====================================================
+     Versión móvil básica: arrastrar/soltar cables y tocar sockets.
+     Estructura:
+       - Canvas dibuja: sockets (puntos) y una lámpara (estado ON/OFF).
+       - El usuario toca y arrastra desde un terminal (fase/neutro) y suelta en el socket.
+       - Lógica simple de validación: si ambos terminales conectados, la bombilla enciende.
+     ===================================================== */
 
-        // FUNCIÓN GLOBAL INICIO MEJORADA
-        function startGame() {
-            const startScreen = document.getElementById('start-screen');
-            const startButton = document.getElementById('start-button');
-            
-            // Animación del botón al hacer clic
-            startButton.style.transform = 'scale(0.95)';
-            
-            setTimeout(() => {
-                startScreen.style.opacity = '0';
-                setTimeout(() => {
-                    startScreen.classList.add('hidden');
-                    // Inicializar Audio Context ahora que tenemos interacción
-                    if(game.audioCtx) game.audioCtx.resume();
-                    // Mostrar instrucciones nivel 1
-                    document.getElementById('modal').classList.remove('hidden');
-                }, 500);
-            }, 150);
-        }
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d', {alpha:false});
+  const toast = document.getElementById('toast');
+  const progressEl = document.getElementById('progress');
 
-        // Actualizar información del nivel en la pantalla de inicio
-        function updateStartScreenInfo(levelIdx) {
-            const level = levels[levelIdx];
-            const levelInfo = document.querySelector('.level-info');
-            const difficultyDots = document.querySelectorAll('.difficulty-dot');
-            const progressElement = document.querySelector('#start-screen p:last-child');
-            
-            // Actualizar información del nivel
-            levelInfo.querySelector('h2').textContent = `Nivel ${level.id}: ${level.title}`;
-            levelInfo.querySelector('p').textContent = level.objective;
-            
-            // Actualizar indicador de dificultad
-            difficultyDots.forEach((dot, index) => {
-                if (index < level.difficulty) {
-                    dot.classList.add('active');
-                } else {
-                    dot.classList.remove('active');
-                }
-            });
-            
-            // Actualizar progreso
-            const progress = Math.round((levelIdx / levels.length) * 100);
-            progressElement.innerHTML = `Total de niveles: ${levels.length} | Progreso: ${progress}%`;
-        }
+  // Escala para pantallas móviles: ajusta canvas tamaño real al contenedor
+  function resizeCanvas(){
+    const rect = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = Math.round(rect.width * ratio);
+    canvas.height = Math.round(rect.height * ratio);
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    draw();
+  }
+  window.addEventListener('resize', resizeCanvas);
+  setTimeout(resizeCanvas, 30);
 
-        class GameManager {
-            constructor() {
-                this.wires = [];
-                this.components = {};
-                this.currentLevelIdx = 0;
-                this.svgLayer = document.getElementById('wire-layer');
-                this.compLayer = document.getElementById('components-layer');
-                this.board = document.getElementById('game-board');
-                this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                this.dragState = { active: false, startId: null, tempPath: null };
-                this.buscapoloActive = false;
-                this.uiNeon = document.getElementById('neon-pen');
-                this.neonTimer = null;
-                this.lastElementChecked = null;
-                
-                this.initInput();
-                this.loadLevel(0);
-            }
+  // Game objects (en unidades de CSS pixels)
+  const sockets = [
+    {id:'fase', x:60, y:120, r:18, color:'#ffb84d', type:'source', label:'Fase', connectedTo:null},
+    {id:'neutro', x:60, y:220, r:18, color:'#a0d6ff', type:'source', label:'Neutro', connectedTo:null},
+    {id:'lamp', x:canvas.clientWidth - 70, y:170, r:32, color:'#f5e6c4', type:'lamp', state:false}
+  ];
 
-            loadLevel(idx) {
-                this.currentLevelIdx = idx;
-                const lvl = levels[idx];
-                
-                document.getElementById('level-title').textContent = lvl.title;
-                document.getElementById('level-objective').textContent = lvl.objective;
-                document.getElementById('modal-title').textContent = lvl.title;
-                document.getElementById('modal-desc').textContent = lvl.objective;
-                document.getElementById('next-btn').style.display = 'none';
-                
-                // Actualizar información en pantalla de inicio
-                updateStartScreenInfo(idx);
-                
-                this.wires = [];
-                this.svgLayer.innerHTML = ''; 
-                this.compLayer.innerHTML = '';
-                this.components = {};
-                this.deactivateBuscapolo();
-                this.lastElementChecked = null;
+  // For dynamic layout compute positions relative to canvas size
+  function layoutSockets(){
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    sockets[0].x = 40; sockets[0].y = Math.round(h*0.25);
+    sockets[1].x = 40; sockets[1].y = Math.round(h*0.55);
+    sockets[2].x = Math.round(w - 60); sockets[2].y = Math.round(h*0.4);
+  }
 
-                lvl.comps.forEach(c => this.createComponent(c));
-                
-                // Mostrar modal (salvo que sea el inicio absoluto que se gestiona en startGame)
-                if(document.getElementById('start-screen').classList.contains('hidden')) {
-                    document.getElementById('modal').classList.remove('hidden');
-                }
+  layoutSockets();
 
-                this.checkCircuit();
-            }
+  // drag state
+  let dragging = null; // {fromSocket, x, y}
+  let lines = []; // {fromId, toX,toY, toId|null}
 
-            createComponent(data) {
-                const el = document.createElement('div');
-                el.className = `component comp-${data.type}`;
-                el.style.left = data.x + '%';
-                el.style.top = data.y + '%';
-                
-                let html = '';
-                if(data.type === 'source') {
-                    html = `<div style="margin-top:20px; font-weight:bold;">220V</div>
-                            <div class="terminal" id="t-phase" data-role="phase" style="top:50px; right:-9px;"></div>
-                            <div class="terminal" id="t-neutral" data-role="neutral" style="top:100px; right:-9px;"></div>
-                            <span style="position:absolute; top:52px; right:12px; font-size:10px; color: #8B4513; font-weight: bold;">L</span>
-                            <span style="position:absolute; top:102px; right:12px; font-size:10px; color: #3498db; font-weight: bold;">N</span>`;
-                } else if (data.type === 'lamp') {
-                    html = `<div class="bulb-glass" id="bulb-${data.id}"></div>
-                            <div class="terminal" id="t-${data.id}-1" style="bottom:5px; left:-9px;"></div>
-                            <div class="terminal" id="t-${data.id}-2" style="bottom:5px; right:-9px;"></div>`;
-                    this.components[data.id] = { type: 'lamp', terminals: [`t-${data.id}-1`, `t-${data.id}-2`] };
-                } else if (data.type === 'switch') {
-                    html = `<label>${data.id}</label>
-                            <div class="switch-lever" id="sw-${data.id}" onclick="game.toggleSwitch('${data.id}')">
-                                <div class="switch-knob"></div>
-                            </div>
-                            <div class="terminal" id="t-${data.id}-1" data-role="phase" style="top:20px; left:-9px;"></div>
-                            <div class="terminal" id="t-${data.id}-2" data-role="phase" style="top:20px; right:-9px;"></div>`;
-                    this.components[data.id] = { type: 'switch', state: false };
-                } else if (data.type === 'breaker') {
-                    html = `<label>Disyuntor</label>
-                            <div class="breaker-lever active" id="bk-${data.id}" onclick="game.toggleBreaker('${data.id}')"></div>
-                            <div class="terminal" id="t-${data.id}-1" data-role="phase" style="top:10px; left:-9px;"></div>
-                            <div class="terminal" id="t-${data.id}-2" data-role="phase" style="top:10px; right:-9px;"></div>
-                            <div class="terminal" id="t-${data.id}-3" data-role="phase" style="bottom:10px; left:-9px;"></div>
-                            <div class="terminal" id="t-${data.id}-4" data-role="phase" style="bottom:10px; right:-9px;"></div>`;
-                    this.components[data.id] = { type: 'breaker', state: true };
-                }
-                el.innerHTML = html;
-                this.compLayer.appendChild(el);
-            }
+  // draw
+  function draw(){
+    layoutSockets();
+    // background
+    ctx.fillStyle = '#041a21';
+    ctx.fillRect(0,0,canvas.clientWidth, canvas.clientHeight);
 
-            // Resto de métodos de la clase GameManager se mantienen igual
-            initInput() {
-                this.compLayer.addEventListener('pointerdown', (e) => {
-                    if(e.target.classList.contains('terminal')) {
-                        e.stopPropagation(); e.target.releasePointerCapture(e.pointerId);
-                        this.startDrag(e, e.target.id);
-                    }
-                });
-                document.addEventListener('pointermove', (e) => { 
-                    if(this.dragState.active) this.updateDrag(e);
-                    if(this.buscapoloActive) this.updateBuscapolo(e);
-                });
-                document.addEventListener('pointerup', (e) => { 
-                    if(this.dragState.active) this.endDrag(e);
-                });
-                
-                // Permitir desactivar buscapolo con ESC
-                document.addEventListener('keydown', (e) => {
-                    if(e.key === 'Escape' && this.buscapoloActive) {
-                        this.deactivateBuscapolo();
-                    }
-                });
-            }
+    // draw wires
+    ctx.lineCap = 'round';
+    lines.forEach(l => {
+      const from = sockets.find(s=>s.id===l.fromId);
+      ctx.strokeStyle = from ? from.color : '#ddd';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(l.toX,l.toY);
+      ctx.stroke();
+    });
 
-            toggleBuscapolo() {
-                if(this.buscapoloActive) {
-                    this.deactivateBuscapolo();
-                } else {
-                    this.activateBuscapolo();
-                }
-            }
+    // draw dragging line
+    if (dragging){
+      ctx.strokeStyle = dragging.fromSocket.color;
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.moveTo(dragging.fromSocket.x, dragging.fromSocket.y);
+      ctx.lineTo(dragging.x, dragging.y);
+      ctx.stroke();
+    }
 
-            activateBuscapolo() {
-                this.buscapoloActive = true;
-                this.board.classList.add('buscapolo-mode');
-                document.getElementById('btn-neon').classList.add('active');
-                this.uiNeon.style.display = 'block';
-                this.showMessage("Buscapolo activado - Pasa sobre nodos L (MARRÓN) para detectar tensión");
-                this.playSound('click');
-            }
+    // draw sockets
+    sockets.forEach(s=>{
+      if (s.type==='lamp'){
+        // lamp circle + glow if on
+        ctx.beginPath();
+        ctx.fillStyle = s.state ? '#fff4c2' : '#f3e9d9';
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = s.state ? '#ffd24a' : '#b59d7a';
+        ctx.stroke();
 
-            deactivateBuscapolo() {
-                this.buscapoloActive = false;
-                this.board.classList.remove('buscapolo-mode');
-                document.getElementById('btn-neon').classList.remove('active');
-                this.uiNeon.style.display = 'none';
-                this.uiNeon.classList.remove('active');
-                if(this.neonTimer) {
-                    clearTimeout(this.neonTimer);
-                    this.neonTimer = null;
-                }
-                this.lastElementChecked = null;
-            }
+        // filament icon
+        ctx.beginPath();
+        ctx.strokeStyle = s.state ? '#b36a00' : '#6a5840';
+        ctx.lineWidth = 2;
+        ctx.moveTo(s.x-10,s.y+6);
+        ctx.lineTo(s.x+10,s.y+6);
+        ctx.stroke();
+      } else {
+        // source socket
+        ctx.beginPath();
+        ctx.fillStyle = s.color;
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#002';
+        ctx.stroke();
+      }
 
-            updateBuscapolo(e) {
-                // POSICIÓN CORREGIDA - Centrado exacto en el cursor
-                this.uiNeon.style.left = e.clientX + 'px';
-                this.uiNeon.style.top = e.clientY + 'px';
+      // labels
+      ctx.font = '14px system-ui,Arial';
+      ctx.fillStyle = '#cfe9ff';
+      ctx.textAlign = 'center';
+      ctx.fillText(s.label || s.id, s.x, s.y + s.r + 16);
+    });
+  }
 
-                // Verificar si estamos sobre un elemento
-                const el = document.elementFromPoint(e.clientX, e.clientY);
+  // Utility: get socket under point
+  function socketAt(x,y){
+    for (let s of sockets){
+      const dx = x - s.x;
+      const dy = y - s.y;
+      if (Math.sqrt(dx*dx+dy*dy) <= s.r + 8) return s;
+    }
+    return null;
+  }
 
-                // Solo procesar si cambiamos de elemento
-                if (el !== this.lastElementChecked) {
-                    this.lastElementChecked = el;
-                    this.checkNeon(el);
-                }
-            }
+  // Convert touch/mouse events to canvas coords
+  function getPos(clientX,clientY){
+    const rect = canvas.getBoundingClientRect();
+    return {x: clientX - rect.left, y: clientY - rect.top};
+  }
 
-            checkNeon(element) {
-                if (element && this.checkElementVoltage(element)) {
-                    if (!this.neonTimer) {
-                        this.neonTimer = setTimeout(() => {
-                            this.uiNeon.classList.add('active');
-                            this.showMessage("¡Tensión detectada! Nodo L activo");
-                        }, 200); // Respuesta muy rápida para nodos
-                    }
-                } else {
-                    if (this.neonTimer) {
-                        clearTimeout(this.neonTimer);
-                        this.neonTimer = null;
-                    }
-                    this.uiNeon.classList.remove('active');
-                }
-            }
+  // Start drag from a source socket
+  function startDrag(fromSocket, x, y){
+    dragging = {fromSocket, x, y};
+    draw();
+  }
 
-            checkElementVoltage(element) {
-                // Verificar si es un terminal con fase
-                if (element.classList.contains('terminal')) {
-                    const isPhaseTerminal = element.classList.contains('lamp-phase') || 
-                                           (element.dataset.role === 'phase');
-                    const hasPhaseConnection = this.checkPhaseConnection(element.id);
-                    return isPhaseTerminal && hasPhaseConnection;
-                }
-                
-                // Verificar si es un cable marrón (fase)
-                if (element.classList.contains('wire')) {
-                    const wire = this.wires.find(w => w.el === element);
-                    if (wire) {
-                        const isBrownWire = wire.el.getAttribute('stroke') === '#8B4513';
-                        const hasPhaseConnection = this.checkPhaseConnection(wire.u) || this.checkPhaseConnection(wire.v);
-                        return isBrownWire && hasPhaseConnection;
-                    }
-                }
-                
-                return false;
-            }
+  // End drag: if released over a socket, create connection
+  function endDrag(x,y){
+    if (!dragging) return;
+    const target = socketAt(x,y);
+    if (target && target.id !== dragging.fromSocket.id){
+      // register a wire ending at target
+      lines.push({fromId: dragging.fromSocket.id, toX: target.x, toY: target.y, toId: target.id});
+      // store connection mapping
+      dragging.fromSocket.connectedTo = target.id;
+      // if both fase and neutro connected to lamp -> light on
+      checkLampState();
+      showToast('Conectado: ' + dragging.fromSocket.label + ' → ' + target.label);
+      updateProgress();
+    } else {
+      // cancel
+    }
+    dragging = null;
+    draw();
+  }
 
-            startDrag(e, id) {
-                // No permitir arrastrar cuando el buscapolo está activo
-                if(this.buscapoloActive) return;
-                
-                this.dragState.active = true; 
-                this.dragState.startId = id;
-                const path = document.createElementNS(svgNS, "path");
-                path.setAttribute("stroke", "#7f8c8d"); 
-                path.setAttribute("stroke-width", "4");
-                path.setAttribute("fill", "none"); 
-                path.setAttribute("stroke-dasharray", "5,5");
-                this.svgLayer.appendChild(path);
-                this.dragState.tempPath = path;
-                const el = document.getElementById(id);
-                
-                // Asignar colores según el tipo de terminal
-                if(el.dataset.role === 'phase' || el.classList.contains('lamp-phase')) {
-                    path.setAttribute("stroke", "var(--phase-color)"); // Marrón
-                } else if(el.dataset.role === 'neutral' || el.classList.contains('lamp-neutral')) {
-                    path.setAttribute("stroke", "var(--neutral-color)"); // Azul
-                } else if(el.classList.contains('lamp-return')) {
-                    path.setAttribute("stroke", "var(--return-color)"); // Negro
-                } else {
-                    path.setAttribute("stroke", "#555"); // Gris por defecto
-                }
-            }
+  // Check lamp: if lamp has two different connections from phase+neutral -> on
+  function checkLampState(){
+    const lamp = sockets.find(s=>s.type==='lamp');
+    const fase = sockets.find(s=>s.id==='fase');
+    const neutro = sockets.find(s=>s.id==='neutro');
 
-            updateDrag(e) {
-                const r1 = document.getElementById(this.dragState.startId).getBoundingClientRect();
-                const board = document.getElementById('game-board').getBoundingClientRect();
-                const x1 = r1.left+r1.width/2-board.left; 
-                const y1 = r1.top+r1.height/2-board.top;
-                const x2 = e.clientX-board.left; 
-                const y2 = e.clientY-board.top;
-                this.dragState.tempPath.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
-            }
+    if (fase.connectedTo === lamp.id && neutro.connectedTo === lamp.id){
+      lamp.state = true;
+      showToast('La lámpara está ENCENDIDA', 1200);
+    } else {
+      lamp.state = false;
+    }
+    draw();
+  }
 
-            endDrag(e) {
-                this.dragState.active = false; 
-                this.dragState.tempPath.remove();
-                const el = document.elementFromPoint(e.clientX, e.clientY);
-                if(el && el.classList.contains('terminal') && el.id !== this.dragState.startId) {
-                    this.connect(this.dragState.startId, el.id);
-                }
-            }
+  function showToast(msg, ms=900){
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=> toast.style.display = 'none', ms);
+  }
 
-            checkPhaseConnection(terminalId) {
-                const adj = {};
-                const addEdge = (a,b) => { 
-                    if(!adj[a]) adj[a]=[]; 
-                    if(!adj[b]) adj[b]=[]; 
-                    adj[a].push(b); 
-                    adj[b].push(a); 
-                };
-                this.wires.forEach(w => addEdge(w.u, w.v));
+  function updateProgress(){
+    const totalRequired = 2;
+    const connected = ['fase','neutro'].filter(id=>{
+      const s = sockets.find(x=>x.id===id);
+      return s && s.connectedTo === 'lamp';
+    }).length;
+    const pct = Math.round((connected/totalRequired)*100);
+    progressEl.textContent = 'Progreso: ' + pct + '%';
+  }
 
-                Object.keys(this.components).forEach(id => {
-                    const c = this.components[id];
-                    if(c.type === 'switch' && c.state) addEdge(`t-${id}-1`, `t-${id}-2`);
-                    if(c.type === 'breaker' && c.state) { 
-                        addEdge(`t-${id}-1`, `t-${id}-3`); 
-                        addEdge(`t-${id}-2`, `t-${id}-4`); 
-                    }
-                    if(c.type === 'lamp') addEdge(`t-${id}-1`, `t-${id}-2`);
-                });
+  // Reset
+  function resetGame(){
+    lines = [];
+    sockets.forEach(s=>{
+      if (s.type === 'source') s.connectedTo = null;
+      if (s.type === 'lamp') s.state = false;
+    });
+    updateProgress();
+    draw();
+  }
 
-                const findPath = (start, end, avoidLamps) => {
-                    if(!adj[start]) return false;
-                    let Q = [start], visited = new Set([start]);
-                    while(Q.length) {
-                        let u = Q.shift();
-                        if(u === end) return true;
-                        if(adj[u]) for(let v of adj[u]) {
-                            if(avoidLamps && u.includes('L') && v.includes('L') && u.split('-')[1]===v.split('-')[1]) continue;
-                            if(!visited.has(v)) { visited.add(v); Q.push(v); }
-                        }
-                    } return false;
-                };
+  // Touch / mouse handlers (support both)
+  function onPointerDown(clientX, clientY){
+    const p = getPos(clientX, clientY);
+    const s = socketAt(p.x,p.y);
+    // start only if touching a source-type socket (fase/neutro)
+    if (s && s.type === 'source'){
+      startDrag(s, p.x, p.y);
+    }
+  }
 
-                return findPath('t-phase', terminalId, false);
-            }
+  function onPointerMove(clientX, clientY){
+    if (!dragging) return;
+    const p = getPos(clientX, clientY);
+    dragging.x = p.x; dragging.y = p.y;
+    draw();
+  }
 
-            connect(idA, idB) {
-                if(this.wires.some(w => (w.u === idA && w.v === idB) || (w.u === idB && w.v === idA))) return;
-                const path = document.createElementNS(svgNS, "path");
-                path.classList.add('wire');
-                const tA = document.getElementById(idA);
-                let color = "#555";
-                
-                // Determinar color basado en la conexión
-                const terminalAColor = this.getTerminalColor(idA, idB);
-                const terminalBColor = this.getTerminalColor(idB, idA);
-                
-                // Usar el color del terminal de origen
-                if(terminalAColor === 'phase') {
-                    color = "var(--phase-color)"; // Marrón
-                } else if(terminalAColor === 'neutral') {
-                    color = "var(--neutral-color)"; // Azul
-                } else if(terminalAColor === 'return') {
-                    color = "var(--return-color)"; // Negro
-                }
-                
-                path.setAttribute("stroke", color);
-                this.svgLayer.appendChild(path);
-                const wire = { u: idA, v: idB, el: path };
-                path.addEventListener('dblclick', () => {
-                    path.remove(); 
-                    this.wires = this.wires.filter(w => w !== wire);
-                    this.checkCircuit(); 
-                    this.playSound('cut');
-                });
-                this.wires.push(wire);
-                this.drawWires(); 
-                this.playSound('click'); 
-                
-                // Actualizar colores de terminales después de conectar
-                this.updateTerminalColors();
-                this.checkCircuit();
-            }
+  function onPointerUp(clientX, clientY){
+    const p = getPos(clientX, clientY);
+    endDrag(p.x,p.y);
+  }
 
-            getTerminalColor(terminalId, connectedToId) {
-                const terminal = document.getElementById(terminalId);
-                
-                // Si es terminal de fuente
-                if(terminalId === 't-phase') return 'phase';
-                if(terminalId === 't-neutral') return 'neutral';
-                
-                // Si es terminal de interruptor o disyuntor
-                if(terminal && terminal.dataset.role === 'phase') return 'phase';
-                
-                // Si es terminal de lámpara
-                if(terminalId.includes('L') && terminalId.includes('t-')) {
-                    // Determinar basado en la conexión
-                    if(this.checkPhaseConnection(terminalId)) return 'phase';
-                    if(this.checkNeutralConnection(terminalId)) return 'neutral';
-                    if(this.checkReturnConnection(terminalId)) return 'return';
-                }
-                
-                return 'default';
-            }
+  // Mouse support
+  canvas.addEventListener('mousedown', e => { e.preventDefault(); onPointerDown(e.clientX,e.clientY); });
+  window.addEventListener('mousemove', e => { if (dragging) { onPointerMove(e.clientX,e.clientY); }});
+  window.addEventListener('mouseup', e => { if (dragging) onPointerUp(e.clientX,e.clientY); });
 
-            checkNeutralConnection(terminalId) {
-                const adj = {};
-                const addEdge = (a,b) => { 
-                    if(!adj[a]) adj[a]=[]; 
-                    if(!adj[b]) adj[b]=[]; 
-                    adj[a].push(b); 
-                    adj[b].push(a); 
-                };
-                this.wires.forEach(w => addEdge(w.u, w.v));
+  // Touch support
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    onPointerDown(t.clientX, t.clientY);
+  }, {passive:false});
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    onPointerMove(t.clientX, t.clientY);
+  }, {passive:false});
+  canvas.addEventListener('touchend', e => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    onPointerUp(t.clientX, t.clientY);
+  }, {passive:false});
 
-                Object.keys(this.components).forEach(id => {
-                    const c = this.components[id];
-                    if(c.type === 'switch' && c.state) addEdge(`t-${id}-1`, `t-${id}-2`);
-                    if(c.type === 'breaker' && c.state) { 
-                        addEdge(`t-${id}-1`, `t-${id}-3`); 
-                        addEdge(`t-${id}-2`, `t-${id}-4`); 
-                    }
-                    if(c.type === 'lamp') addEdge(`t-${id}-1`, `t-${id}-2`);
-                });
+  // Buttons
+  document.getElementById('btnReset').addEventListener('click', resetGame);
+  document.getElementById('btnHint').addEventListener('click', ()=> showToast('Conecta Fase y Neutro a la lámpara'));
+  document.getElementById('btnFullscreen').addEventListener('click', async ()=>{
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch(e){ console.warn(e) }
+  });
 
-                const findPath = (start, end, avoidLamps) => {
-                    if(!adj[start]) return false;
-                    let Q = [start], visited = new Set([start]);
-                    while(Q.length) {
-                        let u = Q.shift();
-                        if(u === end) return true;
-                        if(adj[u]) for(let v of adj[u]) {
-                            if(avoidLamps && u.includes('L') && v.includes('L') && u.split('-')[1]===v.split('-')[1]) continue;
-                            if(!visited.has(v)) { visited.add(v); Q.push(v); }
-                        }
-                    } return false;
-                };
+  // initial
+  resetGame();
+  draw();
 
-                return findPath('t-neutral', terminalId, false);
-            }
+  // Accessibility: allow keyboard connect for desktop testing
+  window.addEventListener('keydown', (e)=>{
+    if (e.key === '1') { sockets[0].connectedTo = 'lamp'; lines.push({fromId:'fase',toX:sockets[2].x,toY:sockets[2].y,toId:'lamp'}); checkLampState(); updateProgress(); }
+    if (e.key === '2') { sockets[1].connectedTo = 'lamp'; lines.push({fromId:'neutro',toX:sockets[2].x,toY:sockets[2].y,toId:'lamp'}); checkLampState(); updateProgress(); }
+    if (e.key === 'r') resetGame();
+  });
 
-            checkReturnConnection(terminalId) {
-                // Un terminal es de retorno si está conectado a un interruptor
-                const adj = {};
-                const addEdge = (a,b) => { 
-                    if(!adj[a]) adj[a]=[]; 
-                    if(!adj[b]) adj[b]=[]; 
-                    adj[a].push(b); 
-                    adj[b].push(a); 
-                };
-                this.wires.forEach(w => addEdge(w.u, w.v));
-
-                // Buscar si está conectado a un interruptor
-                for(let wire of this.wires) {
-                    if(wire.u === terminalId || wire.v === terminalId) {
-                        const otherId = wire.u === terminalId ? wire.v : wire.u;
-                        if(otherId.includes('S') && otherId.includes('t-')) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            }
-
-            updateTerminalColors() {
-                // Resetear todos los terminales de lámpara a gris
-                document.querySelectorAll('.terminal').forEach(terminal => {
-                    if(terminal.id.includes('L') && terminal.id.includes('t-')) {
-                        terminal.classList.remove('lamp-phase', 'lamp-neutral', 'lamp-return');
-                    }
-                });
-
-                // Aplicar colores basados en conexiones
-                Object.keys(this.components).forEach(id => {
-                    const comp = this.components[id];
-                    if(comp.type === 'lamp' && comp.terminals) {
-                        comp.terminals.forEach(terminalId => {
-                            const terminal = document.getElementById(terminalId);
-                            if(terminal) {
-                                if(this.checkPhaseConnection(terminalId)) {
-                                    terminal.classList.add('lamp-phase');
-                                } else if(this.checkNeutralConnection(terminalId)) {
-                                    terminal.classList.add('lamp-neutral');
-                                } else if(this.checkReturnConnection(terminalId)) {
-                                    terminal.classList.add('lamp-return');
-                                }
-                            }
-                        });
-                    }
-                });
-            }
-
-            drawWires() {
-                const board = document.getElementById('game-board').getBoundingClientRect();
-                this.wires.forEach(w => {
-                    const r1 = document.getElementById(w.u).getBoundingClientRect();
-                    const r2 = document.getElementById(w.v).getBoundingClientRect();
-                    const x1 = r1.left+r1.width/2-board.left; 
-                    const y1 = r1.top+r1.height/2-board.top;
-                    const x2 = r2.left+r2.width/2-board.left; 
-                    const y2 = r2.top+r2.height/2-board.top;
-                    const drop = Math.abs(x2 - x1) * 0.2 + 30;
-                    w.el.setAttribute("d", `M ${x1} ${y1} C ${x1} ${y1+drop}, ${x2} ${y2+drop}, ${x2} ${y2}`);
-                });
-            }
-
-            toggleSwitch(id) {
-                const comp = this.components[id];
-                comp.state = !comp.state;
-                const lever = document.getElementById(`sw-${id}`);
-                if(comp.state) lever.classList.add('active'); 
-                else lever.classList.remove('active');
-                this.playSound('click'); 
-                this.checkCircuit();
-            }
-
-            toggleBreaker(id) {
-                const comp = this.components[id];
-                comp.state = !comp.state;
-                const el = document.getElementById(`bk-${id}`);
-                if(comp.state) { 
-                    el.classList.add('active'); 
-                    el.parentElement.classList.remove('tripped'); 
-                } else {
-                    el.classList.remove('active');
-                }
-                this.playSound('clack'); 
-                this.checkCircuit();
-            }
-
-            checkCircuit() {
-                this.wires.forEach(w => { 
-                    w.el.classList.remove('live'); 
-                    w.el.classList.remove('short'); 
-                });
-                Object.keys(this.components).forEach(k => { 
-                    if(this.components[k].type==='lamp') 
-                        document.getElementById(`bulb-${k}`).classList.remove('on'); 
-                });
-
-                const adj = {};
-                const addEdge = (a,b) => { 
-                    if(!adj[a]) adj[a]=[]; 
-                    if(!adj[b]) adj[b]=[]; 
-                    adj[a].push(b); 
-                    adj[b].push(a); 
-                };
-                this.wires.forEach(w => addEdge(w.u, w.v));
-
-                Object.keys(this.components).forEach(id => {
-                    const c = this.components[id];
-                    if(c.type === 'switch' && c.state) addEdge(`t-${id}-1`, `t-${id}-2`);
-                    if(c.type === 'breaker' && c.state) { 
-                        addEdge(`t-${id}-1`, `t-${id}-3`); 
-                        addEdge(`t-${id}-2`, `t-${id}-4`); 
-                    }
-                    if(c.type === 'lamp') addEdge(`t-${id}-1`, `t-${id}-2`);
-                });
-
-                const findPath = (start, end, avoidLamps) => {
-                    if(!adj[start]) return false;
-                    let Q = [start], visited = new Set([start]);
-                    while(Q.length) {
-                        let u = Q.shift();
-                        if(u === end) return true;
-                        if(adj[u]) for(let v of adj[u]) {
-                            if(avoidLamps && u.includes('L') && v.includes('L') && u.split('-')[1]===v.split('-')[1]) continue;
-                            if(!visited.has(v)) { visited.add(v); Q.push(v); }
-                        }
-                    } return false;
-                };
-
-                // Detectar Cortocircuito (sin pasar por resistencia de lámparas)
-                if(findPath('t-phase', 't-neutral', true)) {
-                    const bk = Object.keys(this.components).find(k => this.components[k].type === 'breaker' && this.components[k].state);
-                    if(bk) {
-                        this.components[bk].state = false;
-                        document.getElementById(`bk-${bk}`).classList.remove('active');
-                        document.getElementById(`bk-${bk}`).parentElement.classList.add('tripped');
-                        this.playSound('clack_loud'); 
-                        this.showMessage("¡El disyuntor saltó!");
-                        return;
-                    }
-                    this.wires.forEach(w => w.el.classList.add('short'));
-                    document.getElementById('status-text').textContent = "CORTOCIRCUITO";
-                    document.getElementById('status-text').style.color = "red";
-                    this.playSound('buzz'); 
-                    return;
-                }
-
-                let lampsOn = 0, totalLamps = 0;
-                Object.keys(this.components).forEach(id => {
-                    if(this.components[id].type === 'lamp') {
-                        totalLamps++;
-                        const p1 = `t-${id}-1`, p2 = `t-${id}-2`;
-                        const p1_L = findPath('t-phase', p1), p2_N = findPath('t-neutral', p2);
-                        const p1_N = findPath('t-neutral', p1), p2_L = findPath('t-phase', p2);
-                        if((p1_L && p2_N) || (p1_N && p2_L)) {
-                            document.getElementById(`bulb-${id}`).classList.add('on');
-                            lampsOn++;
-                        }
-                    }
-                });
-
-                if(lampsOn > 0 && lampsOn === totalLamps) {
-                    document.getElementById('status-text').textContent = "OK";
-                    document.getElementById('status-text').style.color = "green";
-                    if(document.getElementById('next-btn').style.display === 'none') {
-                        this.playSound('win');
-                        document.getElementById('next-btn').style.display = 'inline-block';
-                        this.showMessage("¡Nivel completado!");
-                        this.wires.forEach(w => w.el.classList.add('live'));
-                    }
-                } else {
-                    document.getElementById('status-text').textContent = "OFF";
-                    document.getElementById('status-text').style.color = "#555";
-                    document.getElementById('next-btn').style.display = 'none';
-                }
-            }
-
-            nextLevel() {
-                if(this.currentLevelIdx < levels.length - 1) this.loadLevel(this.currentLevelIdx + 1);
-                else this.showMessage("¡Has terminado el juego!");
-            }
-            reloadLevel() { this.loadLevel(this.currentLevelIdx); }
-            showHint() { 
-                document.querySelectorAll('.terminal').forEach(t => t.classList.add('highlight')); 
-                setTimeout(() => document.querySelectorAll('.terminal').forEach(t => t.classList.remove('highlight')), 2000); 
-            }
-            showMessage(msg) { 
-                const el = document.getElementById('message-area'); 
-                el.textContent = msg; 
-                el.style.opacity = 1; 
-                setTimeout(() => el.style.opacity = 0, 3000); 
-            }
-            closeModal() { 
-                document.getElementById('modal').classList.add('hidden'); 
-                if(this.audioCtx) this.audioCtx.resume(); 
-            }
-            
-            playSound(type) {
-                if(!this.audioCtx) return;
-                const osc = this.audioCtx.createOscillator();
-                const gain = this.audioCtx.createGain();
-                osc.connect(gain); gain.connect(this.audioCtx.destination);
-                const t = this.audioCtx.currentTime;
-                if(type === 'click') { 
-                    osc.frequency.setValueAtTime(200,t); 
-                    gain.gain.linearRampToValueAtTime(0,t+0.1); 
-                    osc.start(t); osc.stop(t+0.1); 
-                }
-                else if(type === 'clack') { 
-                    osc.type='square'; 
-                    osc.frequency.setValueAtTime(100,t); 
-                    gain.gain.exponentialRampToValueAtTime(0.01,t+0.1); 
-                    osc.start(t); osc.stop(t+0.1); 
-                }
-                else if(type === 'clack_loud') { 
-                    osc.type='sawtooth'; 
-                    osc.frequency.setValueAtTime(80,t); 
-                    gain.gain.setValueAtTime(0.3,t); 
-                    gain.gain.linearRampToValueAtTime(0,t+0.2); 
-                    osc.start(t); osc.stop(t+0.2); 
-                }
-                else if(type === 'win') { 
-                    osc.type='triangle'; 
-                    osc.frequency.setValueAtTime(440,t); 
-                    osc.frequency.setValueAtTime(880,t+0.2); 
-                    gain.gain.linearRampToValueAtTime(0,t+0.4); 
-                    osc.start(t); osc.stop(t+0.4); 
-                }
-                else if(type === 'buzz') { 
-                    osc.type='sawtooth'; 
-                    osc.frequency.setValueAtTime(50,t); 
-                    gain.gain.linearRampToValueAtTime(0,t+0.5); 
-                    osc.start(t); osc.stop(t+0.5); 
-                }
-            }
-        }
-
-        const game = new GameManager();
-        window.addEventListener('resize', () => game.drawWires());
-    </script>
+  </script>
 </body>
 </html>
