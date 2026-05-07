@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EIVA PUZZLE - Wooden Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --eiva-red: #e61e25;
+            --eiva-yellow: #f9d806;
+            --eiva-blue: #3777f0;
+            --eiva-green: #2ba24c;
+            --eiva-black: #1a1a1a;
+            --wood-light: #d2b48c;
+            --wood-border: #8b4513;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e3c598 url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            color: var(--eiva-black);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header-bar {
+            background: rgba(26, 26, 26, 0.95);
+            width: 100%;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            border-bottom: 4px solid var(--eiva-red);
+        }
+
+        /* Botón de música en negro */
+        .music-btn {
+            background: var(--eiva-black);
+            color: white;
+            border: 2px solid var(--white);
+            padding: 8px 25px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .music-btn:hover { background: #333; color: var(--eiva-yellow); }
+
+        .title-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .main-title { 
+            font-size: 3.5em; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0px white;
+            color: var(--eiva-black);
+            margin: 0;
+        }
+        .main-title span { color: var(--eiva-red); }
+
+        /* Pieza de puzzle blanca minimalista */
+        .puzzle-piece-icon {
+            width: 50px;
+            height: 50px;
+            background: white;
+            position: relative;
+            border-radius: 5px;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.1);
+        }
+        .puzzle-piece-icon::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            top: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .puzzle-piece-icon::before {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #e3c598; /* Color del fondo para simular hueco */
+            border-radius: 50%;
+            bottom: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        #start-menu {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 8px solid var(--wood-border);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .carousel { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .preview-box { width: 320px; height: 200px; border: 4px solid var(--eiva-black); background-size: cover; background-position: center; border-radius: 8px; }
+        .nav-btn { background: none; border: none; color: var(--eiva-blue); font-size: 40px; cursor: pointer; }
+
+        .diff-btn { background: white; color: var(--eiva-black); border: 2px solid var(--eiva-black); padding: 10px 20px; cursor: pointer; font-weight: bold; margin: 5px; border-radius: 5px; }
+        .diff-btn.selected { background: var(--eiva-green); color: white; border-color: var(--eiva-green); }
+
+        #game-screen { display: none; text-align: center; width: 100%; }
+        #puzzle-board { display: grid; gap: 3px; background: #5d4037; padding: 10px; border: 12px solid var(--wood-border); margin: 20px auto; border-radius: 5px; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
+        .piece { cursor: pointer; border-radius: 2px; }
+        .piece.selected { outline: 4px solid var(--eiva-yellow); z-index: 10; filter: brightness(1.2); }
+        .piece.hint-error { outline: 4px solid var(--eiva-red); animation: pulse-hint 0.5s infinite alternate; }
+
+        .button-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 40px; }
+        .action-btn { color: white; border: none; padding: 15px 30px; font-size: 16px; font-weight: bold; text-transform: uppercase; cursor: pointer; border-radius: 8px; box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: 0.2s; }
+        .btn-verify { background: var(--eiva-red); }
+        .btn-hint { background: var(--eiva-green); }
+        .btn-home { background: var(--eiva-blue); }
+
+        #win-overlay { display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; flex-direction: column; justify-content: center; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div id="win-overlay">
+        <h1 style="font-size: 60px; color: var(--eiva-green);">¡COMPLETADO!</h1>
+        <p id="final-time" style="font-size: 24px; color: var(--eiva-black); margin-bottom: 30px;"></p>
+        <button class="action-btn btn-verify" onclick="location.reload()">JUGAR OTRA VEZ</button>
+    </div>
+
+    <div class="header-bar">
+        <button class="music-btn" onclick="toggleMusic()" id="btn-music">▶ MÚSICA RELAX</button>
+    </div>
+
+    <div class="title-container">
+        <div class="puzzle-piece-icon"></div>
+        <div class="main-title">EIVA<span>PUZZLE</span></div>
+    </div>
+
+    <div id="start-menu">
+        <div class="carousel">
+            <button class="nav-btn" onclick="changeImage(-1)">❮</button>
+            <div id="preview" class="preview-box"></div>
+            <button class="nav-btn" onclick="changeImage(1)">❯</button>
+        </div>
+        <p id="counter" style="font-weight: bold;">Cargando catálogo...</p>
+        
+        <div class="diff-container" style="margin: 25px 0;">
+            <button id="b1" class="diff-btn" onclick="setDiff(2, 'b1')">FÁCIL</button>
+            <button id="b2" class="diff-btn selected" onclick="setDiff(3, 'b2')">MEDIO</button>
+            <button id="b3" class="diff-btn" onclick="setDiff(4, 'b3')">DIFÍCIL</button>
+        </div>
+        <button class="action-btn btn-verify" onclick="startGame()" style="width: 100%;">INICIAR JUEGO</button>
+    </div>
+
+    <div id="game-screen">
+        <h2 id="timer" style="color: var(--eiva-black); font-family: 'Courier New', Courier, monospace; font-size: 45px; margin: 10px 0;">00:00</h2>
+        <div id="puzzle-board"></div>
+        
+        <div class="button-group">
+            <button class="action-btn btn-hint" onclick="showHelp()"><i class="fa-solid fa-eye"></i> PISTA</button>
+            <button class="action-btn btn-verify" onclick="verifyPuzzle()"><i class="fa-solid fa-check"></i> VERIFICAR</button>
+            <button class="action-btn btn-home" onclick="location.reload()"><i class="fa-solid fa-house"></i> INICIO</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        const radio = new Audio("https://stream.zeno.fm/0r0xa792kwzuv");
+        function toggleMusic() {
+            if (radio.paused) { radio.play(); document.getElementById('btn-music').innerText = "⏸ PAUSAR"; }
+            else { radio.pause(); document.getElementById('btn-music').innerText = "▶ MÚSICA RELAX"; }
+        }
+
+        const driveIds = ["1BizewZIZCBxv5zisgeaAH4BUPqya8Hbw", "1t9HJ7KDQW1k6XvkCvpOI4IDc24jtiV9I", "1i9Y0dy9OEf9W_joJSboKUyA4GSrD8kMC", "18UG4HwoOfKuKBI4jRNokXsJDK1LVvh_Q", "11p5a2ZNwpiV-GwaqY-JLHqrM6IZ4F83p", "1U1RCKq9fjbIyDQ6t8e9hRVgUSAxOfnNQ", "1_qYtrwWawgeXTiveVjPIg07I8bSPgrCc", "1d7Jz5X0LhPGBQaQuvCblRuUe-DTBrr5F", "1f_Ocpef_gkmX1sSlSrWbCTAu7IuZs_mW", "1PrrSEPG0QCh5RlzNXEY42ZbFO67NsFt7", "1Fi6wzCZKV6cJhIVr8bRKHKD8p3g0RyuZ", "1uLuuBOdlIx50QEb3HSP-D-8pRQxIswa1", "11fXgVCJrQPXEpmgWAvyIh7reDAjiOnAk", "1cCPyRVAS9RKdCgtbXiQNthaF84JvFui0", "1FWPrwv01ymc49lItKwKEK8UlgtUlyxss"];
+
+        let currentIdx = 0, gridSize = 3, selectedPiece = null, timerSeconds = 0, timerInterval = null;
+
+        function getUrl(id) { return `https://lh3.googleusercontent.com/d/${id}=w1000`; }
+
+        function changeImage(dir) {
+            currentIdx = (currentIdx + dir + driveIds.length) % driveIds.length;
+            document.getElementById('preview').style.backgroundImage = `url('${getUrl(driveIds[currentIdx])}')`;
+            document.getElementById('counter').innerText = `SECUENCIA ${currentIdx + 1} de 15`;
+        }
+
+        function setDiff(size, id) {
+            gridSize = size;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById(id).classList.add('selected');
+        }
+
+        function startGame() {
+            document.getElementById('start-menu').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            buildBoard();
+            startTimer();
+        }
+
+        function buildBoard() {
+            const board = document.getElementById('puzzle-board');
+            const url = getUrl(driveIds[currentIdx]);
+            const containerSize = Math.min(window.innerWidth * 0.85, 550);
+            board.style.width = board.style.height = `${containerSize}px`;
+            board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            board.innerHTML = '';
+            
+            let pieces = Array.from({length: gridSize * gridSize}, (_, i) => i);
+            do { pieces.sort(() => Math.random() - 0.5); } while (pieces.every((p, i) => p === i));
+
+            pieces.forEach((pos) => {
+                const p = document.createElement('div');
+                p.className = 'piece';
+                p.dataset.correct = pos;
+                p.style.backgroundImage = `url('${url}')`;
+                p.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
+                const r = Math.floor(pos / gridSize), c = pos % gridSize;
+                const step = 100 / (gridSize - 1);
+                p.style.backgroundPosition = `${c * step}% ${r * step}%`;
+                p.onclick = () => {
+                    if (!selectedPiece) { selectedPiece = p; p.classList.add('selected'); }
+                    else if (selectedPiece === p) { p.classList.remove('selected'); selectedPiece = null; }
+                    else {
+                        const tBg = p.style.backgroundPosition, tPos = p.dataset.correct;
+                        p.style.backgroundPosition = selectedPiece.style.backgroundPosition;
+                        p.dataset.correct = selectedPiece.dataset.correct;
+                        selectedPiece.style.backgroundPosition = tBg;
+                        selectedPiece.dataset.correct = tPos;
+                        selectedPiece.classList.remove('selected'); selectedPiece = null;
+                    }
+                };
+                board.appendChild(p);
+            });
+        }
+
+        function showHelp() {
+            document.querySelectorAll('.piece').forEach((p, i) => { if (parseInt(p.dataset.correct) !== i) p.classList.add('hint-error'); });
+            setTimeout(() => document.querySelectorAll('.piece').forEach(p => p.classList.remove('hint-error')), 1200);
+        }
+
+        function verifyPuzzle() {
+            if ([...document.querySelectorAll('.piece')].every((p, i) => parseInt(p.dataset.correct) === i)) {
+                clearInterval(timerInterval);
+                document.getElementById('final-time').innerText = "Lo lograste en: " + document.getElementById('timer').textContent;
+                document.getElementById('win-overlay').style.display = 'flex';
+                confetti({ particleCount: 200, spread: 80, colors: ['#e61e25', '#f9d806', '#3777f0', '#2ba24c'] });
+            } else { showHelp(); }
+        }
+
+        function startTimer() {
+            timerSeconds = 0;
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const m = String(Math.floor(timerSeconds/60)).padStart(2,'0'), s = String(timerSeconds%60).padStart(2,'0');
+                document.getElementById('timer').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+        window.onload = () => changeImage(0);
+    </script>
+</body>
+</html>
