@@ -2,889 +2,295 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Master Electrician: Edición Profesional</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EIVA PUZZLE - LEGO Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         :root {
-            --bg-dark: #1a1a2e;
-            --bg-panel: #16213e;
-            --primary: #f1c40f; /* Amarillo Electricidad */
-            --primary-glow: rgba(241, 196, 15, 0.5);
-            --accent: #e94560; /* Rojo Alerta */
-            --text-main: #ecf0f1;
-            --text-muted: #95a5a6;
-            --wire-phase: #d35400; /* Marrón/Naranja oscuro para fase */
-            --wire-neutral: #3498db; /* Azul para neutro */
-            --wire-return: #2c3e50; /* Gris oscuro para retorno */
-            --wire-default: #7f8c8d;
-            --terminal-size: 20px;
-            --shadow-card: 0 8px 16px rgba(0,0,0,0.3);
-            --neon-blue: #00f3ff;
+            --eiva-red: #e61e25;
+            --eiva-yellow: #f9d806;
+            --eiva-blue: #3777f0;
+            --eiva-green: #2ba24c;
+            --eiva-black: #1a1a1a;
+            --wood-border: #8b4513;
         }
-
-        * { box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+            font-family: 'Segoe UI', sans-serif;
+            background: #e3c598 url('https://www.transparenttextures.com/patterns/wood-pattern.png');
             margin: 0;
-            height: 100vh;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
-            user-select: none;
-            touch-action: none;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        /* --- UI COMPONENTS --- */
-        .btn {
-            background: linear-gradient(135deg, #2c3e50, #34495e);
-            border: none;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 6px;
+        /* HEADER */
+        .header-bar {
+            background: rgba(26, 26, 26, 0.9);
+            width: 100%;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            border-bottom: 4px solid var(--eiva-blue);
+        }
+
+        .music-btn {
+            background: white;
+            border: 2px solid var(--eiva-yellow);
+            padding: 8px 20px;
+            border-radius: 25px;
             cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
-        .btn:active { transform: translateY(0); }
-        
-        .btn-primary { background: linear-gradient(135deg, var(--primary), #f39c12); color: #1a1a2e; }
-        .btn-danger { background: linear-gradient(135deg, #c0392b, #e74c3c); }
-        .btn-info { background: linear-gradient(135deg, #2980b9, #3498db); }
-        .btn-tool { background: #4b6584; border: 1px solid #778ca3; }
-        .btn-tool.active { 
-            background: var(--accent); 
-            box-shadow: 0 0 15px var(--accent);
-            border-color: #ff7675;
-        }
-
-        /* --- HEADER --- */
-        header {
-            background: var(--bg-panel);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-            z-index: 100;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .level-info h1 { margin: 0; font-size: 1.2rem; color: var(--primary); text-transform: uppercase; letter-spacing: 1px; }
-        .level-info small { color: var(--text-muted); font-size: 0.85rem; }
-
-        .controls { display: flex; gap: 10px; align-items: center; }
-        
-        .status-badge {
-            background: rgba(0,0,0,0.3);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-family: monospace;
             font-weight: bold;
-            border: 1px solid rgba(255,255,255,0.1);
-            min-width: 80px;
-            text-align: center;
         }
-        .status-badge.ok { color: #2ecc71; border-color: #2ecc71; box-shadow: 0 0 10px rgba(46, 204, 113, 0.2); }
-        .status-badge.error { color: #e74c3c; border-color: #e74c3c; animation: pulseError 1s infinite; }
 
-        /* --- GAME BOARD --- */
-        #game-board {
-            flex-grow: 1;
-            position: relative;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            overflow: hidden;
-            cursor: default;
+        .main-title { 
+            font-size: clamp(2.5em, 10vw, 4em); 
+            font-weight: 900; 
+            margin: 20px 0; 
+            text-transform: uppercase; 
+            text-shadow: 2px 2px 0px white;
         }
-        
-        #game-board.buscapolo-mode { cursor: none; }
+        .main-title span { color: var(--eiva-red); }
 
-        /* --- LAYERS --- */
-        #wire-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-        #components-layer { position: absolute; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
-
-        /* --- COMPONENTS --- */
-        .component {
-            position: absolute;
-            background: #ecf0f1;
-            border-radius: 8px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            pointer-events: auto;
+        /* CARRUSEL CORREGIDO */
+        .carousel-container {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: transform 0.2s;
-        }
-        .component:hover { transform: scale(1.02); z-index: 10; }
-        
-        .component-label {
-            position: absolute;
-            top: -25px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            white-space: nowrap;
+            gap: 15px;
+            width: 100%;
         }
 
-        /* Specific Components */
-        .comp-source {
-            width: 90px; height: 160px;
-            background: linear-gradient(to bottom, #2c3e50, #34495e);
-            border: 2px solid #7f8c8d;
-            color: white;
-        }
-        .comp-source::after { content: '220V'; font-weight: 800; font-size: 1.5rem; opacity: 0.5; }
-
-        .comp-lamp {
-            width: 90px; height: 90px;
-            border-radius: 50%;
-            background: #bdc3c7;
-            border: 4px solid #95a5a6;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
-        }
-        .bulb-glass {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.1));
-            opacity: 0.3;
-            transition: all 0.3s;
-        }
-        .comp-lamp.on .bulb-glass {
-            background: radial-gradient(circle, #fff, var(--primary));
-            opacity: 1;
-            box-shadow: 0 0 60px 20px var(--primary-glow);
+        .preview-box { 
+            width: min(70vw, 300px); /* Tamaño del carrusel */
+            aspect-ratio: 1 / 1;    /* Forzamos cuadrado */
+            border: 6px solid var(--eiva-black); 
+            background-color: #eee;
+            background-size: contain; /* SE VE COMPLETA SIN DEFORMAR */
+            background-repeat: no-repeat;
+            background-position: center;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
         }
 
-        .comp-switch { width: 80px; height: 120px; background: #dfe6e9; border: 1px solid #b2bec3; }
-        .switch-body { 
-            width: 40px; height: 70px; background: #b2bec3; border-radius: 4px; position: relative; cursor: pointer; 
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        /* TABLERO DE JUEGO */
+        .game-container {
+            width: min(95vw, 700px);
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
         }
-        .switch-rocker {
-            width: 100%; height: 50%; background: white; position: absolute; bottom: 0;
-            border-radius: 2px; transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        .comp-switch.active .switch-rocker { top: 0; bottom: auto; background: var(--primary); }
 
-        .comp-breaker { width: 70px; height: 130px; background: #ecf0f1; border: 1px solid #bdc3c7; }
-        .breaker-lever {
-            width: 20px; height: 50px; background: #2c3e50; border-radius: 4px; cursor: pointer;
-            position: relative; transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: 10px;
+        #puzzle-board {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            gap: 2px;
+            background: var(--wood-border);
+            border: 10px solid var(--wood-border);
+            border-radius: 8px;
+            box-sizing: border-box;
         }
-        .comp-breaker.active .breaker-lever { transform: scaleY(-1); background: #27ae60; }
-        .comp-breaker.tripped { animation: shake 0.5s; border-color: #e74c3c; }
-        .comp-breaker.tripped .breaker-lever { background: #e74c3c; }
 
-        /* --- TERMINALS --- */
-        .terminal {
-            width: var(--terminal-size); height: var(--terminal-size);
-            background: #95a5a6;
-            border: 2px solid #7f8c8d;
-            border-radius: 50%;
-            position: absolute;
-            cursor: crosshair;
-            z-index: 20;
-            transition: transform 0.2s, background 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        .terminal:hover { transform: scale(1.4); background: white; border-color: var(--primary); }
-        .terminal.highlight { animation: pulseTerminal 1s infinite; }
-        
-        /* Terminal Colors based on role */
-        .terminal[data-role="phase"], .terminal.phase { background: var(--wire-phase); border-color: #a04000; }
-        .terminal[data-role="neutral"], .terminal.neutral { background: var(--wire-neutral); border-color: #2980b9; }
-        .terminal.return { background: var(--wire-return); border-color: #000; }
-
-        /* --- WIRES --- */
-        path.wire {
-            fill: none;
-            stroke-width: 6;
-            stroke-linecap: round;
+        .piece {
+            background-repeat: no-repeat;
             cursor: pointer;
-            transition: stroke 0.3s, stroke-width 0.2s, filter 0.2s;
-            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
-        }
-        path.wire:hover { stroke-width: 10; filter: drop-shadow(0 0 5px white); }
-        path.wire.live { stroke: var(--primary); filter: drop-shadow(0 0 8px var(--primary)); }
-        path.wire.short { stroke: #e74c3c !important; animation: shakeWire 0.1s infinite; }
-
-        /* --- BUSCAPOLO --- */
-        #neon-pen {
-            position: fixed;
-            width: 16px; height: 100px;
-            background: linear-gradient(90deg, rgba(255,255,255,0.2), transparent);
-            background-color: rgba(255, 165, 0, 0.8); /* Cuerpo naranja transparente */
-            border: 1px solid rgba(255,255,255,0.4);
-            border-radius: 4px;
-            pointer-events: none;
-            z-index: 1000;
-            display: none;
-            transform: translate(-50%, -100%);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            backdrop-filter: blur(2px);
-        }
-        #neon-pen::before { /* Punta metálica */
-            content: ''; position: absolute; bottom: -20px; left: 4px;
-            width: 8px; height: 20px; background: linear-gradient(90deg, #bdc3c7, #7f8c8d);
-            clip-path: polygon(0 0, 100% 0, 50% 100%);
-        }
-        #neon-light {
-            width: 8px; height: 30px; margin: 10px auto;
-            background: #333; border-radius: 2px;
-            transition: all 0.1s;
-        }
-        #neon-pen.active #neon-light {
-            background: #ff4500;
-            box-shadow: 0 0 15px #ff4500, inset 0 0 5px #fff;
+            touch-action: manipulation;
         }
 
-        /* --- OVERLAYS --- */
-        #start-screen, #modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(10, 10, 20, 0.95);
-            z-index: 2000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(10px);
-            transition: opacity 0.5s;
+        .piece.selected {
+            outline: 5px solid var(--eiva-yellow);
+            outline-offset: -5px;
+            filter: brightness(1.1);
         }
-        
-        .logo { font-size: 4rem; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
-        
-        .card {
-            background: rgba(255,255,255,0.05);
-            padding: 40px;
-            border-radius: 20px;
+
+        /* UI */
+        #start-menu {
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
-            max-width: 500px;
-            width: 90%;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            width: min(90%, 500px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
         }
-        
-        .level-dots { display: flex; gap: 8px; justify-content: center; margin: 20px 0; }
-        .dot { width: 10px; height: 10px; background: #34495e; border-radius: 50%; }
-        .dot.active { background: var(--primary); box-shadow: 0 0 10px var(--primary); }
 
-        #message-toast {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
-            background: rgba(255,255,255,0.9); color: #1a1a2e;
-            padding: 15px 30px; border-radius: 50px;
-            font-weight: bold; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 3000;
-            display: flex; align-items: center; gap: 10px;
+        .diff-btn { 
+            background: white; border: 2px solid var(--eiva-black); 
+            padding: 12px 20px; cursor: pointer; font-weight: bold; margin: 5px; border-radius: 8px;
         }
-        #message-toast.show { transform: translateX(-50%) translateY(0); }
+        .diff-btn.selected { background: var(--eiva-green); color: white; border-color: var(--eiva-green); }
 
-        /* --- ANIMATIONS --- */
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-        @keyframes pulseError { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes shake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(5deg); } 75% { transform: rotate(-5deg); } }
-        @keyframes shakeWire { 0%, 100% { transform: translate(0,0); } 50% { transform: translate(2px, 2px); } }
-        @keyframes pulseTerminal { 0% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(241, 196, 15, 0); } 100% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); } }
+        .action-btn { 
+            color: white; border: none; padding: 15px 35px; font-weight: bold;
+            text-transform: uppercase; cursor: pointer; border-radius: 10px; transition: 0.2s;
+        }
+        .btn-verify { background: var(--eiva-red); }
+        .btn-hint { background: var(--eiva-green); }
 
-        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+        #win-overlay { 
+            display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.95); 
+            z-index: 1000; flex-direction: column; justify-content: center; align-items: center; 
+            text-align: center;
+        }
     </style>
 </head>
 <body>
 
-    <!-- START SCREEN -->
-    <div id="start-screen">
-        <div class="logo">⚡</div>
-        <div class="card">
-            <h1>Master Electrician</h1>
-            <p style="color: var(--text-muted); margin-bottom: 30px;">Domina el arte de las instalaciones eléctricas residenciales.</p>
-            
-            <div class="level-preview">
-                <h2 id="start-level-title" style="color: var(--primary);">Nivel 1</h2>
-                <p id="start-level-desc">Conceptos básicos de Fase y Neutro.</p>
-                <div class="level-dots" id="level-dots"></div>
-            </div>
-
-            <button class="btn btn-primary" onclick="game.start()" style="font-size: 1.2rem; padding: 15px 40px; margin-top: 20px;">
-                INICIAR JUEGO
-            </button>
-        </div>
+    <div id="win-overlay">
+        <h1 style="font-size: 60px; color: var(--eiva-green); margin: 0;">¡EXCELENTE!</h1>
+        <p style="font-size: 40px;">🎉🥳👏</p>
+        <p id="final-time" style="font-size: 24px; font-weight: bold; margin-bottom: 30px;"></p>
+        <button class="action-btn btn-verify" onclick="location.reload()">VOLVER A JUGAR</button>
     </div>
 
-    <!-- LEVEL INSTRUCTIONS MODAL -->
-    <div id="modal-overlay" class="hidden">
-        <div class="card">
-            <h2 id="modal-title" style="color: var(--primary);">Instrucciones</h2>
-            <p id="modal-desc" style="font-size: 1.1rem; line-height: 1.6;">...</p>
-            <button class="btn btn-primary" onclick="game.closeModal()">Entendido</button>
-        </div>
+    <div class="header-bar">
+        <button class="music-btn" onclick="toggleMusic()" id="btn-music">▶ MÚSICA RELAX</button>
     </div>
 
-    <!-- MAIN INTERFACE -->
-    <header>
-        <div class="level-info">
-            <h1 id="ui-level-title">Nivel 1</h1>
-            <small id="ui-level-obj">Conecta la lámpara</small>
+    <div class="main-title">EIVA<span>PUZZLE</span></div>
+
+    <div id="start-menu">
+        <div class="carousel-container">
+            <button class="diff-btn" onclick="changeImage(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+            <div id="preview" class="preview-box"></div>
+            <button class="diff-btn" onclick="changeImage(1)"><i class="fa-solid fa-chevron-right"></i></button>
         </div>
+        <p id="counter" style="font-weight: bold; margin-top: 10px;">Imagen 1 de 15</p>
         
-        <div class="controls">
-            <div id="status-badge" class="status-badge">OFF</div>
-            <button class="btn btn-tool" id="btn-neon" onclick="game.toggleBuscapolo()" title="Herramienta de prueba">
-                <span>💡</span> Buscapolo
-            </button>
-            <button class="btn btn-info" onclick="game.showHint()" title="Mostrar ayuda">
-                <span>❓</span> Pista
-            </button>
-            <button class="btn btn-danger" onclick="game.resetLevel()" title="Reiniciar conexiones">
-                <span>⟳</span> Reiniciar
-            </button>
-            <button id="btn-next" class="btn btn-primary hidden" onclick="game.nextLevel()">
-                Siguiente ➜
-            </button>
+        <div style="margin: 20px 0;">
+            <button class="diff-btn" onclick="setDiff(2, this)">2x2</button>
+            <button class="diff-btn selected" onclick="setDiff(3, this)">3x3</button>
+            <button class="diff-btn" onclick="setDiff(4, this)">4x4</button>
         </div>
-    </header>
+        <button class="action-btn btn-verify" onclick="startGame()" style="width: 100%; font-size: 1.2em;">¡COMENZAR!</button>
+    </div>
 
-    <div id="game-board">
-        <svg id="wire-layer"></svg>
-        <div id="components-layer"></div>
-        
-        <!-- Buscapolo Element -->
-        <div id="neon-pen">
-            <div id="neon-light"></div>
+    <div id="game-screen" style="display:none; width: 100%; text-align: center;">
+        <h2 id="timer" style="font-family: monospace; font-size: 45px; margin: 10px 0;">00:00</h2>
+        <div class="game-container">
+            <div id="puzzle-board"></div>
+        </div>
+        <div style="display:flex; justify-content:center; gap:15px; margin: 30px 0; flex-wrap:wrap;">
+            <button class="action-btn btn-hint" onclick="showHelp()"><i class="fa-solid fa-eye"></i> PISTA</button>
+            <button class="action-btn btn-verify" onclick="verifyPuzzle()"><i class="fa-solid fa-check"></i> TERMINAR</button>
+            <button class="action-btn" style="background:#555" onclick="location.reload()"><i class="fa-solid fa-house"></i></button>
         </div>
     </div>
 
-    <div id="message-toast">Mensaje del sistema</div>
+    <!-- Audios -->
+    <audio id="audio-win" src="https://www.myinstants.com/media/sounds/crowd-cheer-and-applause-9.mp3"></audio>
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
-        // --- DATA & CONFIG ---
-        const LEVELS = [
-            { id: 1, title: "Conexión Básica", objective: "Haz que la bombilla encienda conectando Fase y Neutro.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'lamp', id: 'L1', x: 60, y: 40 }] },
-            { id: 2, title: "El Interruptor", objective: "Intercala el interruptor en la FASE para controlar la luz.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 40, y: 70 }, { type: 'lamp', id: 'L1', x: 70, y: 30 }] },
-            { id: 3, title: "Circuito en Serie", objective: "Conecta dos lámparas en serie (una tras otra).", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 70 }, { type: 'lamp', id: 'L1', x: 55, y: 30 }, { type: 'lamp', id: 'L2', x: 80, y: 30 }] },
-            { id: 4, title: "Seguridad: Disyuntor", objective: "Protege el circuito pasando primero por el disyuntor.", comps: [{ type: 'source', x: 10, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 40 }] },
-            { id: 5, title: "Instalación Estándar", objective: "Fuente → Disyuntor → Interruptor → Lámpara.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 25, y: 40 }, { type: 'switch', id: 'S1', x: 50, y: 70 }, { type: 'lamp', id: 'L1', x: 80, y: 30 }] },
-            { id: 6, title: "Circuito en Paralelo", objective: "Conecta dos lámparas en paralelo (brillo máximo).", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'switch', id: 'S1', x: 30, y: 80 }, { type: 'lamp', id: 'L1', x: 60, y: 20 }, { type: 'lamp', id: 'L2', x: 60, y: 60 }] },
-            { id: 7, title: "Protección Total", objective: "Usa el disyuntor para proteger un circuito paralelo.", comps: [{ type: 'source', x: 5, y: 40 }, { type: 'breaker', id: 'B1', x: 30, y: 40 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'lamp', id: 'L2', x: 70, y: 60 }] },
-            { id: 8, title: "Control Independiente", objective: "Cada interruptor debe controlar su propia lámpara.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'switch', id: 'S1', x: 35, y: 20 }, { type: 'lamp', id: 'L1', x: 70, y: 20 }, { type: 'switch', id: 'S2', x: 35, y: 80 }, { type: 'lamp', id: 'L2', x: 70, y: 80 }] },
-            { id: 9, title: "Sala de Estar", objective: "Disyuntor general + Interruptor controlando dos luces.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 25, y: 50 }, { type: 'switch', id: 'S1', x: 50, y: 80 }, { type: 'lamp', id: 'L1', x: 80, y: 20 }, { type: 'lamp', id: 'L2', x: 80, y: 50 }] },
-            { id: 10, title: "Maestro Electricista", objective: "Complejo: Protege todo. S1->L1, S2->L2, L3 directa.", comps: [{ type: 'source', x: 5, y: 50 }, { type: 'breaker', id: 'B1', x: 20, y: 50 }, { type: 'switch', id: 'S1', x: 40, y: 20 }, { type: 'lamp', id: 'L1', x: 65, y: 20 }, { type: 'switch', id: 'S2', x: 40, y: 80 }, { type: 'lamp', id: 'L2', x: 65, y: 80 }, { type: 'lamp', id: 'L3', x: 90, y: 50 }] }
-        ];
+        const driveIds = ["1BizewZIZCBxv5zisgeaAH4BUPqya8Hbw", "1t9HJ7KDQW1k6XvkCvpOI4IDc24jtiV9I", "1i9Y0dy9OEf9W_joJSboKUyA4GSrD8kMC", "18UG4HwoOfKuKBI4jRNokXsJDK1LVvh_Q", "11p5a2ZNwpiV-GwaqY-JLHqrM6IZ4F83p", "1U1RCKq9fjbIyDQ6t8e9hRVgUSAxOfnNQ", "1_qYtrwWawgeXTiveVjPIg07I8bSPgrCc", "1d7Jz5X0LhPGBQaQuvCblRuUe-DTBrr5F", "1f_Ocpef_gkmX1sSlSrWbCTAu7IuZs_mW", "1PrrSEPG0QCh5RlzNXEY42ZbFO67NsFt7", "1Fi6wzCZKV6cJhIVr8bRKHKD8p3g0RyuZ", "1uLuuBOdlIx50QEb3HSP-D-8pRQxIswa1", "11fXgVCJrQPXEpmgWAvyIh7reDAjiOnAk", "1cCPyRVAS9RKdCgtbXiQNthaF84JvFui0", "1FWPrwv01ymc49lItKwKEK8UlgtUlyxss"];
+        
+        let currentIdx = 0, gridSize = 3, selectedPiece = null, timerSeconds = 0, timerInterval = null;
+        const radio = new Audio("https://stream.zeno.fm/0r0xa792kwzuv");
+        const winSound = document.getElementById('audio-win');
 
-        // --- AUDIO MANAGER ---
-        class AudioManager {
-            constructor() {
-                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                this.masterGain = this.ctx.createGain();
-                this.masterGain.connect(this.ctx.destination);
-                this.masterGain.gain.value = 0.3; // Volumen global
-            }
+        function getUrl(id) { return `https://lh3.googleusercontent.com/d/${id}`; }
 
-            resume() { if(this.ctx.state === 'suspended') this.ctx.resume(); }
+        function changeImage(dir) {
+            currentIdx = (currentIdx + dir + driveIds.length) % driveIds.length;
+            document.getElementById('preview').style.backgroundImage = `url('${getUrl(driveIds[currentIdx])}')`;
+            document.getElementById('counter').innerText = `Imagen ${currentIdx + 1} de 15`;
+        }
 
-            playTone(freq, type, duration, vol = 1) {
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        function setDiff(size, btn) {
+            gridSize = size;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+
+        function toggleMusic() {
+            if (radio.paused) { radio.play(); document.getElementById('btn-music').innerText = "⏸ PAUSAR"; }
+            else { radio.pause(); document.getElementById('btn-music').innerText = "▶ MÚSICA RELAX"; }
+        }
+
+        function startGame() {
+            document.getElementById('start-menu').style.display = 'none';
+            document.getElementById('game-screen').style.display = 'block';
+            buildBoard();
+            startTimer();
+        }
+
+        function buildBoard() {
+            const board = document.getElementById('puzzle-board');
+            const url = getUrl(driveIds[currentIdx]);
+            board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+            board.innerHTML = '';
+            
+            let piecesIndices = Array.from({length: gridSize * gridSize}, (_, i) => i);
+            do { piecesIndices.sort(() => Math.random() - 0.5); } while (piecesIndices.every((p, i) => p === i));
+
+            piecesIndices.forEach((posIndex) => {
+                const piece = document.createElement('div');
+                piece.className = 'piece';
+                piece.dataset.correctPos = posIndex;
+                piece.style.backgroundImage = `url('${url}')`;
+                piece.style.backgroundSize = `${gridSize * 100}% ${gridSize * 100}%`;
                 
-                osc.connect(gain);
-                gain.connect(this.masterGain);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
-            }
+                const r = Math.floor(posIndex / gridSize);
+                const c = posIndex % gridSize;
+                const percent = 100 / (gridSize - 1);
+                piece.style.backgroundPosition = `${c * percent}% ${r * percent}%`;
 
-            playClick() { this.playTone(600, 'sine', 0.1); }
-            playSnap() { this.playTone(800, 'triangle', 0.05, 0.5); }
-            playZap() { 
-                // Sonido de corto
-                const osc = this.ctx.createOscillator();
-                const gain = this.ctx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, this.ctx.currentTime);
-                osc.frequency.linearRampToValueAtTime(50, this.ctx.currentTime + 0.3);
-                gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
-                gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.3);
-                osc.connect(gain); gain.connect(this.masterGain);
-                osc.start(); osc.stop(this.ctx.currentTime + 0.3);
-            }
-            playWin() {
-                this.playTone(440, 'sine', 0.2);
-                setTimeout(() => this.playTone(554, 'sine', 0.2), 100);
-                setTimeout(() => this.playTone(659, 'sine', 0.4), 200);
+                piece.onclick = () => handlePieceClick(piece);
+                board.appendChild(piece);
+            });
+        }
+
+        function handlePieceClick(piece) {
+            if (!selectedPiece) {
+                selectedPiece = piece;
+                piece.classList.add('selected');
+            } else if (selectedPiece === piece) {
+                piece.classList.remove('selected');
+                selectedPiece = null;
+            } else {
+                const targetBg = piece.style.backgroundPosition;
+                const targetData = piece.dataset.correctPos;
+                piece.style.backgroundPosition = selectedPiece.style.backgroundPosition;
+                piece.dataset.correctPos = selectedPiece.dataset.correctPos;
+                selectedPiece.style.backgroundPosition = targetBg;
+                selectedPiece.dataset.correctPos = targetData;
+                selectedPiece.classList.remove('selected');
+                selectedPiece = null;
             }
         }
 
-        // --- GAME MANAGER ---
-        class GameManager {
-            constructor() {
-                this.levelIdx = 0;
-                this.wires = [];
-                this.components = {};
-                this.audio = new AudioManager();
-                
-                // DOM Elements
-                this.board = document.getElementById('game-board');
-                this.svgLayer = document.getElementById('wire-layer');
-                this.compLayer = document.getElementById('components-layer');
-                this.neonPen = document.getElementById('neon-pen');
-                
-                // State
-                this.drag = { active: false, startId: null, tempLine: null };
-                this.isBuscapoloMode = false;
-                this.neonTimer = null;
+        function verifyPuzzle() {
+            const pieces = [...document.querySelectorAll('.piece')];
+            const isWin = pieces.every((p, i) => parseInt(p.dataset.correctPos) === i);
 
-                this.initEvents();
-                this.renderStartScreen();
+            if (isWin) {
+                clearInterval(timerInterval);
+                radio.pause(); // Pausar radio para que se oigan los aplausos
+                winSound.play(); // SONIDO DE FESTEJO
+                document.getElementById('final-time').innerText = "Logrado en " + document.getElementById('timer').textContent;
+                document.getElementById('win-overlay').style.display = 'flex';
+                confetti({ particleCount: 200, spread: 90, origin: { y: 0.7 } });
+            } else {
+                showHelp();
             }
-
-            renderStartScreen() {
-                const dots = document.getElementById('level-dots');
-                dots.innerHTML = '';
-                LEVELS.forEach((_, i) => {
-                    const d = document.createElement('div');
-                    d.className = `dot ${i === 0 ? 'active' : ''}`;
-                    dots.appendChild(d);
-                });
-            }
-
-            start() {
-                this.audio.resume();
-                document.getElementById('start-screen').classList.add('hidden');
-                this.loadLevel(0);
-            }
-
-            loadLevel(idx) {
-                this.levelIdx = idx;
-                const level = LEVELS[idx];
-                
-                // UI Updates
-                document.getElementById('ui-level-title').textContent = `Nivel ${level.id}: ${level.title}`;
-                document.getElementById('ui-level-obj').textContent = level.objective;
-                document.getElementById('modal-title').textContent = level.title;
-                document.getElementById('modal-desc').textContent = level.objective;
-                document.getElementById('btn-next').classList.add('hidden');
-                this.updateStatus('OFF');
-
-                // Reset Board
-                this.wires = [];
-                this.components = {};
-                this.svgLayer.innerHTML = '';
-                this.compLayer.innerHTML = '';
-                this.setBuscapolo(false);
-
-                // Create Components
-                level.comps.forEach(c => this.createComponent(c));
-
-                // Show Instructions
-                document.getElementById('modal-overlay').classList.remove('hidden');
-                
-                this.checkCircuit();
-            }
-
-            createComponent(data) {
-                const el = document.createElement('div');
-                el.className = `component comp-${data.type}`;
-                el.style.left = `${data.x}%`;
-                el.style.top = `${data.y}%`;
-                el.id = `comp-${data.id || 'src'}`;
-
-                let html = '';
-                if (data.type === 'source') {
-                    html = `<div class="terminal" id="t-phase" data-role="phase" style="top:60px; right:-10px;" title="Fase (L)"></div>
-                            <div class="terminal" id="t-neutral" data-role="neutral" style="top:110px; right:-10px;" title="Neutro (N)"></div>`;
-                } else if (data.type === 'lamp') {
-                    html = `<div class="component-label">${data.id}</div>
-                            <div class="bulb-glass" id="bulb-${data.id}"></div>
-                            <div class="terminal" id="t-${data.id}-1" style="bottom:5px; left:-10px;"></div>
-                            <div class="terminal" id="t-${data.id}-2" style="bottom:5px; right:-10px;"></div>`;
-                    this.components[data.id] = { type: 'lamp', terminals: [`t-${data.id}-1`, `t-${data.id}-2`] };
-                } else if (data.type === 'switch') {
-                    html = `<div class="component-label">${data.id}</div>
-                            <div class="switch-body" onclick="game.toggleSwitch('${data.id}')">
-                                <div class="switch-rocker"></div>
-                            </div>
-                            <div class="terminal" id="t-${data.id}-1" data-role="phase" style="top:20px; left:-10px;"></div>
-                            <div class="terminal" id="t-${data.id}-2" data-role="phase" style="top:20px; right:-10px;"></div>`;
-                    this.components[data.id] = { type: 'switch', state: false };
-                } else if (data.type === 'breaker') {
-                    html = `<div class="component-label">Disyuntor</div>
-                            <div class="breaker-lever" id="bk-${data.id}" onclick="game.toggleBreaker('${data.id}')"></div>
-                            <div class="terminal" id="t-${data.id}-1" data-role="phase" style="top:15px; left:-10px;"></div>
-                            <div class="terminal" id="t-${data.id}-2" data-role="phase" style="top:15px; right:-10px;"></div>
-                            <div class="terminal" id="t-${data.id}-3" data-role="phase" style="bottom:15px; left:-10px;"></div>
-                            <div class="terminal" id="t-${data.id}-4" data-role="phase" style="bottom:15px; right:-10px;"></div>`;
-                    this.components[data.id] = { type: 'breaker', state: true, elId: el.id };
-                }
-
-                el.innerHTML = html;
-                this.compLayer.appendChild(el);
-            }
-
-            // --- INTERACTION ---
-            initEvents() {
-                // Dragging Logic
-                this.compLayer.addEventListener('pointerdown', e => {
-                    if (e.target.classList.contains('terminal')) {
-                        if (this.isBuscapoloMode) return;
-                        e.stopPropagation();
-                        this.startDrag(e.target.id, e);
-                    }
-                });
-
-                window.addEventListener('pointermove', e => {
-                    if (this.drag.active) this.updateDrag(e);
-                    if (this.isBuscapoloMode) this.updateBuscapolo(e);
-                });
-
-                window.addEventListener('pointerup', e => {
-                    if (this.drag.active) this.endDrag(e);
-                });
-
-                window.addEventListener('resize', () => this.redrawWires());
-                
-                // Keyboard shortcuts
-                document.addEventListener('keydown', e => {
-                    if(e.key === 'Escape' && this.isBuscapoloMode) this.setBuscapolo(false);
-                });
-            }
-
-            startDrag(id, e) {
-                this.drag.active = true;
-                this.drag.startId = id;
-                
-                // Create temp line
-                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                path.setAttribute("stroke", "#7f8c8d");
-                path.setAttribute("stroke-width", "4");
-                path.setAttribute("fill", "none");
-                path.setAttribute("stroke-dasharray", "5,5");
-                this.svgLayer.appendChild(path);
-                this.drag.tempLine = path;
-                
-                this.audio.playClick();
-            }
-
-            updateDrag(e) {
-                const startEl = document.getElementById(this.drag.startId);
-                if(!startEl) return;
-                
-                const r1 = startEl.getBoundingClientRect();
-                const boardRect = this.board.getBoundingClientRect();
-                
-                const x1 = r1.left + r1.width/2 - boardRect.left;
-                const y1 = r1.top + r1.height/2 - boardRect.top;
-                const x2 = e.clientX - boardRect.left;
-                const y2 = e.clientY - boardRect.top;
-                
-                this.drag.tempLine.setAttribute("d", `M ${x1} ${y1} L ${x2} ${y2}`);
-            }
-
-            endDrag(e) {
-                this.drag.active = false;
-                if(this.drag.tempLine) this.drag.tempLine.remove();
-                
-                const el = document.elementFromPoint(e.clientX, e.clientY);
-                if (el && el.classList.contains('terminal') && el.id !== this.drag.startId) {
-                    this.connect(this.drag.startId, el.id);
-                }
-            }
-
-            connect(idA, idB) {
-                // Prevent duplicates
-                if (this.wires.some(w => (w.u === idA && w.v === idB) || (w.u === idB && w.v === idA))) return;
-
-                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-                path.classList.add('wire');
-                
-                // Determine Color based on source
-                const color = this.determineWireColor(idA);
-                path.setAttribute("stroke", color);
-                
-                this.svgLayer.appendChild(path);
-                
-                const wire = { u: idA, v: idB, el: path };
-                
-                // Remove on double click
-                path.addEventListener('dblclick', () => {
-                    path.remove();
-                    this.wires = this.wires.filter(w => w !== wire);
-                    this.audio.playSnap();
-                    this.checkCircuit();
-                });
-
-                this.wires.push(wire);
-                this.redrawWires();
-                this.audio.playSnap();
-                this.checkCircuit();
-            }
-
-            determineWireColor(id) {
-                const el = document.getElementById(id);
-                if(el.dataset.role === 'phase' || el.classList.contains('phase')) return 'var(--wire-phase)';
-                if(el.dataset.role === 'neutral' || el.classList.contains('neutral')) return 'var(--wire-neutral)';
-                return 'var(--wire-return)';
-            }
-
-            redrawWires() {
-                const boardRect = this.board.getBoundingClientRect();
-                this.wires.forEach(w => {
-                    const r1 = document.getElementById(w.u).getBoundingClientRect();
-                    const r2 = document.getElementById(w.v).getBoundingClientRect();
-                    
-                    const x1 = r1.left + r1.width/2 - boardRect.left;
-                    const y1 = r1.top + r1.height/2 - boardRect.top;
-                    const x2 = r2.left + r2.width/2 - boardRect.left;
-                    const y2 = r2.top + r2.height/2 - boardRect.top;
-                    
-                    const drop = Math.abs(x2 - x1) * 0.2 + 40; // Curvature
-                    w.el.setAttribute("d", `M ${x1} ${y1} C ${x1} ${y1+drop}, ${x2} ${y2+drop}, ${x2} ${y2}`);
-                });
-            }
-
-            // --- LOGIC ---
-            toggleSwitch(id) {
-                this.components[id].state = !this.components[id].state;
-                const el = document.getElementById(`comp-${id}`);
-                if(this.components[id].state) el.classList.add('active');
-                else el.classList.remove('active');
-                this.audio.playClick();
-                this.checkCircuit();
-            }
-
-            toggleBreaker(id) {
-                const comp = this.components[id];
-                const el = document.getElementById(comp.elId);
-                
-                if(el.classList.contains('tripped')) {
-                    // Resetear si estaba saltado
-                    el.classList.remove('tripped');
-                    comp.state = true;
-                    el.classList.add('active');
-                } else {
-                    comp.state = !comp.state;
-                    if(comp.state) el.classList.add('active');
-                    else el.classList.remove('active');
-                }
-                this.audio.playClick();
-                this.checkCircuit();
-            }
-
-            checkCircuit() {
-                // Reset Visuals
-                this.wires.forEach(w => { w.el.classList.remove('live'); w.el.classList.remove('short'); });
-                document.querySelectorAll('.comp-lamp').forEach(l => l.classList.remove('on'));
-                
-                // Build Graph
-                const adj = {};
-                const addEdge = (a, b) => {
-                    if(!adj[a]) adj[a]=[]; if(!adj[b]) adj[b]=[];
-                    adj[a].push(b); adj[b].push(a);
-                };
-                
-                this.wires.forEach(w => addEdge(w.u, w.v));
-                
-                // Internal connections
-                Object.keys(this.components).forEach(id => {
-                    const c = this.components[id];
-                    if(c.type === 'switch' && c.state) addEdge(`t-${id}-1`, `t-${id}-2`);
-                    if(c.type === 'breaker' && c.state) {
-                        addEdge(`t-${id}-1`, `t-${id}-3`);
-                        addEdge(`t-${id}-2`, `t-${id}-4`);
-                    }
-                    if(c.type === 'lamp') addEdge(`t-${id}-1`, `t-${id}-2`);
-                });
-
-                // BFS Helper
-                const findPath = (start, end, avoidLamps = false) => {
-                    if(!adj[start]) return false;
-                    let Q = [start], visited = new Set([start]);
-                    while(Q.length) {
-                        let u = Q.shift();
-                        if(u === end) return true;
-                        if(adj[u]) for(let v of adj[u]) {
-                            if(avoidLamps && u.includes('L') && v.includes('L') && u.split('-')[1]===v.split('-')[1]) continue;
-                            if(!visited.has(v)) { visited.add(v); Q.push(v); }
-                        }
-                    }
-                    return false;
-                };
-
-                // 1. Check Short Circuit (Phase to Neutral without Load)
-                if(findPath('t-phase', 't-neutral', true)) {
-                    this.triggerShortCircuit();
-                    return;
-                }
-
-                // 2. Check Lamps
-                let lampsOn = 0;
-                let totalLamps = 0;
-                
-                Object.keys(this.components).forEach(id => {
-                    if(this.components[id].type === 'lamp') {
-                        totalLamps++;
-                        const t1 = `t-${id}-1`, t2 = `t-${id}-2`;
-                        // Check if one side is Phase and other is Neutral
-                        const t1_L = findPath('t-phase', t1);
-                        const t2_N = findPath('t-neutral', t2);
-                        const t1_N = findPath('t-neutral', t1);
-                        const t2_L = findPath('t-phase', t2);
-
-                        if((t1_L && t2_N) || (t1_N && t2_L)) {
-                            document.getElementById(`comp-${id}`).classList.add('on');
-                            lampsOn++;
-                        }
-                    }
-                });
-
-                // 3. Update Status
-                if(lampsOn > 0 && lampsOn === totalLamps) {
-                    this.updateStatus('OK');
-                    if(document.getElementById('btn-next').classList.contains('hidden')) {
-                        this.audio.playWin();
-                        this.showToast("¡Excelente! Circuito completado.");
-                        document.getElementById('btn-next').classList.remove('hidden');
-                        this.wires.forEach(w => w.el.classList.add('live'));
-                    }
-                } else {
-                    this.updateStatus('OFF');
-                    document.getElementById('btn-next').classList.add('hidden');
-                }
-                
-                // Update Terminal Colors dynamically
-                this.updateTerminalVisuals(findPath);
-            }
-
-            triggerShortCircuit() {
-                this.updateStatus('CORTO');
-                this.audio.playZap();
-                this.wires.forEach(w => w.el.classList.add('short'));
-                
-                // Trip Breaker if exists
-                const breakerId = Object.keys(this.components).find(k => this.components[k].type === 'breaker' && this.components[k].state);
-                if(breakerId) {
-                    setTimeout(() => {
-                        this.components[breakerId].state = false;
-                        const el = document.getElementById(`comp-${breakerId}`);
-                        el.classList.remove('active');
-                        el.classList.add('tripped');
-                        this.showToast("¡El disyuntor saltó por seguridad!");
-                        this.checkCircuit(); // Re-check to clear short visuals
-                    }, 500);
-                } else {
-                    this.showToast("¡CORTOCIRCUITO! Peligro.");
-                }
-            }
-
-            updateTerminalVisuals(findPathFn) {
-                // Reset
-                document.querySelectorAll('.terminal').forEach(t => {
-                    if(t.id.startsWith('t-L')) t.className = 'terminal';
-                });
-
-                // Apply colors if connected to Phase/Neutral
-                Object.keys(this.components).forEach(id => {
-                    if(this.components[id].type === 'lamp') {
-                       [`t-${id}-1`, `t-${id}-2`].forEach(tid => {
-                           const el = document.getElementById(tid);
-                           if(findPathFn('t-phase', tid)) el.classList.add('phase');
-                           else if(findPathFn('t-neutral', tid)) el.classList.add('neutral');
-                       });
-                    }
-                });
-            }
-
-            // --- TOOLS ---
-            toggleBuscapolo() {
-                this.setBuscapolo(!this.isBuscapoloMode);
-            }
-
-            setBuscapolo(active) {
-                this.isBuscapoloMode = active;
-                const btn = document.getElementById('btn-neon');
-                if(active) {
-                    this.board.classList.add('buscapolo-mode');
-                    btn.classList.add('active');
-                    this.neonPen.style.display = 'block';
-                    this.showToast("Buscapolo activo: Pasa sobre los cables.");
-                } else {
-                    this.board.classList.remove('buscapolo-mode');
-                    btn.classList.remove('active');
-                    this.neonPen.style.display = 'none';
-                }
-            }
-
-            updateBuscapolo(e) {
-                this.neonPen.style.left = e.clientX + 'px';
-                this.neonPen.style.top = e.clientY + 'px';
-                
-                // Detection Logic
-                const el = document.elementFromPoint(e.clientX, e.clientY);
-                let detected = false;
-                
-                if(el) {
-                    // Check Terminal
-                    if(el.classList.contains('terminal')) {
-                        if(el.classList.contains('phase') || el.dataset.role === 'phase') detected = true;
-                    }
-                    // Check Wire
-                    else if(el.classList.contains('wire')) {
-                        // Simple check: if wire is orange/brown
-                        if(el.getAttribute('stroke').includes('d35400') || el.classList.contains('live')) detected = true;
-                    }
-                }
-
-                if(detected) {
-                    this.neonPen.classList.add('active');
-                    if(!this.neonTimer) {
-                        this.neonTimer = setTimeout(() => this.audio.playTone(1000, 'square', 0.05, 0.1), 50);
-                    }
-                } else {
-                    this.neonPen.classList.remove('active');
-                    clearTimeout(this.neonTimer);
-                    this.neonTimer = null;
-                }
-            }
-
-            // --- HELPERS ---
-            updateStatus(status) {
-                const badge = document.getElementById('status-badge');
-                badge.textContent = status;
-                badge.className = 'status-badge ' + (status === 'OK' ? 'ok' : (status === 'CORTO' ? 'error' : ''));
-            }
-
-            showToast(msg) {
-                const toast = document.getElementById('message-toast');
-                toast.textContent = msg;
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 3000);
-            }
-
-            showHint() {
-                document.querySelectorAll('.terminal').forEach(t => t.classList.add('highlight'));
-                setTimeout(() => document.querySelectorAll('.terminal').forEach(t => t.classList.remove('highlight')), 2000);
-            }
-
-            resetLevel() { this.loadLevel(this.levelIdx); }
-            nextLevel() { if(this.levelIdx < LEVELS.length-1) this.loadLevel(this.levelIdx + 1); else this.showToast("¡Juego Completado!"); }
-            closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
         }
 
-        const game = new GameManager();
+        function showHelp() {
+            const pieces = document.querySelectorAll('.piece');
+            pieces.forEach((p, i) => { if (parseInt(p.dataset.correctPos) !== i) p.style.opacity = "0.5"; });
+            setTimeout(() => pieces.forEach(p => p.style.opacity = "1"), 800);
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const m = String(Math.floor(timerSeconds/60)).padStart(2,'0');
+                const s = String(timerSeconds%60).padStart(2,'0');
+                document.getElementById('timer').textContent = `${m}:${s}`;
+            }, 1000);
+        }
+
+        window.onload = () => changeImage(0);
     </script>
 </body>
 </html>
