@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root {
+        /* Paleta Oficial Mercado Índigo */
+        --bg: #F8F8FA;           /* Blanco humo */
+        --surface: #FFFFFF;
+        --border: #E0E0E6;
+        --text: #1F1F29;          /* Grafito */
+        --brand-primary: #4B0082; /* Índigo profundo */
+        --brand-secondary: #560591;/* Índigo eléctrico */
+        --cta: #FF8C42;           /* Naranja ámbar */
+        --cta-hover: #E6762F;     /* Naranja hover */
+        --success: #22C55E;       /* Verde checkout */
+        --radius: 12px;
+    }
+    
+    body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}
+    
+    /* ── NAV ── */
+    nav{background:var(--brand-primary); border-bottom:1px solid rgba(255,255,255,0.1); padding:0 1.5rem; display:flex; align-items:center; height:52px; position:sticky; top:0; z-index:100}
+    .nav-logo{font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:white}
+    .nav-logo span{color:var(--cta)}
+
+    /* ── HERO ── */
+    .hero{background:var(--brand-primary); padding:2.5rem 1.5rem; color:white; text-align:center}
+    .hero h1{font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:.4rem}
+    .search-outer{background:white; border-radius:var(--radius); display:flex; max-width:520px; margin:1rem auto; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,0.15)}
+    #searchInput{flex:1; border:none; outline:none; padding:.85rem 1rem; font-size:15px; color:var(--text); font-family:'DM Sans',sans-serif}
+    .search-btn{background:var(--cta); color:white; border:none; padding:0 1.3rem; cursor:pointer; font-weight:600; transition: 0.2s;}
+    .search-btn:hover{background:var(--cta-hover)}
+
+    /* ── MENU CATEGORÍAS ── */
+    .cat-container{margin-top:1rem; position:relative; display:inline-block;}
+    .btn-cat-toggle{background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:8px 20px; border-radius:25px; cursor:pointer; font-size:13px; font-weight:500; transition:0.2s;}
+    .btn-cat-toggle:hover{background:var(--brand-secondary)}
+    .cat-menu{display:none; position:absolute; top:45px; left:50%; transform:translateX(-50%); background:white; border-radius:15px; padding:15px; box-shadow:0 10px 30px rgba(0,0,0,0.2); grid-template-columns: repeat(2, 1fr); gap:10px; z-index:1000; width:280px;}
+    .cat-menu.active{display:grid}
+    .cat-item{display:flex; flex-direction:column; align-items:center; gap:5px; padding:10px; border-radius:10px; cursor:pointer; border:1px solid #f0ede6; transition: 0.2s;}
+    .cat-item:hover{background:#f8f5f0; border-color:var(--brand-primary)}
+    .cat-item span{font-size:11px; font-weight:600; color:var(--brand-primary); text-transform:uppercase}
+
+    /* ── BARRA DE SECCIÓN ── */
+    .section-bar{background:#FFFFFF; padding:10px 1.5rem; border-bottom:1px solid var(--border); display:none; align-items:center; gap:15px}
+    .section-bar.active{display:flex}
+    .back-btn{cursor:pointer; color:var(--brand-secondary); font-size:13px; text-decoration: underline; font-weight: 500;}
+    .breadcrumb-path{font-size:13px; color: var(--brand-secondary);}
+    .breadcrumb-path span{margin: 0 5px; color: #888; text-decoration: none;}
+
+    /* ── GRID ── */
+    .main{max-width:1000px; margin:0 auto; padding:1.5rem 1rem}
+    .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:14px}
+    .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; transition:.2s; cursor:pointer}
+    .card:hover{transform:translateY(-3px); box-shadow:0 10px 24px rgba(75,0,130,0.1)}
+    .card-img{height:220px; background:#F0F0F5; overflow:hidden; display:flex; align-items:center; justify-content:center}
+    .card-img img{width:100%; height:100%; object-fit:cover}
+    .card-body{padding:.85rem}
+    .card-name{font-size:13px; font-weight:600; color:var(--brand-primary); min-height: 34px;}
+    .btn-open{display:inline-block; padding:6px 16px; background:var(--brand-primary); color:white; border-radius:6px; font-size:11px; margin-top:10px; transition: 0.2s;}
+    .btn-open:hover{background:var(--brand-secondary)}
+
+    /* ── MODAL ── */
+    .modal{display:none; position:fixed; z-index:9999; top:0; left:0; width:100%; height:100%; background:rgba(31,31,41,0.95); align-items:center; justify-content:center; padding:16px}
+    .modal.active{display:flex}
+    .modal-inner{position:relative; max-width:440px; width:100%; background:#fff; border-radius:14px; overflow:hidden}
+    .modal-img-wrap img{width:100%; max-height:58vh; object-fit:contain; display:block; margin:auto; background:#F0F0F5}
+    .modal-info{padding:1.5rem}
+    .modal-close{position:absolute; top:10px; right:13px; background:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10; font-weight: bold; color: var(--brand-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2);}
+    .empty{text-align:center; padding:4rem 1rem; grid-column:1/-1; color:var(--brand-secondary); font-size:14px}
+</style>
+</head>
+<body>
+
+<nav><div class="nav-logo">Mercado <span>Índigo</span></div></nav>
+
+<section class="hero">
+  <h1>Catálogo de <em>Prendas</em></h1>
+  <div class="search-outer">
+    <input type="text" id="searchInput" placeholder="Buscar productos, marcas y más..." autocomplete="off">
+    <button class="search-btn" onclick="renderResults()">Buscar</button>
+  </div>
+  
+  <div class="cat-container">
+    <button class="btn-cat-toggle" onclick="toggleCatMenu()">Categorías ▾</button>
+    <div id="catMenu" class="cat-menu">
+      <div class="cat-item" onclick="quickSearch('campera')"><span>🧥 Camperas</span></div>
+      <div class="cat-item" onclick="quickSearch('pantalon')"><span>👖 Pantalones</span></div>
+      <div class="cat-item" onclick="quickSearch('remera')"><span>👕 Remeras</span></div>
+      <div class="cat-item" onclick="quickSearch('zapatillas')"><span>👟 Zapatillas</span></div>
+    </div>
+  </div>
+</section>
+
+<div id="sectionBar" class="section-bar">
+  <span class="back-btn" onclick="resetSearch()">Volver</span>
+  <div class="breadcrumb-path">
+      Mercado Índigo <span>|</span> <span id="pathLabel">Catálogo</span>
+  </div>
+</div>
+
+<main class="main">
+  <div id="resultsContainer"></div>
+</main>
+
+<div id="imageModal" class="modal" onclick="handleModalClick(event)">
+  <div class="modal-inner">
+    <div class="modal-close" onclick="closeModal()">✕</div>
+    <div class="modal-img-wrap"><img id="modalImg" src=""></div>
+    <div class="modal-info">
+      <h2 id="modalName" style="color:var(--brand-primary); font-family: 'Playfair Display', serif;"></h2>
+      <p id="modalDesc" style="font-size:14px; color:var(--text); margin-top:8px; line-height: 1.4;"></p>
+      <p id="modalRef" style="font-size:10px; color:var(--success); margin-top:10px; font-weight:bold; letter-spacing: 0.5px;"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+function imgUrl(id) { 
+    return `https://lh3.googleusercontent.com/u/0/d/${id}`; 
+}
+
+const PRODUCTS = [
+  { 
+    ref:"1a", 
+    keys:["campera","cuero","moto","racing","negra","hombre"], 
+    cat:"Camperas", 
+    name:"Campera de Cuero Moto Racing", 
+    imgId:"1RERvwtnFrqMKwW8VQHhSLCmCR_JbZGKh", 
+    desc:"Campera de cuero importada estilo Moto Racing Hombre. Resistente y con diseño urbano." 
+  },
+  { 
+    ref:"2b", 
+    keys:["campera","pluma","plumas","ultraliviana","ligero","hombre","azul"], 
+    cat:"Camperas", 
+    name:"Campera de Hombre Pluma", 
+    imgId:"1SUKGkoJRxNgPBwM8t5Q4VPM7U_BFCb21", 
+    desc:"Campera De Plumas Ultraliviana Hombre 100% Pluma Ligero. Ideal para bajas temperaturas." 
+  },
+  { ref:"3c", keys:["pantalon","jean","denim"], cat:"Pantalones", name:"Jean Indigo Denim", imgId:"1GYhfqPYjDSxFzNKf3KGvIHJrYLRFfozE", desc:"Clásico Denim de alta resistencia." },
+  { ref:"4a", keys:["remera","oversize"], cat:"Remeras", name:"Remera Oversize Premium", imgId:"1YIAEHR3fKTfyxzKblRD20Pt2DFBAsN59", desc:"Calidad de algodón 100%, corte holgado." },
+  { ref:"4b", keys:["remera","thrasher"], cat:"Remeras", name:"Remera Thrasher Style", imgId:"1RCUf7kNrZ6ggs31ppAZGdExgD5k2jJ21", desc:"Estilo urbano y callejero." },
+  { ref:"5a", keys:["zapatillas","adidas"], cat:"Zapatillas", name:"Zapatillas Urban — Adidas", imgId:"1oKWGMjxWSbHElGq6uWSEuWdnFTQ_ll0q", desc:"Diseño ligero Adidas para uso diario." },
+  { ref:"5b", keys:["zapatillas","nike"], cat:"Zapatillas", name:"Zapatillas Urban — Nike", imgId:"1fXw_zKHPOSa_yimzwZeHQcj2nCO47gOl", desc:"Máxima comodidad y tracción Nike." }
+];
+
+function toggleCatMenu() { document.getElementById('catMenu').classList.toggle('active'); }
+
+function quickSearch(term) {
+  document.getElementById("searchInput").value = term;
+  document.getElementById('catMenu').classList.remove('active');
+  renderResults();
+}
+
+function resetSearch() {
+    document.getElementById("searchInput").value = "";
+    renderResults();
+}
+
+function renderResults() {
+  const q = document.getElementById("searchInput").value.toLowerCase().trim();
+  const container = document.getElementById("resultsContainer");
+  const bar = document.getElementById("sectionBar");
+  const pathLabel = document.getElementById("pathLabel");
+
+  if(!q) { 
+    container.innerHTML = `<div class="grid"><div class="empty">Probá buscando "campera", "remera" o "zapatillas".</div></div>`; 
+    bar.classList.remove('active');
+    return; 
+  }
+
+  const searchTerms = q.split(/\s+/); 
+
+  const matched = PRODUCTS.filter(p => {
+    return searchTerms.every(term => {
+      const matchKey = p.keys.some(k => k.toLowerCase().includes(term));
+      const matchCat = p.cat.toLowerCase().includes(term);
+      const matchName = p.name.toLowerCase().includes(term);
+      const matchRef = p.ref.toLowerCase().includes(term);
+      return matchKey || matchCat || matchName || matchRef;
+    });
+  });
+  
+  bar.classList.add('active');
+  pathLabel.textContent = q.charAt(0).toUpperCase() + q.slice(1);
+
+  if(matched.length === 0) {
+    container.innerHTML = `<div class="empty">No hay resultados para "${q}"</div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="grid">${matched.map(p => `
+    <div class="card" onclick="openModal('${p.name.replace(/'/g, "\\'")}', '${p.desc.replace(/'/g, "\\'")}', '${p.ref}', '${imgUrl(p.imgId)}')">
+      <div class="card-img">
+        <img src="${imgUrl(p.imgId)}" alt="${p.name}" onerror="this.src='https://placehold.co/400x500/E0E0E6/4B0082?text=Error+Imagen'">
+      </div>
+      <div class="card-body">
+        <div class="card-name">${p.name}</div>
+        <div class="btn-open">Ver Detalle</div>
+      </div>
+    </div>
+  `).join("")}</div>`;
+}
+
+function openModal(name, desc, ref, img) {
+  document.getElementById("modalImg").src = img;
+  document.getElementById("modalName").textContent = name;
+  document.getElementById("modalDesc").textContent = desc;
+  document.getElementById("modalRef").textContent = "DISPONIBLE EN STOCK • REFERENCIA: " + ref.toUpperCase();
+  document.getElementById("imageModal").classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeModal() {
+  document.getElementById("imageModal").classList.remove("active");
+  document.body.style.overflow = "auto";
+}
+
+function handleModalClick(e) { if(e.target.id === "imageModal") closeModal(); }
+
+document.getElementById("searchInput").addEventListener("keydown", e => {
+  if(e.key === "Enter") renderResults();
+});
+
+window.onload = () => renderResults();
+</script>
+</body>
+</html>
