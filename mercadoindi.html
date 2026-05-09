@@ -76,6 +76,7 @@
 
     .btn-whatsapp { width: 100%; padding: 12px; background: #25D366; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 16px; }
     
+    /* BOTÓN AÑADIR CARRITO ACHICADO */
     .add-cart-modal { 
         width: auto; 
         padding: 6px 14px; 
@@ -116,6 +117,7 @@
     .card-body { padding: 1.2rem; text-align: center; }
     .card-name { font-size: 15px; font-weight: 600; color: var(--dark-navy); margin-bottom: 12px; }
     
+    /* BOTÓN DETALLES ACHICADO */
     .btn-open { 
         display: inline-block; 
         padding: 5px 12px; 
@@ -231,7 +233,8 @@ function updateCartUI() {
 
 function finalizarPedido() {
     if(cart.length === 0) return alert("El carrito está vacío");
-    const numeroTel = "+5491162459363";
+    // Formato Argentina: 54 (País) + 9 (Móvil) + 11 (Área) + Número
+    const numeroTel = "5491162459363"; 
     let mensaje = "Hola Mercado Indigo! Me interesa comprar:%0A%0A";
     cart.forEach((item, index) => {
         mensaje += `*${index + 1}.* ${item.name} (Ref: ${item.ref.toUpperCase()})%0A`;
@@ -239,12 +242,12 @@ function finalizarPedido() {
     window.open(`https://wa.me/${numeroTel}?text=${mensaje}`, '_blank');
 }
 
-/* MOTOR DE BÚSQUEDA CORREGIDO POR TOKENS */
+/* MOTOR DE BÚSQUEDA POR TOKENS (PALABRAS SEPARADAS) */
 function renderResults() {
     const q = document.getElementById("searchInput").value.toLowerCase().trim();
     const container = document.getElementById("resultsContainer");
     
-    // Convertimos la búsqueda en tokens (palabras separadas)
+    // Convertimos la búsqueda en tokens (palabras individuales)
     const searchTerms = q.split(/\s+/).filter(t => t.length > 1);
 
     const matched = PRODUCTS.filter(p => {
@@ -267,7 +270,6 @@ function renderResults() {
     `).join("")}</div>`;
 }
 
-// Nueva función de apertura segura para evitar errores de comillas en el HTML
 function openByRef(ref) {
     const p = PRODUCTS.find(prod => prod.ref === ref);
     if(p) {
@@ -288,4 +290,3 @@ window.onload = () => renderResults();
 </script>
 </body>
 </html>
-
