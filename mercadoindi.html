@@ -231,7 +231,7 @@ function updateCartUI() {
 
 function finalizarPedido() {
     if(cart.length === 0) return alert("El carrito está vacío");
-    const numeroTel = "1162459363";
+    const numeroTel = "+5491162459363";
     let mensaje = "Hola Mercado Indigo! Me interesa comprar:%0A%0A";
     cart.forEach((item, index) => {
         mensaje += `*${index + 1}.* ${item.name} (Ref: ${item.ref.toUpperCase()})%0A`;
