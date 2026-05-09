@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mercado Índigo | Catálogo</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+    @import url('https://fonts.cdnfonts.com/css/product-sans');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+        --primary-indigo: #2C1B80;
+        --accent-turquoise: #01C8AC;
+        --warm-white: #FEFBF5;
+        --dark-navy: #231E32;
+        --secondary-turquoise: #32ACB1;
+        --petroleum-blue: #003F63;
+        --border: rgba(35, 30, 50, 0.1);
+        --radius: 16px;
+    }
+
+    body { 
+        background-color: var(--primary-indigo); 
+        color: var(--dark-navy); 
+        font-family: 'Product Sans', 'Open Sans', sans-serif; 
+        min-height: 100vh;
+    }
+    
+    .app-container {
+        background-color: var(--warm-white);
+        max-width: 1200px;
+        margin: 0 auto;
+        min-height: 100vh;
+        box-shadow: 0 0 50px rgba(0,0,0,0.3);
+    }
+
+    nav { 
+        background: var(--warm-white); 
+        border-bottom: 1px solid var(--border); 
+        padding: 0 1.5rem; 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between;
+        height: 65px; 
+        position: sticky; 
+        top: 0; 
+        z-index: 100; 
+    }
+    
+    .nav-logo { font-size: 24px; font-weight: 700; color: var(--dark-navy); letter-spacing: -0.5px; }
+    .nav-logo span { color: var(--primary-indigo); }
+
+    .cart-btn-nav { position: relative; cursor: pointer; padding: 8px; }
+    .cart-count {
+        position: absolute; top: 0; right: 0; background: var(--accent-turquoise);
+        color: var(--primary-indigo); font-size: 10px; font-weight: bold;
+        width: 18px; height: 18px; border-radius: 50%; display: flex;
+        align-items: center; justify-content: center; border: 2px solid var(--warm-white);
+    }
+
+    .cart-sidebar {
+        position: fixed; top: 0; right: -100%; width: 100%; max-width: 380px;
+        height: 100%; background: white; z-index: 10000; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+        transition: 0.4s; display: flex; flex-direction: column;
+    }
+    .cart-sidebar.active { right: 0; }
+    .cart-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    .cart-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .cart-footer { padding: 20px; border-top: 1px solid #eee; }
+    
+    .cart-item { display: flex; gap: 15px; margin-bottom: 15px; align-items: center; border-bottom: 1px solid #f9f9f9; padding-bottom: 10px; }
+    .cart-item img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+    .remove-btn { color: #ff4d4d; font-size: 12px; cursor: pointer; text-decoration: underline; }
+
+    .btn-whatsapp { width: 100%; padding: 12px; background: #25D366; color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 16px; }
+    
+    .add-cart-modal { 
+        width: auto; 
+        padding: 6px 14px; 
+        background: var(--primary-indigo); 
+        color: white; 
+        border: none; 
+        border-radius: 8px; 
+        margin-top: 15px; 
+        cursor: pointer; 
+        font-family: inherit; 
+        font-weight: bold; 
+        font-size: 12px;
+    }
+
+    .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; }
+    .overlay.active { display: block; }
+
+    .hero { background: var(--accent-turquoise); padding: 3.5rem 1.5rem; color: var(--dark-navy); text-align: center; }
+    .hero h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: var(--primary-indigo); letter-spacing: -1px; }
+
+    .search-outer { 
+        background: white; border-radius: 30px; display: flex; 
+        max-width: 550px; margin: 1.5rem auto; overflow: hidden; 
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #eee;
+    }
+    #searchInput { flex: 1; border: none; outline: none; padding: 1rem 1.5rem; font-size: 16px; font-family: inherit; color: var(--dark-navy); }
+    .search-btn { background: var(--petroleum-blue); color: white; border: none; padding: 0 1.8rem; cursor: pointer; font-weight: 600; font-family: inherit; }
+
+    .main { padding: 2.5rem 1.5rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
+    
+    .card { background: white; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: 0.4s; cursor: pointer; }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(44, 27, 128, 0.1); border-color: var(--accent-turquoise); }
+    
+    .card-img { height: 260px; background: #fdfdfd; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; } 
+    
+    .card-body { padding: 1.2rem; text-align: center; }
+    .card-name { font-size: 15px; font-weight: 600; color: var(--dark-navy); margin-bottom: 12px; }
+    
+    .btn-open { 
+        display: inline-block; 
+        padding: 5px 12px; 
+        background: var(--petroleum-blue); 
+        color: white; 
+        border-radius: 6px; 
+        font-size: 10px; 
+        font-weight: 700; 
+        text-transform: uppercase; 
+    }
+
+    .modal { display: none; position: fixed; z-index: 9999; top: 0; left: 0; width: 100%; height: 100%; background: rgba(35, 30, 50, 0.95); align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+    .modal.active { display: flex; }
+    .modal-inner { position: relative; max-width: 480px; width: 100%; background: white; border-radius: 24px; overflow: hidden; }
+    
+    .modal-img-wrap { background:#fcfcfc; height: 350px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .modal-img-wrap img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+    .modal-info { padding: 1.5rem; text-align: center; }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: var(--warm-white); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; z-index: 10; }
+    .empty { text-align: center; padding: 6rem 1rem; grid-column: 1/-1; color: var(--primary-indigo); font-weight: 600; font-size: 18px; }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="toggleCart()"></div>
+
+<div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header"><h3>Tu Pedido</h3><span onclick="toggleCart()" style="cursor:pointer; font-weight:bold">✕</span></div>
+    <div class="cart-body" id="cartItemsList"></div>
+    <div class="cart-footer"><button class="btn-whatsapp" onclick="finalizarPedido()">Finalizar Pedido por WhatsApp</button></div>
+</div>
+
+<div class="app-container">
+    <nav>
+        <div class="nav-logo">MERCADO <span>ÍNDIGO</span></div>
+        <div class="cart-btn-nav" onclick="toggleCart()">
+            <span style="font-size:24px">🛒</span>
+            <div class="cart-count" id="cartCount">0</div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Catálogo de Prendas</h1>
+        <div class="search-outer">
+            <input type="text" id="searchInput" placeholder="Ej: campera de cuero" autocomplete="off">
+            <button class="search-btn" onclick="renderResults()">Buscar</button>
+        </div>
+    </section>
+
+    <main class="main"><div id="resultsContainer"></div></main>
+</div>
+
+<div id="imageModal" class="modal" onclick="handleModalClick(event)">
+    <div class="modal-inner">
+        <div class="modal-close" onclick="closeModal()">✕</div>
+        <div class="modal-img-wrap"><img id="modalImg" src=""></div>
+        <div class="modal-info">
+            <h2 id="modalName" style="color:var(--primary-indigo); font-weight:700; margin-bottom:12px; font-size:20px;"></h2>
+            <p id="modalDesc" style="font-size:14px; color:var(--dark-navy); line-height:1.5;"></p>
+            <div id="modalRef" style="margin-top:10px; display:inline-block; padding:4px 10px; background:var(--accent-turquoise); color:var(--primary-indigo); font-size:11px; font-weight:700; border-radius:8px;"></div>
+            <br>
+            <button id="addToCartBtn" class="add-cart-modal">Añadir al Carrito</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let cart = [];
+
+function imgUrl(id) { 
+    return `https://lh3.googleusercontent.com/u/0/d/${id}`; 
+}
+
+const PRODUCTS = [
+    { ref:"1a", keys:["campera","cuero"], cat:"Camperas", name:"Campera de Cuero Moto Racing", imgId:"1RERvwtnFrqMKwW8VQHhSLCmCR_JbZGKh", desc:"Campera de cuero importada estilo Moto Racing Hombre." },
+    { ref:"2b", keys:["campera","pluma"], cat:"Camperas", name:"Campera de Hombre Pluma", imgId:"1SUKGkoJRxNgPBwM8t5Q4VPM7U_BFCb21", desc:"Campera De Plumas Ultraliviana Hombre 100% Pluma Ligero." },
+    { ref:"3c", keys:["pantalon","jean"], cat:"Pantalones", name:"Jean Indigo Denim", imgId:"1GYhfqPYjDSxFzNKf3KGvIHJrYLRFfozE", desc:"Clásico Denim de alta resistencia con acabado premium." },
+    { ref:"4a", keys:["remera","oversize"], cat:"Remeras", name:"Remera Oversize Premium", imgId:"1YIAEHR3fKTfyxzKblRD20Pt2DFBAsN59", desc:"Calidad de algodón 100%, corte holgado contemporáneo." },
+    { ref:"4b", keys:["remera","thrasher"], cat:"Remeras", name:"Remera Thrasher Style", imgId:"1RCUf7kNrZ6ggs31ppAZGdExgD5k2jJ21", desc:"Estilo urbano inspirado en la cultura skate." },
+    { ref:"5a", keys:["zapatillas","adidas"], cat:"Zapatillas", name:"Zapatillas Urban — Adidas", imgId:"1oKWGMjxWSbHElGq6uWSEuWdnFTQ_ll0q", desc:"Diseño ligero y deportivo para el día a día." },
+    { ref:"5b", keys:["zapatillas","nike"], cat:"Zapatillas", name:"Zapatillas Urban — Nike", imgId:"1fXw_zKHPOSa_yimzwZeHQcj2nCO47gOl", desc:"Máxima comodidad y tracción con tecnología Nike." }
+];
+
+function toggleCart() {
+    document.getElementById('cartSidebar').classList.toggle('active');
+    document.getElementById('overlay').classList.toggle('active');
+}
+
+function addToCart(ref) {
+    const product = PRODUCTS.find(p => p.ref === ref);
+    if(product) {
+        cart.push(product);
+        updateCartUI();
+        closeModal();
+    }
+}
+
+function removeFromCart(index) {
+    cart.splice(index, 1);
+    updateCartUI();
+}
+
+function updateCartUI() {
+    const list = document.getElementById('cartItemsList');
+    const count = document.getElementById('cartCount');
+    count.innerText = cart.length;
+    list.innerHTML = cart.length === 0 ? '<p style="text-align:center; color:#999">Vacío</p>' : '';
+    cart.forEach((item, index) => {
+        list.innerHTML += `<div class="cart-item"><img src="${imgUrl(item.imgId)}"><div class="cart-item-info"><h4>${item.name}</h4><span class="remove-btn" onclick="removeFromCart(${index})">Eliminar</span></div></div>`;
+    });
+}
+
+function finalizarPedido() {
+    if(cart.length === 0) return alert("El carrito está vacío");
+    const numeroTel = "1162459363";
+    let mensaje = "Hola Mercado Indigo! Me interesa comprar:%0A%0A";
+    cart.forEach((item, index) => {
+        mensaje += `*${index + 1}.* ${item.name} (Ref: ${item.ref.toUpperCase()})%0A`;
+    });
+    window.open(`https://wa.me/${numeroTel}?text=${mensaje}`, '_blank');
+}
+
+/* MOTOR DE BÚSQUEDA CORREGIDO POR TOKENS */
+function renderResults() {
+    const q = document.getElementById("searchInput").value.toLowerCase().trim();
+    const container = document.getElementById("resultsContainer");
+    
+    // Convertimos la búsqueda en tokens (palabras separadas)
+    const searchTerms = q.split(/\s+/).filter(t => t.length > 1);
+
+    const matched = PRODUCTS.filter(p => {
+        if (!q) return true;
+        // El producto debe contener TODAS las palabras buscadas
+        return searchTerms.every(term => 
+            p.name.toLowerCase().includes(term) || 
+            p.keys.some(k => k.toLowerCase().includes(term)) || 
+            p.cat.toLowerCase().includes(term)
+        );
+    });
+    
+    if(matched.length === 0) { container.innerHTML = `<div class="empty">Sin resultados</div>`; return; }
+
+    container.innerHTML = `<div class="grid">${matched.map(p => `
+        <div class="card" onclick="openByRef('${p.ref}')">
+            <div class="card-img"><img src="${imgUrl(p.imgId)}" onerror="this.src='https://placehold.co/400x500?text=Error'"></div>
+            <div class="card-body"><div class="card-name">${p.name}</div><div class="btn-open">Detalles</div></div>
+        </div>
+    `).join("")}</div>`;
+}
+
+// Nueva función de apertura segura para evitar errores de comillas en el HTML
+function openByRef(ref) {
+    const p = PRODUCTS.find(prod => prod.ref === ref);
+    if(p) {
+        document.getElementById("modalImg").src = imgUrl(p.imgId);
+        document.getElementById("modalName").textContent = p.name;
+        document.getElementById("modalDesc").textContent = p.desc;
+        document.getElementById("modalRef").textContent = "CÓDIGO: " + p.ref.toUpperCase();
+        document.getElementById("addToCartBtn").onclick = () => addToCart(p.ref);
+        document.getElementById("imageModal").classList.add("active");
+        document.body.style.overflow = "hidden";
+    }
+}
+
+function closeModal() { document.getElementById("imageModal").classList.remove("active"); document.body.style.overflow = "auto"; }
+function handleModalClick(e) { if(e.target.id === "imageModal") closeModal(); }
+document.getElementById("searchInput").addEventListener("keydown", e => { if(e.key === "Enter") renderResults(); });
+window.onload = () => renderResults();
+</script>
+</body>
+</html>
+
