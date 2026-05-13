@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Meta viewport para control de escala en móviles -->
-  <title>Animal Legends - Scroll Horizontal Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animal Legends - Final Responsive Edition</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
@@ -11,95 +11,165 @@
     }
     .tema-hielo { --primary: #00d2ff; --secondary: #003366; --accent: #ade8f4; --bg: #03045e; }
 
+    /* Estructura Responsiva Base */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       background-color: var(--bg); color: #fff;
       display: flex; flex-direction: column; align-items: center; 
-      padding: 10px; 
-      min-height: 100vh; /* Altura mínima adaptable */
+      padding: 10px; min-height: 100vh;
       transition: background 0.5s ease;
+      overflow-x: hidden;
     }
 
-    /* --- CONTENEDOR DE LA APP --- */
+    /* Pantalla de Inicio Adaptable */
+    #overlay-inicio {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 52, 96, 0.98); z-index: 3000;
+      display: flex; justify-content: center; align-items: center;
+      padding: 20px;
+    }
+
+    .menu-inicio-card {
+      background: var(--secondary); padding: 2rem; border-radius: 30px;
+      border: 3px solid var(--primary); text-align: center; 
+      width: 100%; max-width: 500px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+    }
+
+    .logo-inicio {
+      max-width: 100%; height: auto; max-height: 250px;
+      object-fit: contain; border-radius: 15px; margin-bottom: 1.5rem;
+      filter: drop-shadow(0 0 10px var(--accent));
+    }
+
+    /* Panel de Audio */
+    .audio-container {
+      position: relative; margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 20px; border-radius: 50px;
+      display: flex; align-items: center; gap: 15px;
+      backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2);
+      z-index: 100;
+    }
+
+    .visualizer { display: flex; align-items: flex-end; gap: 3px; height: 18px; }
+    .bar { width: 3px; background: var(--accent); height: 30%; transition: 0.2s; }
+    .animating .bar { animation: wave 0.6s infinite alternate; }
+    @keyframes wave { from { height: 30%; } to { height: 100%; } }
+
+    /* App Principal */
     #app {
-      background: var(--secondary); border-radius: 30px; 
-      padding: 1.5rem;
-      width: 95%; /* Ancho porcentual para responsividad */
-      max-width: 1100px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+      background: var(--secondary); border-radius: 35px; padding: 1.5rem;
+      width: 100%; max-width: 1200px; 
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
       display: none; flex-direction: column; align-items: center;
     }
 
-    /* --- ÁREA DE DESPLAZAMIENTO HORIZONTAL --- */
-    /* Este contenedor permite que el tablero sea más ancho que la pantalla en celulares */
-    .tablero-wrapper {
-      width: 100%;
-      overflow-x: auto; /* Habilita la barra de desplazamiento horizontal */
-      padding: 10px 0;
-      -webkit-overflow-scrolling: touch; /* Suavidad de scroll en iOS */
+    .header-main h1 { font-size: clamp(1.5rem, 5vw, 3rem); text-shadow: 3px 3px 0px var(--primary); text-align: center; }
+
+    /* Stats Flexbox */
+    #stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 1rem 0; width: 100%; }
+    .stat-box {
+      border: 2px solid var(--primary); border-radius: 15px; padding: 0.8rem;
+      flex: 1 1 100px; text-align: center; background: rgba(0,0,0,0.2);
     }
 
-    /* Personalización de la barra de scroll */
-    .tablero-wrapper::-webkit-scrollbar {
-      height: 8px;
+    /* Tablero con Scroll Horizontal para Móviles */
+    .tablero-wrapper {
+      width: 100%; overflow-x: auto; padding: 15px 0;
+      -webkit-overflow-scrolling: touch;
     }
-    .tablero-wrapper::-webkit-scrollbar-thumb {
-      background: var(--primary);
-      border-radius: 10px;
-    }
+    .tablero-wrapper::-webkit-scrollbar { height: 6px; }
+    .tablero-wrapper::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
     #tablero { 
       display: grid; 
-      /* Definimos un ancho mínimo para forzar el scroll en pantallas pequeñas */
-      grid-template-columns: repeat(4, minmax(140px, 1fr)); 
-      gap: 15px; 
-      min-width: 600px; /* Asegura que las cartas mantengan un tamaño visible */
+      grid-template-columns: repeat(4, minmax(140px, 220px)); 
+      gap: 15px; justify-content: center; 
+      min-width: 620px; /* Forzamos ancho mínimo para activar scroll en móviles */
       margin: 0 auto;
     }
 
-    /* --- CARTAS --- */
+    /* Cartas y Animaciones */
     .carta { aspect-ratio: 1; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
     .carta.flipped { transform: rotateY(180deg); }
-    .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 10px; border: 2px solid var(--accent); overflow: hidden; }
-    .face img { width: 100%; height: 100%; object-fit: contain; } /* Imágenes fluidas */
+    .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; border: 2px solid var(--accent); overflow: hidden; }
+    .face img { width: 100%; height: 100%; object-fit: contain; }
     .front { transform: rotateY(180deg); background: rgba(255,255,255,0.05); }
     .back { background: var(--secondary); }
 
-    /* --- RESTO DE ELEMENTOS (STATS, BOTONES, ETC) --- */
-    #stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 1rem 0; width: 100%; }
-    .stat-box { border: 2px solid var(--primary); border-radius: 12px; padding: 10px; flex: 1 1 100px; text-align: center; }
-    .btn { padding: 0.8rem 1.2rem; border-radius: 50px; border: none; cursor: pointer; font-weight: 800; transition: 0.3s; }
-    .btn-explorar { background: var(--primary); color: white; }
+    .success-match { animation: pulse-success 0.8s ease-out; border: 4px solid #2ecc71 !important; }
+    @keyframes pulse-success {
+      0% { transform: scale(1) rotateY(180deg); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+      50% { transform: scale(1.05) rotateY(180deg); box-shadow: 0 0 20px 10px rgba(46, 204, 113, 0.4); }
+      100% { transform: scale(1) rotateY(180deg); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+    }
+
+    .points-float {
+      position: absolute; top: 50%; left: 50%; color: var(--accent);
+      font-weight: 900; font-size: 2.5rem; text-shadow: 3px 3px 10px #000;
+      pointer-events: none; z-index: 100;
+      animation: float-up-fixed 1.2s ease-out forwards; 
+    }
+    @keyframes float-up-fixed {
+      0% { opacity: 1; transform: translate(-50%, -50%) rotateY(180deg) scale(1); }
+      100% { opacity: 0; transform: translate(-50%, -180%) rotateY(180deg) scale(1.5); }
+    }
+
+    /* Confeti */
+    .confetti { position: fixed; width: 10px; height: 10px; z-index: 5000; top: -10px; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
+
+    /* Botones */
+    .btn { padding: 0.8rem 1.5rem; border-radius: 50px; border: none; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
+    .btn-explorar { background: var(--primary); color: white; box-shadow: 0 4px 15px var(--primary); }
     .btn-gris { background: rgba(255,255,255,0.1); color: #fff; }
 
-    #overlay-inicio { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 52, 96, 0.98); z-index: 3000; display: flex; justify-content: center; align-items: center; }
-    .menu-inicio-card { background: var(--secondary); padding: 2rem; border-radius: 25px; border: 3px solid var(--primary); text-align: center; width: 90%; max-width: 500px; }
-    
-    .points-float { position: absolute; top: 50%; left: 50%; color: var(--accent); font-weight: 900; font-size: 1.8rem; animation: float-up 1.2s ease-out forwards; }
-    @keyframes float-up { 0% { opacity: 1; transform: translate(-50%, -50%) rotateY(180deg); } 100% { opacity: 0; transform: translate(-50%, -150%) rotateY(180deg); } }
+    #modal-victoria {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.95); z-index: 4000; justify-content: center; align-items: center; 
+      text-align: center; padding: 20px;
+    }
 
     .ocultar { display: none !important; }
   </style>
 </head>
 <body>
 
+  <!-- INICIO -->
   <div id="overlay-inicio">
     <div class="menu-inicio-card">
-      <img src="https://lh3.googleusercontent.com/d/16kPOn6omfFbjglvpe-9Bv_DAiLq0VONy" style="max-width:100%; height:auto; max-height:200px;" alt="Logo">
-      <h1 style="color: var(--accent); margin: 10px 0;">ANIMAL LEGENDS</h1>
-      <select id="mundo-select-inicio" style="width:100%; padding:10px; margin-bottom:1rem; background:var(--bg); color:#fff; border:2px solid var(--accent); border-radius:10px;">
+      <img src="https://lh3.googleusercontent.com/d/16kPOn6omfFbjglvpe-9Bv_DAiLq0VONy" class="logo-inicio" alt="Logo">
+      <h1 style="color: var(--accent); font-size: 1.8rem; margin-bottom: 10px;">ANIMAL LEGENDS</h1>
+      <div style="text-align:left; background:rgba(0,0,0,0.3); padding:15px; border-radius:15px; margin-bottom: 1.5rem; font-size: 0.9rem;">
+        <p style="color:var(--primary); font-weight:bold;">REGLAS:</p>
+        <p>• 8 Pares totales (500P c/u).</p>
+        <p>• <span style="color:var(--accent);">2 Leyendas Bonus (1500P).</span></p>
+        <p>• ¡Récord: menos de 1 minuto!</p>
+      </div>
+      <select id="mundo-select-inicio" style="width:100%; padding:12px; margin-bottom:1.5rem; background:var(--bg); color:#fff; border:2px solid var(--accent); border-radius:12px; font-weight:bold;" onchange="actualizarClaseFondo()">
         <option value="hibrido">MUNDO HÍBRIDO</option>
         <option value="hielo">MUNDO DE HIELO</option>
       </select>
-      <button class="btn btn-explorar" style="width:100%;" onclick="comenzarJuego()">INICIAR JUEGO</button>
+      <button class="btn btn-explorar" style="width:100%;" onclick="comenzarJuego()">INICIAR EXPLORACIÓN</button>
     </div>
   </div>
 
+  <!-- JUEGO -->
   <div id="app">
+    <div class="audio-container">
+      <div class="visualizer" id="visualizer">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+      </div>
+      <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5" style="width: 50px;">
+      <button onclick="toggleMusic()" style="background:none; border:none; color:white; cursor:pointer;">
+        <i class="fa-solid fa-play" id="music-icon"></i>
+      </button>
+    </div>
+
     <div class="header-main">
-      <h1 id="titulo-mundo" style="font-size: 1.8rem; text-align: center;">ANIMAL LEGENDS</h1>
+      <h1 id="titulo-mundo">ANIMAL LEGENDS</h1>
     </div>
 
     <div id="stats">
@@ -113,34 +183,89 @@
       <button class="btn btn-gris" onclick="volverAlMenu()">MENÚ</button>
     </div>
 
-    <!-- CONTENEDOR CON SCROLL HORIZONTAL -->
     <div class="tablero-wrapper">
       <div id="tablero"></div>
+    </div>
+  </div>
+
+  <!-- VICTORIA -->
+  <div id="modal-victoria">
+    <div class="menu-inicio-card">
+      <h2 id="msg-felicitacion" style="color:var(--accent); font-size:2rem;"></h2>
+      <p id="stats-finales" style="margin: 2rem 0; white-space: pre-line; line-height: 1.6;"></p>
+      <button class="btn btn-explorar" onclick="cerrarModalYReiniciar()" style="width:100%; margin-bottom:10px;">VOLVER A JUGAR</button>
+      <button class="btn btn-gris" onclick="volverAlMenu()" style="width:100%;">IR AL MENÚ</button>
     </div>
   </div>
 
   <audio id="game-audio" loop src="https://stream.zeno.fm/0r0xa792kwzuv"></audio>
 
   <script>
+    const audio = document.getElementById('game-audio');
+    const musicIcon = document.getElementById('music-icon');
+    const visualizer = document.getElementById('visualizer');
+    
     const DORSO_HIBRIDO = '1ewu_QyVQel-EWA5DHW93RYR6G9vJ2d6_';
     const DORSO_HIELO = '18y--weyWyTsT_SdAbMHcZuUJNBuWAWuI';
+    
     let mazo = [], leyendas = [], primera = null, segunda = null, bloqueado = false;
     let paresEnc = 0, puntos = 0, tiempo = 0, cronoIdx;
 
     const MUNDOS = {
-      hibrido: { dorso: DORSO_HIBRIDO, imagenes: { 'a': '1lSewG0HFoXu7pkuZnSfk3eYGXZpJyArl', 'b': '18r503w24-xeY7ls8DjLW-H72OgRsiKIw', 'c': '1GuBzYluK2OUufoM7Zal4VrqfTDL4Pg-A', 'd': '1VK_ZmemKE_ZFAxnhMvL9LBMtadzpSv-A', 'e': '1OpGi0QGcZFPM6UIVV3ko9TQ8RuN0YNsB', 'f': '1u5Z2_06-8xEze1LVAEHPCc8QFiquNxXQ', 'g': '17v_NxLVaJwEy9fnn3V2Y572BNn1UmpC_', 'h': '1LpsdXZ-jCMHXXSNYeNprG3NxLQtTZAiu' } },
-      hielo: { dorso: DORSO_HIELO, imagenes: { '1': '1R8ABQMznCdExQs8D50_-BzNEngU1C-KN', '2': '1unb5405SydYtd0biiV5UnJ532psHoEjX', '3': '1qJan5z_aQxgAEKV5iJ380AS1L98plnvs', '4': '1uoMw2qE_sJKACPrG3weU24Joa0YLs3hN', '5': '1NlBGIN6qDJFmN1Jo9JFrEIlFVJHHa8dH', '6': '1DIRrECXC7-X4IFt27Ko9cmzGD-UcZecF', '7': '1wGg2nRf_UvX3PUQFNJxb0N7aEAOObJnD', '8': '1yRUqU4UXtUkhj4xIZwYz7T9T_Qny5o6G' } }
+      hibrido: { 
+        titulo: "Global Hybrid Series", dorso: DORSO_HIBRIDO,
+        imagenes: { 
+          'a': '1lSewG0HFoXu7pkuZnSfk3eYGXZpJyArl', 'b': '18r503w24-xeY7ls8DjLW-H72OgRsiKIw', 
+          'c': '1GuBzYluK2OUufoM7Zal4VrqfTDL4Pg-A', 'd': '1VK_ZmemKE_ZFAxnhMvL9LBMtadzpSv-A', 
+          'e': '1OpGi0QGcZFPM6UIVV3ko9TQ8RuN0YNsB', 'f': '1u5Z2_06-8xEze1LVAEHPCc8QFiquNxXQ', 
+          'g': '17v_NxLVaJwEy9fnn3V2Y572BNn1UmpC_', 'h': '1LpsdXZ-jCMHXXSNYeNprG3NxLQtTZAiu' 
+        } 
+      },
+      hielo: { 
+        titulo: "Cartas de Hielo", dorso: DORSO_HIELO,
+        imagenes: { '1': '1R8ABQMznCdExQs8D50_-BzNEngU1C-KN', '2': '1unb5405SydYtd0biiV5UnJ532psHoEjX', '3': '1qJan5z_aQxgAEKV5iJ380AS1L98plnvs', '4': '1uoMw2qE_sJKACPrG3weU24Joa0YLs3hN', '5': '1NlBGIN6qDJFmN1Jo9JFrEIlFVJHHa8dH', '6': '1DIRrECXC7-X4IFt27Ko9cmzGD-UcZecF', '7': '1wGg2nRf_UvX3PUQFNJxb0N7aEAOObJnD', '8': '1yRUqU4UXtUkhj4xIZwYz7T9T_Qny5o6G' } 
+      }
     };
 
+    function actualizarClaseFondo() {
+      const m = document.getElementById('mundo-select-inicio').value;
+      document.body.className = m === 'hielo' ? 'tema-hielo' : '';
+    }
+
+    function toggleMusic() {
+      if (audio.paused) { audio.play().catch(()=>{}); musicIcon.className = "fa-solid fa-pause"; visualizer.classList.add('animating'); }
+      else { audio.pause(); musicIcon.className = "fa-solid fa-play"; visualizer.classList.remove('animating'); }
+    }
+
+    document.getElementById('vol-slider').addEventListener('input', (e) => { audio.volume = e.target.value; });
+
     function comenzarJuego() {
+      const m = document.getElementById('mundo-select-inicio').value;
+      document.getElementById('titulo-mundo').innerText = MUNDOS[m].titulo;
       document.getElementById('overlay-inicio').classList.add('ocultar');
       document.getElementById('app').style.display = 'flex';
+      if(audio.paused) toggleMusic();
       mezclarMazo();
       iniciarCrono();
     }
 
+    function lanzarConfeti() {
+      const colores = ['#f1c40f', '#e94560', '#2ecc71', '#3498db'];
+      for (let i = 0; i < 80; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
+        confetti.style.animationDuration = (Math.random() * 2 + 1) + 's';
+        document.body.appendChild(confetti);
+        setTimeout(() => confetti.remove(), 3000);
+      }
+    }
+
     function mezclarMazo() {
-      puntos = 0; paresEnc = 0; tiempo = 0;
+      puntos = 0; paresEnc = 0; tiempo = 0; primera = null; segunda = null; bloqueado = false;
+      document.getElementById('val-puntos').innerText = "0";
+      document.getElementById('val-pares').innerText = "0/8";
       const mKey = document.getElementById('mundo-select-inicio').value;
       const config = MUNDOS[mKey];
       const keys = Object.keys(config.imagenes);
@@ -164,14 +289,20 @@
       segunda = c; bloqueado = true;
       if(primera.dataset.id === segunda.dataset.id) {
         paresEnc++;
-        const valor = leyendas.includes(primera.dataset.id) ? 1500 : 500;
-        puntos += valor;
-        const float = document.createElement('div');
-        float.className = 'points-float'; float.innerText = valor + "P";
-        segunda.appendChild(float);
-        document.getElementById('val-puntos').innerText = puntos;
+        const val = leyendas.includes(primera.dataset.id) ? 1500 : 500;
+        puntos += val;
+        const p1 = primera, p2 = segunda;
+        setTimeout(() => {
+          p1.querySelector('.face.front').classList.add('success-match');
+          p2.querySelector('.face.front').classList.add('success-match');
+          const float = document.createElement('div');
+          float.className = 'points-float'; float.innerText = val + "P";
+          p2.appendChild(float);
+        }, 300);
         document.getElementById('val-pares').innerText = `${paresEnc}/8`;
+        document.getElementById('val-puntos').innerText = puntos;
         primera = segunda = null; bloqueado = false;
+        if(paresEnc === 8) setTimeout(finalizarJuego, 1200);
       } else {
         setTimeout(() => { primera.classList.remove('flipped'); segunda.classList.remove('flipped'); primera = segunda = null; bloqueado = false; }, 700);
       }
@@ -181,13 +312,28 @@
       clearInterval(cronoIdx);
       cronoIdx = setInterval(() => {
         tiempo++;
-        let m = Math.floor(tiempo / 60).toString().padStart(2, '0');
-        let s = (tiempo % 60).toString().padStart(2, '0');
+        let m = Math.floor(tiempo / 60).toString().padStart(2, '0'), s = (tiempo % 60).toString().padStart(2, '0');
         document.getElementById('val-tiempo').innerText = `${m}:${s}`;
       }, 1000);
     }
 
+    function finalizarJuego() {
+      clearInterval(cronoIdx); lanzarConfeti();
+      const modal = document.getElementById('modal-victoria');
+      const msg = document.getElementById('msg-felicitacion');
+      const stats = document.getElementById('stats-finales');
+      if(tiempo < 60) {
+        msg.innerText = "¡TIEMPO RÉCORD!";
+        stats.innerText = `¡Felicidades, en menos de un minuto!\nTiempo: ${tiempo}s | Puntos: ${puntos}P`;
+      } else {
+        msg.innerText = "¡NIVEL COMPLETADO!";
+        stats.innerText = `¡Felicidades! Has terminado este mundo.\nTiempo: ${Math.floor(tiempo/60)}m ${tiempo%60}s | Puntos: ${puntos}P\n\n¡Explora otros mundos en el Menú!`;
+      }
+      modal.style.display = 'flex';
+    }
+
     function volverAlMenu() { location.reload(); }
+    function cerrarModalYReiniciar() { document.getElementById('modal-victoria').style.display = 'none'; mezclarMazo(); iniciarCrono(); }
   </script>
 </body>
 </html>
