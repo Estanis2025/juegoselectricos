@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Animal Legends - Final Responsive Edition</title>
+  <title>Animal Legends - Master Edition</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
@@ -11,87 +11,64 @@
     }
     .tema-hielo { --primary: #00d2ff; --secondary: #003366; --accent: #ade8f4; --bg: #03045e; }
 
-    /* Estructura Responsiva Base */
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
       background-color: var(--bg); color: #fff;
       display: flex; flex-direction: column; align-items: center; 
-      padding: 10px; min-height: 100vh;
-      transition: background 0.5s ease;
+      min-height: 100vh; transition: background 0.5s ease;
       overflow-x: hidden;
     }
 
-    /* Pantalla de Inicio Adaptable */
-    #overlay-inicio {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(15, 52, 96, 0.98); z-index: 3000;
-      display: flex; justify-content: center; align-items: center;
-      padding: 20px;
+    /* --- REPRODUCTOR GLOBAL PERSISTENTE --- */
+    .audio-global {
+      position: fixed; top: 15px; right: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 18px; border-radius: 50px;
+      display: flex; align-items: center; gap: 12px;
+      backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);
+      z-index: 5000; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
+    .visualizer { display: flex; align-items: flex-end; gap: 3px; height: 16px; }
+    .bar { width: 3px; background: var(--accent); height: 30%; transition: 0.2s; }
+    .animating .bar { animation: wave 0.6s infinite alternate; }
+    @keyframes wave { from { height: 30%; } to { height: 100%; } }
+    #vol-slider { width: 60px; accent-color: var(--primary); cursor: pointer; }
 
+    /* --- SECCIONES (SPA) --- */
+    .view-section {
+      width: 100%; display: flex; flex-direction: column; align-items: center;
+      padding: 20px; min-height: 100vh; justify-content: center;
+    }
+    #app { display: none; width: 100%; max-width: 1200px; }
+
+    /* --- MENÚ INICIAL --- */
     .menu-inicio-card {
-      background: var(--secondary); padding: 2rem; border-radius: 30px;
+      background: var(--secondary); padding: 2.5rem; border-radius: 30px;
       border: 3px solid var(--primary); text-align: center; 
-      width: 100%; max-width: 500px;
-      box-shadow: 0 0 40px rgba(0,0,0,0.5);
+      width: 95%; max-width: 500px; box-shadow: 0 0 40px rgba(0,0,0,0.5);
     }
-
     .logo-inicio {
-      max-width: 100%; height: auto; max-height: 250px;
+      max-width: 100%; height: auto; max-height: 220px;
       object-fit: contain; border-radius: 15px; margin-bottom: 1.5rem;
       filter: drop-shadow(0 0 10px var(--accent));
     }
 
-    /* Panel de Audio */
-    .audio-container {
-      position: relative; margin-bottom: 15px;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px 20px; border-radius: 50px;
-      display: flex; align-items: center; gap: 15px;
-      backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2);
-      z-index: 100;
-    }
-
-    .visualizer { display: flex; align-items: flex-end; gap: 3px; height: 18px; }
-    .bar { width: 3px; background: var(--accent); height: 30%; transition: 0.2s; }
-    .animating .bar { animation: wave 0.6s infinite alternate; }
-    @keyframes wave { from { height: 30%; } to { height: 100%; } }
-
-    /* App Principal */
-    #app {
-      background: var(--secondary); border-radius: 35px; padding: 1.5rem;
-      width: 100%; max-width: 1200px; 
-      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
-      display: none; flex-direction: column; align-items: center;
-    }
-
-    .header-main h1 { font-size: clamp(1.5rem, 5vw, 3rem); text-shadow: 3px 3px 0px var(--primary); text-align: center; }
-
-    /* Stats Flexbox */
-    #stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 1rem 0; width: 100%; }
-    .stat-box {
-      border: 2px solid var(--primary); border-radius: 15px; padding: 0.8rem;
-      flex: 1 1 100px; text-align: center; background: rgba(0,0,0,0.2);
-    }
-
-    /* Tablero con Scroll Horizontal para Móviles */
+    /* --- TABLERO RESPONSIVE CON SCROLL --- */
     .tablero-wrapper {
       width: 100%; overflow-x: auto; padding: 15px 0;
       -webkit-overflow-scrolling: touch;
     }
-    .tablero-wrapper::-webkit-scrollbar { height: 6px; }
+    .tablero-wrapper::-webkit-scrollbar { height: 8px; }
     .tablero-wrapper::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
 
     #tablero { 
-      display: grid; 
-      grid-template-columns: repeat(4, minmax(140px, 220px)); 
-      gap: 15px; justify-content: center; 
-      min-width: 620px; /* Forzamos ancho mínimo para activar scroll en móviles */
-      margin: 0 auto;
+      display: grid; grid-template-columns: repeat(4, minmax(140px, 220px)); 
+      gap: 15px; justify-content: center; min-width: 620px; margin: 0 auto;
     }
 
-    /* Cartas y Animaciones */
+    /* --- CARTAS Y ANIMACIONES --- */
     .carta { aspect-ratio: 1; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
     .carta.flipped { transform: rotateY(180deg); }
     .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; border: 2px solid var(--accent); overflow: hidden; }
@@ -101,9 +78,9 @@
 
     .success-match { animation: pulse-success 0.8s ease-out; border: 4px solid #2ecc71 !important; }
     @keyframes pulse-success {
-      0% { transform: scale(1) rotateY(180deg); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+      0% { transform: scale(1) rotateY(180deg); }
       50% { transform: scale(1.05) rotateY(180deg); box-shadow: 0 0 20px 10px rgba(46, 204, 113, 0.4); }
-      100% { transform: scale(1) rotateY(180deg); box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+      100% { transform: scale(1) rotateY(180deg); }
     }
 
     .points-float {
@@ -117,14 +94,15 @@
       100% { opacity: 0; transform: translate(-50%, -180%) rotateY(180deg) scale(1.5); }
     }
 
-    /* Confeti */
-    .confetti { position: fixed; width: 10px; height: 10px; z-index: 5000; top: -10px; animation: fall linear forwards; }
+    /* --- CONFETI --- */
+    .confetti { position: fixed; width: 10px; height: 10px; z-index: 6000; top: -10px; animation: fall linear forwards; }
     @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
 
-    /* Botones */
+    /* --- BOTONES Y STATS --- */
+    .stat-box { border: 2px solid var(--primary); border-radius: 15px; padding: 10px; flex: 1; text-align: center; background: rgba(0,0,0,0.2); }
     .btn { padding: 0.8rem 1.5rem; border-radius: 50px; border: none; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
     .btn-explorar { background: var(--primary); color: white; box-shadow: 0 4px 15px var(--primary); }
-    .btn-gris { background: rgba(255,255,255,0.1); color: #fff; }
+    .btn-gris { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
 
     #modal-victoria {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -137,64 +115,63 @@
 </head>
 <body>
 
-  <!-- INICIO -->
-  <div id="overlay-inicio">
+  <!-- REPRODUCTOR GLOBAL -->
+  <div class="audio-global">
+    <div class="visualizer" id="visualizer">
+      <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    </div>
+    <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5">
+    <button onclick="toggleMusic()" style="background:none; border:none; color:white; cursor:pointer;">
+      <i class="fa-solid fa-play" id="music-icon"></i>
+    </button>
+  </div>
+
+  <!-- SECCIÓN: MENÚ -->
+  <section id="overlay-inicio" class="view-section">
     <div class="menu-inicio-card">
       <img src="https://lh3.googleusercontent.com/d/16kPOn6omfFbjglvpe-9Bv_DAiLq0VONy" class="logo-inicio" alt="Logo">
-      <h1 style="color: var(--accent); font-size: 1.8rem; margin-bottom: 10px;">ANIMAL LEGENDS</h1>
+      <h1 style="color: var(--accent); margin-bottom: 1rem;">ANIMAL LEGENDS</h1>
       <div style="text-align:left; background:rgba(0,0,0,0.3); padding:15px; border-radius:15px; margin-bottom: 1.5rem; font-size: 0.9rem;">
-        <p style="color:var(--primary); font-weight:bold;">REGLAS:</p>
         <p>• 8 Pares totales (500P c/u).</p>
         <p>• <span style="color:var(--accent);">2 Leyendas Bonus (1500P).</span></p>
-        <p>• ¡Récord: menos de 1 minuto!</p>
       </div>
-      <select id="mundo-select-inicio" style="width:100%; padding:12px; margin-bottom:1.5rem; background:var(--bg); color:#fff; border:2px solid var(--accent); border-radius:12px; font-weight:bold;" onchange="actualizarClaseFondo()">
+      <select id="mundo-select" style="width:100%; padding:12px; margin-bottom:1.5rem; background:var(--bg); color:#fff; border:2px solid var(--accent); border-radius:12px; font-weight:bold;" onchange="actualizarClaseFondo()">
         <option value="hibrido">MUNDO HÍBRIDO</option>
         <option value="hielo">MUNDO DE HIELO</option>
       </select>
-      <button class="btn btn-explorar" style="width:100%;" onclick="comenzarJuego()">INICIAR EXPLORACIÓN</button>
+      <button class="btn btn-explorar" style="width:100%;" onclick="navegarAJuego()">INICIAR JUEGO</button>
     </div>
-  </div>
+  </section>
 
-  <!-- JUEGO -->
-  <div id="app">
-    <div class="audio-container">
-      <div class="visualizer" id="visualizer">
-        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-      </div>
-      <input type="range" id="vol-slider" min="0" max="1" step="0.1" value="0.5" style="width: 50px;">
-      <button onclick="toggleMusic()" style="background:none; border:none; color:white; cursor:pointer;">
-        <i class="fa-solid fa-play" id="music-icon"></i>
-      </button>
-    </div>
+  <!-- SECCIÓN: JUEGO -->
+  <section id="app" class="view-section">
+    <h1 id="titulo-mundo" style="font-size: 2rem; margin-bottom: 1rem;"></h1>
+    
+    <div id="alerta-bonus" style="background:rgba(241,196,15,0.1); border:1px solid var(--accent); padding:8px; border-radius:10px; margin-bottom:15px; width:100%; max-width:600px; text-align:center; color:var(--accent); font-weight:bold;"></div>
 
-    <div class="header-main">
-      <h1 id="titulo-mundo">ANIMAL LEGENDS</h1>
-    </div>
-
-    <div id="stats">
+    <div style="display:flex; gap:10px; width:100%; max-width:600px; margin-bottom:15px;">
       <div class="stat-box"><span id="val-tiempo">00:00</span><br><small>Tiempo</small></div>
       <div class="stat-box"><span id="val-pares">0/8</span><br><small>Pares</small></div>
       <div class="stat-box" style="border-color:var(--accent);"><span id="val-puntos">0</span><br><small>Puntos</small></div>
     </div>
 
     <div style="display:flex; gap:10px; margin-bottom:1rem;">
-      <button class="btn btn-gris" onclick="mezclarMazo()">REINICIAR</button>
-      <button class="btn btn-gris" onclick="volverAlMenu()">MENÚ</button>
+      <button class="btn btn-gris" onclick="reiniciarPartida()">REINICIAR</button>
+      <button class="btn btn-gris" onclick="navegarAMenu()">MENÚ</button>
     </div>
 
     <div class="tablero-wrapper">
       <div id="tablero"></div>
     </div>
-  </div>
+  </section>
 
-  <!-- VICTORIA -->
+  <!-- MODAL VICTORIA -->
   <div id="modal-victoria">
     <div class="menu-inicio-card">
       <h2 id="msg-felicitacion" style="color:var(--accent); font-size:2rem;"></h2>
       <p id="stats-finales" style="margin: 2rem 0; white-space: pre-line; line-height: 1.6;"></p>
       <button class="btn btn-explorar" onclick="cerrarModalYReiniciar()" style="width:100%; margin-bottom:10px;">VOLVER A JUGAR</button>
-      <button class="btn btn-gris" onclick="volverAlMenu()" style="width:100%;">IR AL MENÚ</button>
+      <button class="btn btn-gris" onclick="navegarAMenu()">IR AL MENÚ</button>
     </div>
   </div>
 
@@ -208,28 +185,33 @@
     const DORSO_HIBRIDO = '1ewu_QyVQel-EWA5DHW93RYR6G9vJ2d6_';
     const DORSO_HIELO = '18y--weyWyTsT_SdAbMHcZuUJNBuWAWuI';
     
-    let mazo = [], leyendas = [], primera = null, segunda = null, bloqueado = false;
+    let leyendas = [], primera = null, segunda = null, bloqueado = false;
     let paresEnc = 0, puntos = 0, tiempo = 0, cronoIdx;
 
     const MUNDOS = {
-      hibrido: { 
-        titulo: "Global Hybrid Series", dorso: DORSO_HIBRIDO,
-        imagenes: { 
-          'a': '1lSewG0HFoXu7pkuZnSfk3eYGXZpJyArl', 'b': '18r503w24-xeY7ls8DjLW-H72OgRsiKIw', 
-          'c': '1GuBzYluK2OUufoM7Zal4VrqfTDL4Pg-A', 'd': '1VK_ZmemKE_ZFAxnhMvL9LBMtadzpSv-A', 
-          'e': '1OpGi0QGcZFPM6UIVV3ko9TQ8RuN0YNsB', 'f': '1u5Z2_06-8xEze1LVAEHPCc8QFiquNxXQ', 
-          'g': '17v_NxLVaJwEy9fnn3V2Y572BNn1UmpC_', 'h': '1LpsdXZ-jCMHXXSNYeNprG3NxLQtTZAiu' 
-        } 
-      },
-      hielo: { 
-        titulo: "Cartas de Hielo", dorso: DORSO_HIELO,
-        imagenes: { '1': '1R8ABQMznCdExQs8D50_-BzNEngU1C-KN', '2': '1unb5405SydYtd0biiV5UnJ532psHoEjX', '3': '1qJan5z_aQxgAEKV5iJ380AS1L98plnvs', '4': '1uoMw2qE_sJKACPrG3weU24Joa0YLs3hN', '5': '1NlBGIN6qDJFmN1Jo9JFrEIlFVJHHa8dH', '6': '1DIRrECXC7-X4IFt27Ko9cmzGD-UcZecF', '7': '1wGg2nRf_UvX3PUQFNJxb0N7aEAOObJnD', '8': '1yRUqU4UXtUkhj4xIZwYz7T9T_Qny5o6G' } 
-      }
+      hibrido: { titulo: "Global Hybrid Series", dorso: DORSO_HIBRIDO, imagenes: { 'a': '1lSewG0HFoXu7pkuZnSfk3eYGXZpJyArl', 'b': '18r503w24-xeY7ls8DjLW-H72OgRsiKIw', 'c': '1GuBzYluK2OUufoM7Zal4VrqfTDL4Pg-A', 'd': '1VK_ZmemKE_ZFAxnhMvL9LBMtadzpSv-A', 'e': '1OpGi0QGcZFPM6UIVV3ko9TQ8RuN0YNsB', 'f': '1u5Z2_06-8xEze1LVAEHPCc8QFiquNxXQ', 'g': '17v_NxLVaJwEy9fnn3V2Y572BNn1UmpC_', 'h': '1LpsdXZ-jCMHXXSNYeNprG3NxLQtTZAiu' } },
+      hielo: { titulo: "Cartas de Hielo", dorso: DORSO_HIELO, imagenes: { '1': '1R8ABQMznCdExQs8D50_-BzNEngU1C-KN', '2': '1unb5405SydYtd0biiV5UnJ532psHoEjX', '3': '1qJan5z_aQxgAEKV5iJ380AS1L98plnvs', '4': '1uoMw2qE_sJKACPrG3weU24Joa0YLs3hN', '5': '1NlBGIN6qDJFmN1Jo9JFrEIlFVJHHa8dH', '6': '1DIRrECXC7-X4IFt27Ko9cmzGD-UcZecF', '7': '1wGg2nRf_UvX3PUQFNJxb0N7aEAOObJnD', '8': '1yRUqU4UXtUkhj4xIZwYz7T9T_Qny5o6G' } }
     };
 
     function actualizarClaseFondo() {
-      const m = document.getElementById('mundo-select-inicio').value;
+      const m = document.getElementById('mundo-select').value;
       document.body.className = m === 'hielo' ? 'tema-hielo' : '';
+    }
+
+    function navegarAJuego() {
+      const m = document.getElementById('mundo-select').value;
+      document.getElementById('titulo-mundo').innerText = MUNDOS[m].titulo;
+      document.getElementById('overlay-inicio').classList.add('ocultar');
+      document.getElementById('app').style.display = 'flex';
+      if(audio.paused && musicIcon.className.includes('pause')) audio.play();
+      reiniciarPartida();
+    }
+
+    function navegarAMenu() {
+      clearInterval(cronoIdx);
+      document.getElementById('modal-victoria').style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('overlay-inicio').classList.remove('ocultar');
     }
 
     function toggleMusic() {
@@ -239,40 +221,29 @@
 
     document.getElementById('vol-slider').addEventListener('input', (e) => { audio.volume = e.target.value; });
 
-    function comenzarJuego() {
-      const m = document.getElementById('mundo-select-inicio').value;
-      document.getElementById('titulo-mundo').innerText = MUNDOS[m].titulo;
-      document.getElementById('overlay-inicio').classList.add('ocultar');
-      document.getElementById('app').style.display = 'flex';
-      if(audio.paused) toggleMusic();
-      mezclarMazo();
-      iniciarCrono();
-    }
-
     function lanzarConfeti() {
       const colores = ['#f1c40f', '#e94560', '#2ecc71', '#3498db'];
       for (let i = 0; i < 80; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + 'vw';
-        confetti.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
-        confetti.style.animationDuration = (Math.random() * 2 + 1) + 's';
-        document.body.appendChild(confetti);
-        setTimeout(() => confetti.remove(), 3000);
+        const c = document.createElement('div'); c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
+        c.style.animationDuration = (Math.random() * 2 + 1) + 's';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 3000);
       }
     }
 
-    function mezclarMazo() {
+    function reiniciarPartida() {
       puntos = 0; paresEnc = 0; tiempo = 0; primera = null; segunda = null; bloqueado = false;
       document.getElementById('val-puntos').innerText = "0";
       document.getElementById('val-pares').innerText = "0/8";
-      const mKey = document.getElementById('mundo-select-inicio').value;
+      const mKey = document.getElementById('mundo-select').value;
       const config = MUNDOS[mKey];
       const keys = Object.keys(config.imagenes);
       leyendas = [...keys].sort(() => 0.5 - Math.random()).slice(0, 2);
-      mazo = [...keys, ...keys].sort(() => 0.5 - Math.random());
-      const t = document.getElementById('tablero');
-      t.innerHTML = '';
+      document.getElementById('alerta-bonus').innerHTML = `🌟 LEYENDAS: <span style="text-transform:uppercase">${leyendas[0]} y ${leyendas[1]}</span>`;
+      const mazo = [...keys, ...keys].sort(() => 0.5 - Math.random());
+      const t = document.getElementById('tablero'); t.innerHTML = '';
       mazo.forEach(id => {
         const c = document.createElement('div'); c.className = 'carta'; c.dataset.id = id;
         c.innerHTML = `<div class="face back"><img src="https://lh3.googleusercontent.com/d/${config.dorso}"></div>
@@ -280,6 +251,7 @@
         c.onclick = () => voltear(c);
         t.appendChild(c);
       });
+      iniciarCrono();
     }
 
     function voltear(c) {
@@ -322,18 +294,12 @@
       const modal = document.getElementById('modal-victoria');
       const msg = document.getElementById('msg-felicitacion');
       const stats = document.getElementById('stats-finales');
-      if(tiempo < 60) {
-        msg.innerText = "¡TIEMPO RÉCORD!";
-        stats.innerText = `¡Felicidades, en menos de un minuto!\nTiempo: ${tiempo}s | Puntos: ${puntos}P`;
-      } else {
-        msg.innerText = "¡NIVEL COMPLETADO!";
-        stats.innerText = `¡Felicidades! Has terminado este mundo.\nTiempo: ${Math.floor(tiempo/60)}m ${tiempo%60}s | Puntos: ${puntos}P\n\n¡Explora otros mundos en el Menú!`;
-      }
+      msg.innerText = tiempo < 60 ? "¡TIEMPO RÉCORD!" : "¡LO LOGRASTE!";
+      stats.innerText = `Tiempo: ${tiempo}s | Puntos: ${puntos}P\n\n¡Felicidades! Explora otros mundos en el Menú.`;
       modal.style.display = 'flex';
     }
 
-    function volverAlMenu() { location.reload(); }
-    function cerrarModalYReiniciar() { document.getElementById('modal-victoria').style.display = 'none'; mezclarMazo(); iniciarCrono(); }
+    function cerrarModalYReiniciar() { document.getElementById('modal-victoria').style.display = 'none'; reiniciarPartida(); }
   </script>
 </body>
 </html>
