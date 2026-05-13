@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Animal Legends - Master Mystic Edition</title>
+  <title>Animal Legends - Master Edition Update</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <style>
     :root {
@@ -11,6 +11,7 @@
     }
     .tema-hielo { --primary: #00d2ff; --secondary: #003366; --accent: #ade8f4; --bg: #03045e; }
     .tema-mistico { --primary: #9b59b6; --secondary: #2c003e; --accent: #00ffcc; --bg: #12001c; }
+    .tema-arena { --primary: #d4a373; --secondary: #582f0e; --accent: #ffdd00; --bg: #331800; }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
@@ -22,7 +23,6 @@
       overflow-x: hidden;
     }
 
-    /* --- REPRODUCTOR GLOBAL PERSISTENTE --- */
     .audio-global {
       position: fixed; top: 15px; right: 15px;
       background: rgba(255, 255, 255, 0.1);
@@ -37,7 +37,6 @@
     @keyframes wave { from { height: 30%; } to { height: 100%; } }
     #vol-slider { width: 60px; accent-color: var(--primary); cursor: pointer; }
 
-    /* --- SECCIONES (SPA) --- */
     .view-section {
       width: 100%; display: flex; flex-direction: column; align-items: center;
       padding: 20px; min-height: 100vh; justify-content: center;
@@ -55,7 +54,6 @@
       filter: drop-shadow(0 0 10px var(--accent));
     }
 
-    /* --- TABLERO RESPONSIVE --- */
     .tablero-wrapper {
       width: 100%; overflow-x: auto; padding: 15px 0;
       -webkit-overflow-scrolling: touch;
@@ -68,7 +66,6 @@
       gap: 15px; justify-content: center; min-width: 620px; margin: 0 auto;
     }
 
-    /* --- CARTAS Y ANIMACIONES --- */
     .carta { aspect-ratio: 1; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
     .carta.flipped { transform: rotateY(180deg); }
     .face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; border: 2px solid var(--accent); overflow: hidden; }
@@ -94,10 +91,6 @@
       100% { opacity: 0; transform: translate(-50%, -180%) rotateY(180deg) scale(1.5); }
     }
 
-    /* --- CONFETI --- */
-    .confetti { position: fixed; width: 10px; height: 10px; z-index: 6000; top: -10px; animation: fall linear forwards; }
-    @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
-
     .stat-box { border: 2px solid var(--primary); border-radius: 15px; padding: 10px; flex: 1; text-align: center; background: rgba(0,0,0,0.2); }
     .btn { padding: 0.8rem 1.5rem; border-radius: 50px; border: none; cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
     .btn-explorar { background: var(--primary); color: white; box-shadow: 0 4px 15px var(--primary); }
@@ -108,13 +101,13 @@
       background: rgba(0,0,0,0.95); z-index: 4000; justify-content: center; align-items: center; 
       text-align: center; padding: 20px;
     }
-
+    .confetti { position: fixed; width: 10px; height: 10px; z-index: 6000; top: -10px; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
     .ocultar { display: none !important; }
   </style>
 </head>
 <body id="cuerpo">
 
-  <!-- REPRODUCTOR PERSISTENTE -->
   <div class="audio-global">
     <div class="visualizer" id="visualizer">
       <div class="bar"></div><div class="bar"></div><div class="bar"></div>
@@ -125,47 +118,43 @@
     </button>
   </div>
 
-  <!-- SECCIÓN MENÚ -->
   <section id="overlay-inicio" class="view-section">
     <div class="menu-inicio-card">
       <img src="https://lh3.googleusercontent.com/d/16kPOn6omfFbjglvpe-9Bv_DAiLq0VONy" class="logo-inicio" alt="Logo">
       <h1 style="color: var(--accent); font-size: 1.8rem; margin-bottom: 10px;">ANIMAL LEGENDS</h1>
-      <div style="text-align:left; background:rgba(0,0,0,0.3); padding:15px; border-radius:15px; margin-bottom: 1.5rem; font-size: 0.9rem;">
-        <p>• 8 Pares totales (500P c/u).</p>
-        <p>• <span style="color:var(--accent);">2 Leyendas Bonus (1500P).</span></p>
+      <div style="text-align:left; background:rgba(0,0,0,0.3); padding:15px; border-radius:15px; margin-bottom: 1.5rem; font-size: 0.85rem; line-height: 1.4;">
+        <p style="color:var(--accent); font-weight:bold; margin-bottom: 5px;">INSTRUCCIONES:</p>
+        <p>Cada partida, 2 animales al azar serán Leyendas. ¡Encuéntralos para ganar +3000 puntos!</p>
+        <p style="margin-top: 8px;">• 8 Pares totales (500P c/u).</p>
+        <p>• 2 Leyendas Bonus (1500P c/u).</p>
       </div>
       <select id="mundo-select" style="width:100%; padding:12px; margin-bottom:1.5rem; background:var(--bg); color:#fff; border:2px solid var(--accent); border-radius:12px; font-weight:bold;" onchange="actualizarClaseFondo()">
         <option value="hibrido">MUNDO HÍBRIDO</option>
         <option value="hielo">MUNDO DE HIELO</option>
         <option value="mistico">MUNDO MÍSTICO</option>
+        <option value="arena">MUNDO ARENA</option>
       </select>
-      <button class="btn btn-explorar" style="width:100%;" onclick="navegarAJuego()">INICIAR EXPLORACIÓN</button>
+      <button class="btn btn-explorar" style="width:100%;" onclick="navegarAJuego()">INICIAR JUEGO</button>
     </div>
   </section>
 
-  <!-- SECCIÓN JUEGO -->
   <section id="app" class="view-section">
     <h1 id="titulo-mundo" style="font-size: 2rem; margin-bottom: 1rem;"></h1>
-    
     <div id="alerta-bonus" style="background:rgba(241,196,15,0.1); border:1px solid var(--accent); padding:8px; border-radius:10px; margin-bottom:15px; width:100%; max-width:600px; text-align:center; color:var(--accent); font-weight:bold;"></div>
-
     <div style="display:flex; gap:10px; width:100%; max-width:600px; margin-bottom:15px;">
       <div class="stat-box"><span id="val-tiempo">00:00</span><br><small>Tiempo</small></div>
       <div class="stat-box"><span id="val-pares">0/8</span><br><small>Pares</small></div>
       <div class="stat-box" style="border-color:var(--accent);"><span id="val-puntos">0</span><br><small>Puntos</small></div>
     </div>
-
     <div style="display:flex; gap:10px; margin-bottom:1rem;">
       <button class="btn btn-gris" onclick="reiniciarPartida()">REINICIAR</button>
       <button class="btn btn-gris" onclick="navegarAMenu()">MENÚ</button>
     </div>
-
     <div class="tablero-wrapper">
       <div id="tablero"></div>
     </div>
   </section>
 
-  <!-- MODAL VICTORIA -->
   <div id="modal-victoria">
     <div class="menu-inicio-card">
       <h2 id="msg-felicitacion" style="color:var(--accent); font-size:2rem;"></h2>
@@ -185,42 +174,33 @@
     const DORSO_HIBRIDO = '1ewu_QyVQel-EWA5DHW93RYR6G9vJ2d6_';
     const DORSO_HIELO = '18y--weyWyTsT_SdAbMHcZuUJNBuWAWuI';
     const DORSO_MISTICO = '1wTG7bhhxngqK5AxxZ46R0U4JYA8yY5vF';
+    const DORSO_ARENA = '1rcqSG2LC0ijNhNf9Wqxm4sH2SolrfIeo';
     
     let leyendas = [], primera = null, segunda = null, bloqueado = false;
     let paresEnc = 0, puntos = 0, tiempo = 0, cronoIdx;
 
     const MUNDOS = {
-      hibrido: { 
-        titulo: "Global Hybrid Series", dorso: DORSO_HIBRIDO,
+      hibrido: { titulo: "Global Hybrid Series", dorso: DORSO_HIBRIDO, imagenes: { 'a': '1lSewG0HFoXu7pkuZnSfk3eYGXZpJyArl', 'b': '18r503w24-xeY7ls8DjLW-H72OgRsiKIw', 'c': '1GuBzYluK2OUufoM7Zal4VrqfTDL4Pg-A', 'd': '1VK_ZmemKE_ZFAnhMvL9LBMtadzpSv-A', 'e': '1OpGi0QGcZFPM6UIVV3ko9TQ8RuN0YNsB', 'f': '1u5Z2_06-8xEze1LVAEHPCc8QFiquNxXQ', 'g': '17v_NxLVaJwEy9fnn3V2Y572BNn1UmpC_', 'h': '1LpsdXZ-jCMHXXSNYeNprG3NxLQtTZAiu' } },
+      hielo: { titulo: "Cartas de Hielo", dorso: DORSO_HIELO, imagenes: { '1': '1R8ABQMznCdExQs8D50_-BzNEngU1C-KN', '2': '1unb5405SydYtd0biiV5UnJ532psHoEjX', '3': '1qJan5z_aQxgAEKV5iJ380AS1L98plnvs', '4': '1uoMw2qE_sJKACPrG3weU24Joa0YLs3hN', '5': '1NlBGIN6qDJFmN1Jo9JFrEIlFVJHHa8dH', '6': '1DIRrECXC7-X4IFt27Ko9cmzGD-UcZecF', '7': '1wGg2nRf_UvX3PUQFNJxb0N7aEAOObJnD', '8': '1yRUqU4UXtUkhj4xIZwYz7T9T_Qny5o6G' } },
+      mistico: { titulo: "Mundos Místicos", dorso: DORSO_MISTICO, imagenes: { 'm1': '1mI6JvjrLmt_kplY_jd3l0mG8Ap3EVAgr', 'm2': '1yYOdGqah2C4o0cBdDOpTYX3fxrAhvn9M', 'm3': '1AqWi8Wp_Xe6xFh0iybpXcLKiIUAEl2bj', 'm4': '1MI-3s51c2g6SHxJMpK3898V4p6njnDQ9', 'm5': '18vXK6sbcuowx-dz-rd7YbjWztixwROVL', 'm6': '1xJKOnD5qx5cQk0BRaDTNhX9ZwkVipmoP', 'm7': '18Pu_iCN2ZSblqpWhSzUvDkDI-77wHHz9', 'm8': '19zXECJXYeEqOsCEa9ckWyxAq2sncSSYC' } },
+      arena: { 
+        titulo: "Mundos Arena", dorso: DORSO_ARENA, 
         imagenes: { 
-          'a': '1lSewG0HFoXu7pkuZnSfk3eYGXZpJyArl', 'b': '18r503w24-xeY7ls8DjLW-H72OgRsiKIw', 
-          'c': '1GuBzYluK2OUufoM7Zal4VrqfTDL4Pg-A', 'd': '1VK_ZmemKE_ZFAxnhMvL9LBMtadzpSv-A', 
-          'e': '1OpGi0QGcZFPM6UIVV3ko9TQ8RuN0YNsB', 'f': '1u5Z2_06-8xEze1LVAEHPCc8QFiquNxXQ', 
-          'g': '17v_NxLVaJwEy9fnn3V2Y572BNn1UmpC_', 'h': '1LpsdXZ-jCMHXXSNYeNprG3NxLQtTZAiu' 
-        } 
-      },
-      hielo: { 
-        titulo: "Cartas de Hielo", dorso: DORSO_HIELO,
-        imagenes: { '1': '1R8ABQMznCdExQs8D50_-BzNEngU1C-KN', '2': '1unb5405SydYtd0biiV5UnJ532psHoEjX', '3': '1qJan5z_aQxgAEKV5iJ380AS1L98plnvs', '4': '1uoMw2qE_sJKACPrG3weU24Joa0YLs3hN', '5': '1NlBGIN6qDJFmN1Jo9JFrEIlFVJHHa8dH', '6': '1DIRrECXC7-X4IFt27Ko9cmzGD-UcZecF', '7': '1wGg2nRf_UvX3PUQFNJxb0N7aEAOObJnD', '8': '1yRUqU4UXtUkhj4xIZwYz7T9T_Qny5o6G' } 
-      },
-      mistico: { 
-        titulo: "Mundos Místicos", dorso: DORSO_MISTICO,
-        imagenes: { 
-          'dragon': '1mI6JvjrLmt_kplY_jd3l0mG8Ap3EVAgr', 
-          'fenix': '1yYOdGqah2C4o0cBdDOpTYX3fxrAhvn9M', 
-          'unicornio': '1AqWi8Wp_Xe6xFh0iybpXcLKiIUAEl2bj', 
-          'kraken': '1MI-3s51c2g6SHxJMpK3898V4p6njnDQ9', 
-          'pegaso': '18vXK6sbcuowx-dz-rd7YbjWztixwROVL', 
-          'caballo': '1xJKOnD5qx5cQk0BRaDTNhX9ZwkVipmoP', 
-          'grifo': '18Pu_iCN2ZSblqpWhSzUvDkDI-77wHHz9', 
-          'ciervo': '19zXECJXYeEqOsCEa9ckWyxAq2sncSSYC'
+          'cam': '1qMhcykFYGr48RCeIWPlIQCWX-qLX5cZ1', 
+          'esc': '1jCVGRJNc8ZLY01up-uezc-Ha0NTbYg_7', 
+          'hal': '1Zthkh9EysjaXr3WAsJFHgPMa9vHymCtM', 
+          'jag': '16I4LD56ivj5J3zx7-JnKE5fvThLw7-rL', 
+          'leo': '12RjyWWVy4SBrdjg3U1pWB4OXWKJ8oxSI', 
+          'lob': '1o81AyPFkRH09iYuGAAWgLmczedtxiiHn', 
+          'rin': '1liDXZtRqZ9fUtE_aYmCgbABe6WSlvIQu', 
+          'ser': '1RwYcPFnlxIepaNEI4p64j5bo_S4w-OTM' 
         } 
       }
     };
 
     function actualizarClaseFondo() {
       const m = document.getElementById('mundo-select').value;
-      document.body.className = m === 'hielo' ? 'tema-hielo' : m === 'mistico' ? 'tema-mistico' : '';
+      document.body.className = m === 'hielo' ? 'tema-hielo' : m === 'mistico' ? 'tema-mistico' : m === 'arena' ? 'tema-arena' : '';
     }
 
     function navegarAJuego() {
@@ -239,8 +219,13 @@
       document.getElementById('overlay-inicio').classList.remove('ocultar');
     }
 
+    function toggleMusic() {
+      if (audio.paused) { audio.play().catch(()=>{}); musicIcon.className = "fa-solid fa-pause"; visualizer.classList.add('animating'); }
+      else { audio.pause(); musicIcon.className = "fa-solid fa-play"; visualizer.classList.remove('animating'); }
+    }
+
     function lanzarConfeti() {
-      const colores = ['#f1c40f', '#e94560', '#2ecc71', '#3498db', '#00ffcc', '#9b59b6'];
+      const colores = ['#f1c40f', '#e94560', '#2ecc71', '#d4a373', '#ffdd00'];
       for (let i = 0; i < 80; i++) {
         const c = document.createElement('div'); c.className = 'confetti';
         c.style.left = Math.random() * 100 + 'vw';
@@ -249,11 +234,6 @@
         document.body.appendChild(c);
         setTimeout(() => c.remove(), 3000);
       }
-    }
-
-    function toggleMusic() {
-      if (audio.paused) { audio.play().catch(()=>{}); musicIcon.className = "fa-solid fa-pause"; visualizer.classList.add('animating'); }
-      else { audio.pause(); musicIcon.className = "fa-solid fa-play"; visualizer.classList.remove('animating'); }
     }
 
     function reiniciarPartida() {
@@ -318,7 +298,7 @@
       const msg = document.getElementById('msg-felicitacion');
       const stats = document.getElementById('stats-finales');
       msg.innerText = tiempo < 60 ? "¡TIEMPO RÉCORD!" : "¡LO LOGRASTE!";
-      stats.innerText = `Tiempo: ${tiempo}s | Puntos: ${puntos}P\n\n¡Felicidades! Has conquistado este mundo.`;
+      stats.innerText = `Tiempo: ${tiempo}s | Puntos: ${puntos}P\n\n¡Felicidades! Explora otros mundos en el Menú.`;
       modal.style.display = 'flex';
     }
 
